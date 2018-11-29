@@ -2,7 +2,7 @@
 var http = require('http');
 
 var versions_server = http.createServer((request, response) => {
-  response.end('flowcrypt-android.js: ' + JSON.stringify(process.versions));
+  response.end('flowcrypt-android.js:v2: ' + JSON.stringify(process.versions));
 });
 
 versions_server.listen(3000, 'localhost');

@@ -4,7 +4,7 @@ android {
     compileSdkVersion 25
     buildToolsVersion '28.0.3'
     defaultConfig {
-        applicationId "com.yourorg.sample"
+        applicationId "com.flowcrypt.node"
         minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
