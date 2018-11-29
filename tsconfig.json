@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "commonjs",
+    "lib": [
+      "es2017",
+      "dom"
+    ],
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "alwaysStrict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noImplicitThis": true,
+    "strictPropertyInitialization": false,
+    "strictFunctionTypes": false,
+    "sourceMap": false,
+    "checkJs": false,
+    "outDir": "./TypeScript/build/ts",
+    "baseUrl": "./TypeScript/source",
+    "typeRoots": [
+      "./TypeScript/source/types/*.d.ts"
+    ]
+  },
+  "include": [
+    "./TypeScript/source/node.ts"
+  ],
+  "exclude": [
+    "**/build/**",
+    "**/node_modules/**"
+  ]
+}
