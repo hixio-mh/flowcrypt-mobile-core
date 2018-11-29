@@ -1,14 +1,21 @@
 package com.yourorg.sample;
 
 import android.annotation.SuppressLint;
+import android.content.res.AssetManager;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import java.net.*;
-import java.io.*;
+
+import org.apache.commons.io.IOUtils;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,25 +26,26 @@ public class MainActivity extends AppCompatActivity {
   }
 
   //We just want one instance of node running in the background.
-  public static boolean _startedNodeAlready=false;
+  public static boolean nodeIsRunning = false;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
+
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
-    if( !_startedNodeAlready ) {
-      _startedNodeAlready=true;
+    if(!nodeIsRunning) {
+      nodeIsRunning = true;
       new Thread(new Runnable() {
         @Override
         public void run() {
-          startNodeWithArguments(new String[]{"node", "-e",
-            "var http = require('http'); " +
-            "var versions_server = http.createServer( (request, response) => { " +
-            "  response.end('Versions2: ' + JSON.stringify(process.versions)); " +
-            "}); " +
-            "versions_server.listen(3000, 'localhost');"
-          });
+          try {
+            AssetManager assets = getApplicationContext().getAssets();
+            String jsSrc = IOUtils.toString(assets.open("js/flowcrypt-android.js"), StandardCharsets.UTF_8);
+            startNodeWithArguments(new String[]{"node", "-e", jsSrc});
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
         }
       }).start();
     }
