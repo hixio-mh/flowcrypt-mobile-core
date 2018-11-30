@@ -3,12 +3,13 @@ const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
   target: 'node',
-  externals: [nodeExternals({
-    // whitelist: ['openpgp']
-  })],
+  externals: [nodeExternals()],
   mode: 'none',
   entry: {
     'flowcrypt': './build/ts/node.js',
+    'asn1': './node_modules/asn1.js/lib/asn1.js',
+    'bn': './node_modules/bn.js/lib/bn.js',
+    'minimalistic-assert': './node_modules/minimalistic-assert/index.js',
   },
   output: {
     path: __dirname + '/build/bundles',
