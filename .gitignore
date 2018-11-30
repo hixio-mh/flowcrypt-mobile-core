@@ -69,3 +69,4 @@ TypeScript/build/*
 TypeScript/tmp/*
 TypeScript/node_modules
 TypeScript/node_modules/*
+node_modules/@types/node/LICENSE
