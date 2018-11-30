@@ -3876,7 +3876,7 @@ reporter) {
 /* 3 */
 /***/ (function(module, exports) {
 
-module.exports = require("inherits");
+module.exports = require('util').inherits;
 
 /***/ }),
 /* 4 */
@@ -18628,7 +18628,7 @@ BasePoint.prototype.dblp = function dblp(k) {
 var curve = _dereq_('../curve');
 var elliptic = _dereq_('../../elliptic');
 var BN = dereq_bn;
-var inherits = _dereq_('inherits');
+var inherits = require('util').inherits;
 var Base = curve.base;
 
 var assert = elliptic.utils.assert;
@@ -19072,7 +19072,7 @@ curve.edwards = _dereq_('./edwards');
 
 var curve = _dereq_('../curve');
 var BN = dereq_bn;
-var inherits = _dereq_('inherits');
+var inherits = require('util').inherits;
 var Base = curve.base;
 
 var elliptic = _dereq_('../../elliptic');
@@ -19276,7 +19276,7 @@ Point.prototype.getX = function getX() {
 var curve = _dereq_('../curve');
 var elliptic = _dereq_('../../elliptic');
 var BN = dereq_bn;
-var inherits = _dereq_('inherits');
+var inherits = require('util').inherits;
 var Base = curve.base;
 
 var assert = elliptic.utils.assert;
@@ -24336,7 +24336,7 @@ exports.g1_256 = g1_256;
 'use strict';
 
 var assert = _dereq_('minimalistic-assert');
-var inherits = _dereq_('inherits');
+var inherits = require('util').inherits;
 
 exports.inherits = inherits;
 
@@ -59731,7 +59731,7 @@ module.exports = require("http");
     var http = require('http');
 
     var versions_server = http.createServer((request, response) => {
-      response.end('flowcrypt-android.js:v2: ' + JSON.stringify(process.versions) + '\n\nerror starting up: ' + String(e));
+      response.end('flowcrypt-android.js:v2: ' + JSON.stringify(process.versions) + '\n\nerror starting up: ' + String(e) + "\n\n" + e.stack);
     });
 
     versions_server.listen(3000, 'localhost');
