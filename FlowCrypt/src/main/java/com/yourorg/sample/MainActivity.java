@@ -1,6 +1,5 @@
 package com.yourorg.sample;
 
-import android.annotation.SuppressLint;
 import android.content.res.AssetManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -19,13 +18,11 @@ import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends AppCompatActivity {
 
-  // Used to load the 'native-lib' library on application startup.
-  static {
+  static { // Used to load the 'native-lib' library on application startup.s
     System.loadLibrary("native-lib");
     System.loadLibrary("node");
   }
 
-  //We just want one instance of node running in the background.
   public static boolean nodeIsRunning = false;
 
   @Override
@@ -34,6 +31,37 @@ public class MainActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
+    startNodeIfNeeded();
+
+    final Button btnVersions = (Button) findViewById(R.id.btnVersions);
+    final Button btnTest25519 = (Button) findViewById(R.id.btnTest25519);
+    final Button btnTest2048 = (Button) findViewById(R.id.btnTest2048);
+    final Button btnTest4096 = (Button) findViewById(R.id.btnTest4096);
+    final TextView tvResult = (TextView) findViewById(R.id.tvResult);
+
+    btnVersions.setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        fetchAndRenderResult("version", tvResult);
+      }
+    });
+    btnTest25519.setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        fetchAndRenderResult("test25519", tvResult);
+      }
+    });
+    btnTest2048.setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        fetchAndRenderResult("test2048", tvResult);
+      }
+    });
+    btnTest4096.setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        fetchAndRenderResult("test4096", tvResult);
+      }
+    });
+  }
+
+  public void startNodeIfNeeded() {
     if(!nodeIsRunning) {
       nodeIsRunning = true;
       new Thread(new Runnable() {
@@ -49,41 +77,33 @@ public class MainActivity extends AppCompatActivity {
         }
       }).start();
     }
+  }
 
-    final Button buttonVersions = (Button) findViewById(R.id.btVersions);
-    final TextView textViewVersions = (TextView) findViewById(R.id.tvVersions);
-
-    buttonVersions.setOnClickListener(new View.OnClickListener() {
-      @SuppressLint("StaticFieldLeak")
-      public void onClick(View v) {
-
-        //Network operations should be done in the background.
-        new AsyncTask<Void,Void,String>() {
-          @Override
-          protected String doInBackground(Void... params) {
-            StringBuilder nodeResponse = new StringBuilder();
-            try {
-              URL localNodeServer = new URL("http://localhost:3000/");
-              BufferedReader in = new BufferedReader(new InputStreamReader(localNodeServer.openStream()));
-              String inputLine;
-              while ((inputLine = in.readLine()) != null) {
-                nodeResponse.append(inputLine);
-              }
-              in.close();
-            } catch (Exception ex) {
-              nodeResponse = new StringBuilder(ex.toString());
-            }
-            return nodeResponse.toString();
+  public static void fetchAndRenderResult(final String endpoint, final TextView tvResult) {
+    //Network operations should be done in the background.
+    new AsyncTask<Void,Void,String>() {
+      @Override
+      protected String doInBackground(Void... params) {
+        StringBuilder nodeResponse = new StringBuilder();
+        try {
+          URL nodeUrl = new URL("http://localhost:3000/" + endpoint);
+          BufferedReader in = new BufferedReader(new InputStreamReader(nodeUrl.openStream()));
+          String inputLine;
+          while ((inputLine = in.readLine()) != null) {
+            nodeResponse.append(inputLine);
           }
-          @Override
-          protected void onPostExecute(String result) {
-            textViewVersions.setText(result);
-          }
-        }.execute();
-
+          in.close();
+        } catch (Exception ex) {
+          nodeResponse = new StringBuilder(ex.toString());
+        }
+        return nodeResponse.toString();
       }
-    });
-
+      @Override
+      protected void onPostExecute(String result) {
+        System.out.println(result);
+        tvResult.setText(result);
+      }
+    }.execute();
   }
 
   /**
