@@ -5,7 +5,7 @@ android {
     buildToolsVersion '28.0.3'
     defaultConfig {
         applicationId "com.flowcrypt.node"
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"

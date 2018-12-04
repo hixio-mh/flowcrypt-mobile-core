@@ -5,7 +5,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import org.apache.commons.io.IOUtils;
@@ -15,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,30 +33,56 @@ public class MainActivity extends AppCompatActivity {
 
     startNodeIfNeeded();
 
-    final Button btnVersions = (Button) findViewById(R.id.btnVersions);
-    final Button btnTest25519 = (Button) findViewById(R.id.btnTest25519);
-    final Button btnTest2048 = (Button) findViewById(R.id.btnTest2048);
-    final Button btnTest4096 = (Button) findViewById(R.id.btnTest4096);
     final TextView tvResult = (TextView) findViewById(R.id.tvResult);
 
-    btnVersions.setOnClickListener(new View.OnClickListener() {
+    findViewById(R.id.btnVersions).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
         fetchAndRenderResult("version", tvResult);
       }
     });
-    btnTest25519.setOnClickListener(new View.OnClickListener() {
+    findViewById(R.id.btnTest25519).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
         fetchAndRenderResult("test25519", tvResult);
       }
     });
-    btnTest2048.setOnClickListener(new View.OnClickListener() {
+    findViewById(R.id.btnTest2048).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
         fetchAndRenderResult("test2048", tvResult);
       }
     });
-    btnTest4096.setOnClickListener(new View.OnClickListener() {
+    findViewById(R.id.btnTest4096).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
         fetchAndRenderResult("test4096", tvResult);
+      }
+    });
+    findViewById(R.id.btnTest2048_1M).setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        fetchAndRenderResult("test2048-1M", tvResult);
+      }
+    });
+    findViewById(R.id.btnTest2048_3M).setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        fetchAndRenderResult("test2048-3M", tvResult);
+      }
+    });
+    findViewById(R.id.btnTest2048_5M).setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        fetchAndRenderResult("test2048-5M", tvResult);
+      }
+    });
+    findViewById(R.id.btnTest2048_10M).setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        fetchAndRenderResult("test2048-10M", tvResult);
+      }
+    });
+    findViewById(R.id.btnTest2048_25M).setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        fetchAndRenderResult("test2048-25M", tvResult);
+      }
+    });
+    findViewById(R.id.btnTest2048_50M).setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        fetchAndRenderResult("test2048-50M", tvResult);
       }
     });
   }
@@ -80,23 +106,15 @@ public class MainActivity extends AppCompatActivity {
   }
 
   public static void fetchAndRenderResult(final String endpoint, final TextView tvResult) {
-    //Network operations should be done in the background.
     new AsyncTask<Void,Void,String>() {
       @Override
       protected String doInBackground(Void... params) {
-        StringBuilder nodeResponse = new StringBuilder();
         try {
           URL nodeUrl = new URL("http://localhost:3000/" + endpoint);
-          BufferedReader in = new BufferedReader(new InputStreamReader(nodeUrl.openStream()));
-          String inputLine;
-          while ((inputLine = in.readLine()) != null) {
-            nodeResponse.append(inputLine);
-          }
-          in.close();
+          return new BufferedReader(new InputStreamReader(nodeUrl.openStream())).lines().collect(Collectors.joining());
         } catch (Exception ex) {
-          nodeResponse = new StringBuilder(ex.toString());
+          return ex.toString();
         }
-        return nodeResponse.toString();
       }
       @Override
       protected void onPostExecute(String result) {

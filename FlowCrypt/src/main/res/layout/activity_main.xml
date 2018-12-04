@@ -50,6 +50,74 @@
         app:layout_constraintLeft_toRightOf="@+id/btnTest2048"
         tools:layout_editor_absoluteY="8dp" />
 
+    <Button
+        android:id="@+id/btnTest2048_1M"
+        android:layout_width="60dp"
+        android:layout_height="wrap_content"
+        android:text="1M"
+        app:layout_constraintTop_toBottomOf="@+id/btnVersions"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp" />
+
+    <Button
+        android:id="@+id/btnTest2048_3M"
+        android:layout_width="60dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/btnVersions"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="8dp"
+        android:text="3M"
+        app:layout_constraintLeft_toRightOf="@+id/btnTest2048_1M"
+        tools:layout_editor_absoluteY="8dp" />
+
+    <Button
+        android:id="@+id/btnTest2048_5M"
+        android:layout_width="60dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/btnVersions"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="8dp"
+        android:text="5M"
+        app:layout_constraintLeft_toRightOf="@+id/btnTest2048_3M"
+        tools:layout_editor_absoluteY="8dp" />
+
+    <Button
+        android:id="@+id/btnTest2048_10M"
+        android:layout_width="60dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/btnVersions"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="8dp"
+        android:text="10M"
+        app:layout_constraintLeft_toRightOf="@+id/btnTest2048_5M"
+        tools:layout_editor_absoluteY="8dp" />
+
+    <Button
+        android:id="@+id/btnTest2048_25M"
+        android:layout_width="55dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/btnVersions"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="8dp"
+        android:text="25M"
+        app:layout_constraintLeft_toRightOf="@+id/btnTest2048_10M"
+        tools:layout_editor_absoluteY="8dp" />
+
+
+    <Button
+        android:id="@+id/btnTest2048_50M"
+        android:layout_width="55dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/btnVersions"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="8dp"
+        android:text="50M"
+        app:layout_constraintLeft_toRightOf="@+id/btnTest2048_25M"
+        tools:layout_editor_absoluteY="8dp" />
+
+
     <TextView
         android:id="@+id/tvResult"
         android:layout_width="match_parent"
@@ -65,7 +133,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnVersions"
+        app:layout_constraintTop_toBottomOf="@+id/btnTest2048_1M"
         app:layout_constraintVertical_bias="0.0" />
 
 </android.support.constraint.ConstraintLayout>

@@ -204,23 +204,39 @@ const fmtErr = (e: any): string => {
   });
 };
 
+const newBigString = (mb: number): string => {
+  return new Array(mb * 1024 * 1024 / 2).join('x'); // in js, each character is a 16-bit value
+}
+
 const handleReq = async (r: http.IncomingMessage): Promise<string> => {
   if (r.url === '/version') {
     return JSON.stringify(process.versions);
   } else if (r.url === '/hash') {
     return Pgp.hash.sha256('hello');
   } else if (r.url === '/test25519') {
-    return await testEncryptDecrypt(KEY_25519);
+    return await testEncryptDecrypt(KEY_25519, 'encrypt this string');
   } else if (r.url === '/test2048') {
-    return await testEncryptDecrypt(KEY_2048);
+    return await testEncryptDecrypt(KEY_2048, 'encrypt this string');
   } else if (r.url === '/test4096') {
-    return await testEncryptDecrypt(KEY_4096);
+    return await testEncryptDecrypt(KEY_4096, 'encrypt this string');
+  } else if (r.url === '/test2048-1M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(1));
+  } else if (r.url === '/test2048-3M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(3));
+  } else if (r.url === '/test2048-5M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(5));
+  } else if (r.url === '/test2048-10M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(10));
+  } else if (r.url === '/test2048-25M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(25));
+  } else if (r.url === '/test2048-50M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(50));
   } else {
     return `unknown path ${r.url}`;
   }
 }
 
-const testEncryptDecrypt = async (privateKeyArmored: string) => {
+const testEncryptDecrypt = async (privateKeyArmored: string, data: string) => {
 
   let msg = '';
 
@@ -231,12 +247,10 @@ const testEncryptDecrypt = async (privateKeyArmored: string) => {
     checkpoint = now;
   }
 
-  const data = 'Hello FlowCrypt Please encrypt THIS';
   const passphrase = 'some long pp';
   const prv = openpgp.key.readArmored(privateKeyArmored).keys[0];
   const pub = prv.toPublic();
   measure('key parsed');
-  msg += `${JSON.stringify(pub.primaryKey.getAlgorithmInfo())},\n`;
 
   const encrypted = await openpgp.encrypt({ data, publicKeys: [pub] });
   // console.log(encrypted.data);
@@ -251,6 +265,8 @@ const testEncryptDecrypt = async (privateKeyArmored: string) => {
   })
   // console.log(decrypted.data);
   measure('message decrypted');
+
+  msg += `${JSON.stringify(pub.primaryKey.getAlgorithmInfo())} (data:${Math.round(data.length / 512)}K),\n`;
 
   return msg;
 
