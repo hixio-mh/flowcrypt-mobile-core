@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   public static void fetchAndRenderResult(final String endpoint, final TextView tvResult) {
+    final long startTime = System.currentTimeMillis();
     new AsyncTask<Void,Void,String>() {
       @Override
       protected String doInBackground(Void... params) {
@@ -78,7 +79,9 @@ public class MainActivity extends AppCompatActivity {
       }
       @Override
       protected void onPostExecute(String result) {
-        tvResult.setText(result);
+        Long ms = System.currentTimeMillis() - startTime;
+        String text = result + "\n[" + ms.toString() + "ms]";
+        tvResult.setText(text);
       }
     }.execute();
   }
