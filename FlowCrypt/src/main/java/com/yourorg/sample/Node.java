@@ -5,11 +5,24 @@ import android.content.res.AssetManager;
 import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.util.stream.Collectors;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
 
 public class Node {
 
@@ -19,8 +32,10 @@ public class Node {
 
   public static String request(String endpoint) {
     try {
-      URL url = new URL("http://localhost:3000/" + endpoint);
-      return new BufferedReader(new InputStreamReader(url.openStream())).lines().collect(Collectors.joining());
+      URL url = new URL("https://localhost:3000/" + endpoint);
+      HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+      conn.setSSLSocketFactory(NativeNodeWrapper.getCustomCaTlsSocketFactory());
+      return new BufferedReader(new InputStreamReader(conn.getInputStream())).lines().collect(Collectors.joining());
     } catch (Exception ex) {
       return ex.toString();
     }
@@ -35,7 +50,7 @@ class NativeNodeWrapper {
     System.loadLibrary("node");
   }
 
-  private static String DEBUG_SSL_CA = "-----BEGIN CERTIFICATE-----\n" +
+  public static String SSL_CA = "-----BEGIN CERTIFICATE-----\n" +
       "MIIF2jCCA8KgAwIBAgIJAPlUAZVi0YciMA0GCSqGSIb3DQEBCwUAMIGBMQswCQYD\n" +
       "VQQGEwJISzESMBAGA1UECAwJSG9uZyBLb25nMRIwEAYDVQQHDAlIb25nIEtvbmcx\n" +
       "GjAYBgNVBAoMEUZsb3dDcnlwdCBMaW1pdGVkMRYwFAYDVQQLDA1ub2RlanMtbW9i\n" +
@@ -69,6 +84,7 @@ class NativeNodeWrapper {
       "g8px0Y5y4ssGljVvmpgkUVUjuDY1SCMNCSmLcVQ7D6a8M1o+ez2EJKdMfRxwQAkl\n" +
       "pUZ5Y50QBatTK7U+oU0=\n" +
       "-----END CERTIFICATE-----\n";
+
   private static String DEBUG_SSL_CRT = "-----BEGIN CERTIFICATE-----\n" +
       "MIIESDCCAjACCQDJbepQvI1QejANBgkqhkiG9w0BAQsFADCBgTELMAkGA1UEBhMC\n" +
       "SEsxEjAQBgNVBAgMCUhvbmcgS29uZzESMBAGA1UEBwwJSG9uZyBLb25nMRowGAYD\n" +
@@ -94,6 +110,7 @@ class NativeNodeWrapper {
       "SXb9PSc3EBdUPrjt5zpZ+GqPbzD4HmLXkpHRyyGDK3hq7BLbAe8N/EwkOaIBVm+j\n" +
       "Fi94H/5KdbTDeNoYUo3u5arrnm+V0fbqApT6NMY/8ad+AyhCc3FLzSyDZeg=\n" +
       "-----END CERTIFICATE-----\n";
+
   private static String DEBUG_SSL_KEY = "-----BEGIN RSA PRIVATE KEY-----\n" +
       "MIIEowIBAAKCAQEA6hZe+WDgZ9PcOTl9gZ/86QgdF1T5muVhBtggVEsdmi3qns/R\n" +
       "ljaVWYzk6PplnmSFeVYzK9XuTY0DMmEWqPR3qmkh5i4+nrdOOjoggtauZFW/nGiM\n" +
@@ -123,6 +140,22 @@ class NativeNodeWrapper {
       "-----END RSA PRIVATE KEY-----\n";
 
   private static boolean isRunning = false;
+  private static SSLContext sslContext = null;
+
+  static SSLSocketFactory getCustomCaTlsSocketFactory() throws CertificateException, KeyStoreException, NoSuchAlgorithmException, IOException, KeyManagementException {
+    if(sslContext == null) {
+      CertificateFactory cf = CertificateFactory.getInstance("X.509");
+      Certificate ca = cf.generateCertificate(new ByteArrayInputStream(SSL_CA.getBytes()));
+      KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+      keyStore.load(null, null);
+      keyStore.setCertificateEntry("ca", ca);
+      TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      tmf.init(keyStore);
+      sslContext = SSLContext.getInstance("TLS");
+      sslContext.init(null, tmf.getTrustManagers(), null);
+    }
+    return sslContext.getSocketFactory();
+  }
 
   static void startIfNotRunning(final AssetManager am) {
     if(!isRunning) {
@@ -148,7 +181,7 @@ class NativeNodeWrapper {
   private static String getJavaScriptSource(AssetManager am) {
     try {
       String src = "";
-      src += jsInitConst("NODE_SSL_CA", DEBUG_SSL_CA);
+      src += jsInitConst("NODE_SSL_CA", SSL_CA);
       src += jsInitConst("NODE_SSL_CRT", DEBUG_SSL_CRT);
       src += jsInitConst("NODE_SSL_KEY", DEBUG_SSL_KEY);
       System.out.println(src);

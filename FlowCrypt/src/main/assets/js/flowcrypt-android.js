@@ -57806,7 +57806,7 @@ Object.defineProperty(exports, "__esModule", {
 
 const pgp_js_1 = __webpack_require__(1);
 
-const http = __webpack_require__(7);
+const https = __webpack_require__(7);
 
 const KEY_2048 = `-----BEGIN PGP PRIVATE KEY BLOCK-----
 Version: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption
@@ -58061,15 +58061,18 @@ const testEncryptDecrypt = async (privateKeyArmored, data) => {
   return msg;
 };
 
-const versions_server = http.createServer((request, response) => {
+https.createServer({
+  key: NODE_SSL_KEY,
+  cert: NODE_SSL_CRT,
+  ca: NODE_SSL_CA
+}, (request, response) => {
   handleReq(request).then(r => {
     console.log(r);
     response.end(r);
   }).catch(e => {
     response.end(fmtErr(e));
   });
-});
-versions_server.listen(3000, 'localhost');
+}).listen(3000, 'localhost');
 
 /***/ }),
 /* 1 */
@@ -59877,7 +59880,7 @@ exports.Catch = Catch;
 /* 7 */
 /***/ (function(module, exports) {
 
-module.exports = require("http");
+module.exports = require("https");
 
 /***/ })
 /******/ ]);

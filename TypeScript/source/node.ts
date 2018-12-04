@@ -9,9 +9,11 @@
 'use strict';
 
 import { Pgp } from './core/pgp.js';
-import * as http from 'http';
+import * as https from 'https';
+import { IncomingMessage } from 'http';
 
 declare let openpgp: typeof OpenPGP;
+declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string;
 
 const KEY_2048 = `-----BEGIN PGP PRIVATE KEY BLOCK-----
 Version: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption
@@ -208,7 +210,7 @@ const newBigString = (mb: number): string => {
   return new Array(mb * 1024 * 1024 / 2).join('x'); // in js, each character is a 16-bit value
 }
 
-const handleReq = async (r: http.IncomingMessage): Promise<string> => {
+const handleReq = async (r: IncomingMessage): Promise<string> => {
   if (r.url === '/version') {
     return JSON.stringify(process.versions);
   } else if (r.url === '/hash') {
@@ -272,13 +274,11 @@ const testEncryptDecrypt = async (privateKeyArmored: string, data: string) => {
 
 }
 
-const versions_server = http.createServer((request, response) => {
+https.createServer({ key: NODE_SSL_KEY, cert: NODE_SSL_CRT, ca: NODE_SSL_CA }, (request, response) => {
   handleReq(request).then((r) => {
     console.log(r);
     response.end(r);
   }).catch((e) => {
     response.end(fmtErr(e));
   });
-});
-
-versions_server.listen(3000, 'localhost');
+}).listen(3000, 'localhost');
