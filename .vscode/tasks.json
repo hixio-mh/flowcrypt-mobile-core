@@ -20,6 +20,12 @@
       "script": "_buildWrap",
       "path": "TypeScript/",
       "problemMatcher": []
+    },
+    {
+      "type": "npm",
+      "script": "deploy",
+      "path": "TypeScript/",
+      "problemMatcher": []
     }
   ]
 }
