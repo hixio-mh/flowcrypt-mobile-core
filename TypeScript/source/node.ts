@@ -13,7 +13,7 @@ import * as https from 'https';
 import { IncomingMessage } from 'http';
 
 declare let openpgp: typeof OpenPGP;
-declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string;
+declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string;
 
 const KEY_2048 = `-----BEGIN PGP PRIVATE KEY BLOCK-----
 Version: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption
@@ -274,7 +274,7 @@ const testEncryptDecrypt = async (privateKeyArmored: string, data: string) => {
 
 }
 
-https.createServer({ key: NODE_SSL_KEY, cert: NODE_SSL_CRT, ca: NODE_SSL_CA }, (request, response) => {
+https.createServer({ key: NODE_SSL_KEY, cert: NODE_SSL_CRT }, (request, response) => {
   handleReq(request).then((r) => {
     console.log(r);
     response.end(r);

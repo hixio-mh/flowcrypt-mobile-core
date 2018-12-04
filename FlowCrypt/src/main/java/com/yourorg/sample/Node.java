@@ -50,41 +50,6 @@ class NativeNodeWrapper {
     System.loadLibrary("node");
   }
 
-  private static String SSL_CA = "-----BEGIN CERTIFICATE-----\n" +
-      "MIIF2jCCA8KgAwIBAgIJAPlUAZVi0YciMA0GCSqGSIb3DQEBCwUAMIGBMQswCQYD\n" +
-      "VQQGEwJISzESMBAGA1UECAwJSG9uZyBLb25nMRIwEAYDVQQHDAlIb25nIEtvbmcx\n" +
-      "GjAYBgNVBAoMEUZsb3dDcnlwdCBMaW1pdGVkMRYwFAYDVQQLDA1ub2RlanMtbW9i\n" +
-      "aWxlMRYwFAYDVQQDDA1ub2RlanMtbW9iaWxlMB4XDTE4MTIwNDE3MjUzMFoXDTQ2\n" +
-      "MDQyMTE3MjUzMFowgYExCzAJBgNVBAYTAkhLMRIwEAYDVQQIDAlIb25nIEtvbmcx\n" +
-      "EjAQBgNVBAcMCUhvbmcgS29uZzEaMBgGA1UECgwRRmxvd0NyeXB0IExpbWl0ZWQx\n" +
-      "FjAUBgNVBAsMDW5vZGVqcy1tb2JpbGUxFjAUBgNVBAMMDW5vZGVqcy1tb2JpbGUw\n" +
-      "ggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDE+pU5cCe8mzm6uMrs1GI5\n" +
-      "ze98lLrTXht8+VmFbE1don+Hz4Sw6iZ31JwSai1+CpsCWwoCM3C8WRHnOkgjDm3l\n" +
-      "gZQJsOS+9e9uHHrhLfNwd2/uVKja/uU81atpcNoNQ1C74Utx0ance/W2DbHTN/jb\n" +
-      "Z3c42fhjs/7f6GyKnNALsC8mod1XkRPJQRuYwMqNTchwOHUMCzIUgUGbPuXfOnpQ\n" +
-      "Ig7b99I5fzPkQ8Y5dmy6zmTrtCwuE8NmGs7XbmsNqWuyayTnXosGuZ4ZZSWOkHdO\n" +
-      "Lcf8mMTUuHolCXlNejMl3LN36qWonMgEYO+jmuimpNx1qPHUaaxP1jI8bNVnOcUm\n" +
-      "B2blJQ0WKyhrTpnZy7sv6oiHdbE26HWLHm4db3XB1J/meIKyVJSopt+HnshtoC6E\n" +
-      "Ldg6to+mOWVHw+W1/WWfoev12tloVTWsUCDCA5DMYXXUGgf80hYlrQGQkzjZTIth\n" +
-      "uofL9IfgWD7s4SQ1tmOp8PbdmFNnely7vEEqekVlXHC7HSnCa4pF+VUu/fX5SOsC\n" +
-      "NrLvKpFO4YbKdIj2t8PBe+USpmtV/4mm1h7MQF3b/Qc3Chy1UlzHlVG7KEJv8qID\n" +
-      "ZGY2/zHtWkRC5OynOaKfY25lV2wZiTzTYM/N8nOA5c6HwojW43K7csKTXg6vPBuY\n" +
-      "6Cu5Azfn5wxKlAvXbEadIQIDAQABo1MwUTAdBgNVHQ4EFgQUiAY4wQecjkZ19eLn\n" +
-      "ZFwziXxQWNswHwYDVR0jBBgwFoAUiAY4wQecjkZ19eLnZFwziXxQWNswDwYDVR0T\n" +
-      "AQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAgEAJQZFeMOF5NXPD7QBHLQSzj0C\n" +
-      "Zr7fSI72qFUbHKur5jFQR8vxepFBOGOGATvcqPQR90CUbKTfQssY/JrvY+TjysAR\n" +
-      "dm9KjWdb0Ps0VzHt4MbpEdk0zCYBBugIubtHkYjsW1aU4KHDU4bES2oqn821eegI\n" +
-      "AJdnYnWsCq0bcwQysrHnvFajeUSr9eBTR6baPCXyQqaR+h9ZXWI8LL9T6qD4sBSS\n" +
-      "nkOcUMpPuZAqA8jdECfPU4JSevvxSOpRR7LQiI63vUyYQIzZ6hmFcyKrqjUg8rnk\n" +
-      "MPtJ84ympSD4hNzXie1U319H6CqWYL5XuaW1lvQuLisabEyw2sJ5E5MuuyUxRw0w\n" +
-      "tSZ7fj22t0SXnKpoZOOn+fNw+YzpQWxek1iLkJKDnsqQrDPB2bCbntkKWdx6jtPg\n" +
-      "n5yTTeoZ9j4JbRT3A1K5YivujTWuJLbRLz1qSyMuPWN+SXLNenPeQOjg4iVnEPoN\n" +
-      "sRmjx7K9RZbEDR1V9bpn4wNSuKprVVmD1WIPZvm/MwpfagtdY+/tZTiekn8GDElF\n" +
-      "oGfaJM32xBH9cqLFTjEm6yucTk+V7WrkNJOBoA+xJNGDKNE7i/udTZHWpQotLKzO\n" +
-      "g8px0Y5y4ssGljVvmpgkUVUjuDY1SCMNCSmLcVQ7D6a8M1o+ez2EJKdMfRxwQAkl\n" +
-      "pUZ5Y50QBatTK7U+oU0=\n" +
-      "-----END CERTIFICATE-----\n";
-
   private static String DEBUG_SSL_CRT = "-----BEGIN CERTIFICATE-----\n" +
       "MIIESDCCAjACCQDJbepQvI1QejANBgkqhkiG9w0BAQsFADCBgTELMAkGA1UEBhMC\n" +
       "SEsxEjAQBgNVBAgMCUhvbmcgS29uZzESMBAGA1UEBwwJSG9uZyBLb25nMRowGAYD\n" +
@@ -145,7 +110,7 @@ class NativeNodeWrapper {
   static SSLSocketFactory getCustomCaTlsSocketFactory() throws CertificateException, KeyStoreException, NoSuchAlgorithmException, IOException, KeyManagementException {
     if(sslContext == null) {
       CertificateFactory cf = CertificateFactory.getInstance("X.509");
-      Certificate ca = cf.generateCertificate(new ByteArrayInputStream(SSL_CA.getBytes()));
+      Certificate ca = cf.generateCertificate(new ByteArrayInputStream(DEBUG_SSL_CRT.getBytes()));
       KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
       keyStore.load(null, null);
       keyStore.setCertificateEntry("ca", ca);
@@ -181,7 +146,6 @@ class NativeNodeWrapper {
   private static String getJavaScriptSource(AssetManager am) {
     try {
       String src = "";
-      src += jsInitConst("NODE_SSL_CA", SSL_CA);
       src += jsInitConst("NODE_SSL_CRT", DEBUG_SSL_CRT);
       src += jsInitConst("NODE_SSL_KEY", DEBUG_SSL_KEY);
       System.out.println(src);

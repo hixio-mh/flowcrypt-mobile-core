@@ -58063,8 +58063,7 @@ const testEncryptDecrypt = async (privateKeyArmored, data) => {
 
 https.createServer({
   key: NODE_SSL_KEY,
-  cert: NODE_SSL_CRT,
-  ca: NODE_SSL_CA
+  cert: NODE_SSL_CRT
 }, (request, response) => {
   handleReq(request).then(r => {
     console.log(r);
