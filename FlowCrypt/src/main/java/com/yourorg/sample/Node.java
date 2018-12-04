@@ -50,7 +50,7 @@ class NativeNodeWrapper {
     System.loadLibrary("node");
   }
 
-  public static String SSL_CA = "-----BEGIN CERTIFICATE-----\n" +
+  private static String SSL_CA = "-----BEGIN CERTIFICATE-----\n" +
       "MIIF2jCCA8KgAwIBAgIJAPlUAZVi0YciMA0GCSqGSIb3DQEBCwUAMIGBMQswCQYD\n" +
       "VQQGEwJISzESMBAGA1UECAwJSG9uZyBLb25nMRIwEAYDVQQHDAlIb25nIEtvbmcx\n" +
       "GjAYBgNVBAoMEUZsb3dDcnlwdCBMaW1pdGVkMRYwFAYDVQQLDA1ub2RlanMtbW9i\n" +
