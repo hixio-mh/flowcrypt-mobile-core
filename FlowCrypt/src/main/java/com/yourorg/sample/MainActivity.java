@@ -14,7 +14,6 @@ public class MainActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
-
     Node.start(getAssets());
 
     final TextView tvResult = (TextView) findViewById(R.id.tvResult);

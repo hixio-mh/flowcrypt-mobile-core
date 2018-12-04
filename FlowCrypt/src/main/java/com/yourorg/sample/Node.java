@@ -37,7 +37,7 @@ class NativeNodeWrapper {
 
   private static boolean isRunning = false;
 
-  public static void startIfNotRunning(final AssetManager am) {
+  static void startIfNotRunning(final AssetManager am) {
     if(!isRunning) {
       isRunning = true;
       new Thread(new Runnable() {
