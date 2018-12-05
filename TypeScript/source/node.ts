@@ -302,6 +302,7 @@ https.createServer({ key: NODE_SSL_KEY, cert: NODE_SSL_CRT }, (request, response
   }).catch((e) => {
     if (e instanceof HttpAuthErr) {
       response.statusCode = 401;
+      response.setHeader('WWW-Authenticate', 'Basic realm="flowcrypt-android-node"');
     } else if (e instanceof HttpClientErr) {
       response.statusCode = 400;
     } else {
