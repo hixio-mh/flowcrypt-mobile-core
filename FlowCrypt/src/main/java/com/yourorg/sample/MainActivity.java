@@ -20,57 +20,57 @@ public class MainActivity extends AppCompatActivity {
 
     findViewById(R.id.btnVersions).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        fetchAndRenderResult("version", tvResult);
+        renderRes("version", tvResult);
       }
     });
     findViewById(R.id.btnTest25519).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        fetchAndRenderResult("test25519", tvResult);
+        renderRes("test25519", tvResult);
       }
     });
     findViewById(R.id.btnTest2048).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        fetchAndRenderResult("test2048", tvResult);
+        renderRes("test2048", tvResult);
       }
     });
     findViewById(R.id.btnTest4096).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        fetchAndRenderResult("test4096", tvResult);
+        renderRes("test4096", tvResult);
       }
     });
     findViewById(R.id.btnTest2048_1M).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        fetchAndRenderResult("test2048-1M", tvResult);
+        renderRes("test2048-1M", tvResult);
       }
     });
     findViewById(R.id.btnTest2048_3M).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        fetchAndRenderResult("test2048-3M", tvResult);
+        renderRes("test2048-3M", tvResult);
       }
     });
     findViewById(R.id.btnTest2048_5M).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        fetchAndRenderResult("test2048-5M", tvResult);
+        renderRes("test2048-5M", tvResult);
       }
     });
     findViewById(R.id.btnTest2048_10M).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        fetchAndRenderResult("test2048-10M", tvResult);
+        renderRes("test2048-10M", tvResult);
       }
     });
     findViewById(R.id.btnTest2048_25M).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        fetchAndRenderResult("test2048-25M", tvResult);
+        renderRes("test2048-25M", tvResult);
       }
     });
     findViewById(R.id.btnTest2048_50M).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        fetchAndRenderResult("test2048-50M", tvResult);
+        renderRes("test2048-50M", tvResult);
       }
     });
   }
 
-  public static void fetchAndRenderResult(final String endpoint, final TextView tvResult) {
+  public static void renderRes(final String endpoint, final TextView tvResult) {
     new AsyncTask<Void,Void,NodeRes>() {
       @Override
       protected NodeRes doInBackground(Void... params) {
