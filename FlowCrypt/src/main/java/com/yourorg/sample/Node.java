@@ -10,13 +10,10 @@ import org.spongycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.spongycastle.cert.X509CertificateHolder;
 import org.spongycastle.cert.X509v3CertificateBuilder;
 import org.spongycastle.jce.provider.BouncyCastleProvider;
-import org.spongycastle.operator.ContentSigner;
-import org.spongycastle.operator.OperatorCreationException;
 import org.spongycastle.operator.jcajce.JcaContentSignerBuilder;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
@@ -26,14 +23,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.Security;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Date;
@@ -47,25 +40,26 @@ import javax.xml.bind.DatatypeConverter;
 
 public class Node {
 
-  private static NativeNodeWrapper nativeWrapper;
+  private static NativeNode nativeNode;
 
   static {
     try {
-      nativeWrapper = new NativeNodeWrapper();
+      nativeNode = new NativeNode();
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
 
   public static void start(AssetManager am) {
-    nativeWrapper.startIfNotRunning(am);
+    nativeNode.startIfNotRunning(am);
   }
 
   public static String request(String endpoint) {
     try {
       URL url = new URL("https://localhost:3000/" + endpoint);
       HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-      conn.setSSLSocketFactory(nativeWrapper.getCustomCaTlsSocketFactory());
+      conn.setRequestProperty("Authorization", nativeNode.getAuthHeader());
+      conn.setSSLSocketFactory(nativeNode.getSocketFactory());
       return new BufferedReader(new InputStreamReader(conn.getInputStream())).lines().collect(Collectors.joining());
     } catch (Exception e) {
       e.printStackTrace();
@@ -75,7 +69,7 @@ public class Node {
 
 }
 
-class NativeNodeWrapper {
+class NativeNode {
 
   static { // Used to load the 'native-lib' library on application startup.s
     System.loadLibrary("native-lib");
@@ -83,28 +77,22 @@ class NativeNodeWrapper {
   }
 
   private boolean isRunning = false;
-  private SSLContext sslContext = null;
-  private Pems pems = null;
+  private Secrets secrets = null;
 
-  NativeNodeWrapper() throws Exception {
+  NativeNode() throws Exception {
     try {
-      pems = SslCertificateFactory.newPems();
-      CertificateFactory cf = CertificateFactory.getInstance("X.509");
-      Certificate cert = cf.generateCertificate(new ByteArrayInputStream(pems.crt.getBytes()));
-      KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-      keyStore.load(null, null);
-      keyStore.setCertificateEntry("ca", cert);
-      TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-      tmf.init(keyStore);
-      sslContext = SSLContext.getInstance("TLS");
-      sslContext.init(null, tmf.getTrustManagers(), null);
+      secrets = SecretsFactory.generate();
     } catch(Exception e) {
-      throw new Exception("Could not initialize NativeNodeWrapper TLS", e);
+      throw new Exception("Could not initialize NativeNode secrets", e);
     }
   }
 
-  SSLSocketFactory getCustomCaTlsSocketFactory() {
-    return sslContext.getSocketFactory();
+  SSLSocketFactory getSocketFactory() {
+    return secrets.sslContext.getSocketFactory();
+  }
+
+  String getAuthHeader() {
+    return secrets.authHeader;
   }
 
   void startIfNotRunning(final AssetManager am) {
@@ -134,8 +122,9 @@ class NativeNodeWrapper {
 
   private String getJsSrc(AssetManager am) throws Exception {
     String src = "";
-    src += jsInitConst("NODE_SSL_CRT", pems.crt);
-    src += jsInitConst("NODE_SSL_KEY", pems.key);
+    src += jsInitConst("NODE_SSL_CRT", secrets.crt);
+    src += jsInitConst("NODE_SSL_KEY", secrets.key);
+    src += jsInitConst("NODE_AUTH_HEADER", secrets.authHeader);
     src += IOUtils.toString(am.open("js/flowcrypt-android.js"), StandardCharsets.UTF_8);
     return src;
   }
@@ -149,23 +138,29 @@ class NativeNodeWrapper {
 
 }
 
-class Pems {
+class Secrets {
   String key;
   String crt;
+  String authPwd;
+  String authHeader;
+  SSLContext sslContext;
 }
 
-class SslCertificateFactory {
+class SecretsFactory {
+
+  static private SecureRandom secureRandom = new SecureRandom();
 
   static {
     BouncyCastleProvider prov = new org.spongycastle.jce.provider.BouncyCastleProvider();
     Security.addProvider(prov);
   }
 
-  static Pems newPems() throws NoSuchAlgorithmException, CertificateException, IOException, OperatorCreationException, NoSuchProviderException {
-    KeyPair pair;
-    KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
-    gen.initialize(2048, new SecureRandom());
-    pair = gen.generateKeyPair();
+  static Secrets generate() throws Exception {
+    // new keypair
+    KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+    keyGen.initialize(2048, secureRandom);
+    KeyPair pair = keyGen.generateKeyPair();
+    // new self-signed ssl cert
     X500Name sub = new X500Name("CN=localhost");
     BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
     Date from = new Date(System.currentTimeMillis());
@@ -174,16 +169,27 @@ class SslCertificateFactory {
     X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(sub, serial, from, to, sub, info);
     KeyUsage ku = new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.dataEncipherment | KeyUsage.keyAgreement);
     certBuilder.addExtension(Extension.keyUsage, true, ku);
-    JcaContentSignerBuilder builder = new JcaContentSignerBuilder("SHA256WithRSAEncryption");
-    ContentSigner signer = builder.build(pair.getPrivate());
-    X509CertificateHolder holder = certBuilder.build(signer);
+    JcaContentSignerBuilder signerBuilder = new JcaContentSignerBuilder("SHA256WithRSAEncryption");
+    X509CertificateHolder holder = certBuilder.build(signerBuilder.build(pair.getPrivate()));
     InputStream is = new ByteArrayInputStream(holder.getEncoded());
     CertificateFactory cf = CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME);
     X509Certificate crt = (X509Certificate) cf.generateCertificate(is);
-    Pems pems = new Pems();
-    pems.crt = crtToString(crt);
-    pems.key = keyToString(pair.getPrivate());
-    return pems;
+    // new sslContext for http client that accepts this self-signed cert
+    KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+    keyStore.load(null, null);
+    keyStore.setCertificateEntry("ca", crt);
+    TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+    tmf.init(keyStore);
+    SSLContext sslContext = SSLContext.getInstance("TLS");
+    sslContext.init(null, tmf.getTrustManagers(), null);
+    // return all that plus new passwords
+    Secrets secrets = new Secrets();
+    secrets.crt = crtToString(crt);
+    secrets.key = keyToString(pair.getPrivate());
+    secrets.sslContext = sslContext;
+    secrets.authPwd = genPwd();
+    secrets.authHeader = "Basic " + DatatypeConverter.printBase64Binary(secrets.authPwd.getBytes());
+    return secrets;
   }
 
   private static String crtToString(X509Certificate cert) throws CertificateEncodingException {
@@ -200,6 +206,12 @@ class SslCertificateFactory {
     sw.write(DatatypeConverter.printBase64Binary(prv.getEncoded()).replaceAll("(.{64})", "$1\n"));
     sw.write("\n-----END RSA PRIVATE KEY-----\n");
     return sw.toString();
+  }
+
+  private static String genPwd() {
+    byte bytes[] = new byte[32];
+    secureRandom.nextBytes(bytes);
+    return DatatypeConverter.printBase64Binary(bytes);
   }
 
 }
