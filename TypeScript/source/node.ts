@@ -13,7 +13,7 @@ import * as https from 'https';
 import { IncomingMessage } from 'http';
 
 declare let openpgp: typeof OpenPGP;
-declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string;
+declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_AUTH_HEADER: string;
 
 const KEY_2048 = `-----BEGIN PGP PRIVATE KEY BLOCK-----
 Version: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption
@@ -210,7 +210,16 @@ const newBigString = (mb: number): string => {
   return new Array(mb * 1024 * 1024 / 2).join('x'); // in js, each character is a 16-bit value
 }
 
+class HttpAuthErr extends Error { }
+class HttpClientErr extends Error { }
+
 const handleReq = async (r: IncomingMessage): Promise<string> => {
+  if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT) {
+    throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_KEY or NODE_SSL_CRT');
+  }
+  if (r.headers['authorization'] !== NODE_AUTH_HEADER) {
+    throw new HttpAuthErr('Wrong Authorization');
+  }
   if (r.url === '/version') {
     return JSON.stringify(process.versions);
   } else if (r.url === '/hash') {
@@ -233,9 +242,8 @@ const handleReq = async (r: IncomingMessage): Promise<string> => {
     return await testEncryptDecrypt(KEY_2048, newBigString(25));
   } else if (r.url === '/test2048-50M') {
     return await testEncryptDecrypt(KEY_2048, newBigString(50));
-  } else {
-    return `unknown path ${r.url}`;
   }
+  throw new HttpClientErr(`unknown path ${r.url}`);
 }
 
 const testEncryptDecrypt = async (privateKeyArmored: string, data: string) => {
@@ -279,6 +287,13 @@ https.createServer({ key: NODE_SSL_KEY, cert: NODE_SSL_CRT }, (request, response
     console.log(r);
     response.end(r);
   }).catch((e) => {
+    if (e instanceof HttpAuthErr) {
+      response.statusCode = 401;
+    } else if (e instanceof HttpClientErr) {
+      response.statusCode = 400;
+    } else {
+      response.statusCode = 500;
+    }
     response.end(fmtErr(e));
   });
 }).listen(3000, 'localhost');

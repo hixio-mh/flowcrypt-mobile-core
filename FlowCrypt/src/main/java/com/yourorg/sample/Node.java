@@ -3,6 +3,8 @@ package com.yourorg.sample;
 import android.content.res.AssetManager;
 
 import org.apache.commons.io.IOUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.spongycastle.asn1.x500.X500Name;
 import org.spongycastle.asn1.x509.Extension;
 import org.spongycastle.asn1.x509.KeyUsage;
@@ -14,6 +16,7 @@ import org.spongycastle.operator.jcajce.JcaContentSignerBuilder;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
@@ -29,12 +32,12 @@ import java.security.Security;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.stream.Collectors;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 import javax.xml.bind.DatatypeConverter;
 
@@ -54,18 +57,90 @@ public class Node {
     nativeNode.startIfNotRunning(am);
   }
 
-  public static String request(String endpoint) {
+  public static NodeRes request(String endpoint) {
+    return nativeNode.request(endpoint);
+  }
+
+}
+
+class NodeError extends Exception {
+
+  static NodeError fromConnection(HttpsURLConnection conn) {
+    int errCode;
     try {
-      URL url = new URL("https://localhost:3000/" + endpoint);
-      HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-      conn.setRequestProperty("Authorization", nativeNode.getAuthHeader());
-      conn.setSSLSocketFactory(nativeNode.getSocketFactory());
-      return new BufferedReader(new InputStreamReader(conn.getInputStream())).lines().collect(Collectors.joining());
-    } catch (Exception e) {
-      e.printStackTrace();
-      return e.toString();
+      errCode = conn.getResponseCode();
+    } catch (IOException e) {
+      return new NodeError(0, e.getMessage(), null);
+    }
+    String res = new BufferedReader(new InputStreamReader(conn.getErrorStream())).lines().collect(Collectors.joining());
+    try {
+      JSONObject obj = new JSONObject(res);
+      JSONObject error = obj.getJSONObject("error");
+      String stack = error.getString("stack");
+      return new NodeError(errCode, error.getString("message"), newStackTraceElement(stack));
+    } catch (JSONException e) {
+      return new NodeError(errCode, "Node http err without err obj",  newStackTraceElement("[RES]" + res));
     }
   }
+
+  private NodeError(int httpErrCode, String errMsg, StackTraceElement addStackTraceElement) {
+    super(Integer.valueOf(httpErrCode).toString() + " " + errMsg);
+    StackTraceElement[] origStack = getStackTrace();
+    StackTraceElement[] newStack = Arrays.copyOf(origStack, origStack.length + 1);
+    newStack[origStack.length] = addStackTraceElement;
+    setStackTrace(newStack);
+  }
+
+  static private StackTraceElement newStackTraceElement(String data) {
+    return new StackTraceElement(
+      "==========================================",
+      "\n[node.js] " + data,
+      "flowcrypt-android.js",
+      -1
+    );
+  }
+
+}
+
+class NodeRes {
+
+  private Exception err;
+  private InputStream data;
+  private Boolean errWasTested = false;
+  public long ms;
+
+  NodeRes(Exception err, InputStream inputStream, long startTime) {
+    this.err = err;
+    this.data = inputStream;
+    this.ms = System.currentTimeMillis() - startTime;;
+  }
+
+  public Exception getErr() {
+    errWasTested = true;
+    return err;
+  }
+
+  public InputStream getInputStream() {
+    if(!errWasTested) {
+      throw new Error("NodeRes getErr() must be called before accessing data");
+    }
+    return data;
+  }
+
+  public BufferedReader getBufferedReader() {
+    if(data == null) {
+      return null;
+    }
+    return new BufferedReader(new InputStreamReader(getInputStream()));
+  }
+
+  public String getString() {
+    if(data == null) {
+      return null;
+    }
+    return getBufferedReader().lines().collect(Collectors.joining());
+  }
+
 
 }
 
@@ -87,12 +162,23 @@ class NativeNode {
     }
   }
 
-  SSLSocketFactory getSocketFactory() {
-    return secrets.sslContext.getSocketFactory();
-  }
-
-  String getAuthHeader() {
-    return secrets.authHeader;
+  NodeRes request(String endpoint) {
+    long startTime = System.currentTimeMillis();
+    try {
+      URL url = new URL("https://localhost:3000/" + endpoint);
+      HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+      conn.setRequestProperty("Authorization", secrets.authHeader);
+      conn.setSSLSocketFactory(secrets.sslContext.getSocketFactory());
+      conn.connect();
+      if(conn.getResponseCode() == 200) {
+        return new NodeRes(null, conn.getInputStream(), startTime);
+      } else {
+        return new NodeRes(NodeError.fromConnection(conn), null, startTime);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      return new NodeRes(e, null, startTime);
+    }
   }
 
   void startIfNotRunning(final AssetManager am) {

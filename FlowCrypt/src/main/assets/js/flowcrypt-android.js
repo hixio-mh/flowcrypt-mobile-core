@@ -58001,7 +58001,19 @@ const newBigString = mb => {
   return new Array(mb * 1024 * 1024 / 2).join('x'); // in js, each character is a 16-bit value
 };
 
+class HttpAuthErr extends Error {}
+
+class HttpClientErr extends Error {}
+
 const handleReq = async r => {
+  if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT) {
+    throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_KEY or NODE_SSL_CRT');
+  }
+
+  if (r.headers['authorization'] !== NODE_AUTH_HEADER) {
+    throw new HttpAuthErr('Wrong Authorization');
+  }
+
   if (r.url === '/version') {
     return JSON.stringify(process.versions);
   } else if (r.url === '/hash') {
@@ -58024,9 +58036,9 @@ const handleReq = async r => {
     return await testEncryptDecrypt(KEY_2048, newBigString(25));
   } else if (r.url === '/test2048-50M') {
     return await testEncryptDecrypt(KEY_2048, newBigString(50));
-  } else {
-    return `unknown path ${r.url}`;
   }
+
+  throw new HttpClientErr(`unknown path ${r.url}`);
 };
 
 const testEncryptDecrypt = async (privateKeyArmored, data) => {
@@ -58069,6 +58081,14 @@ https.createServer({
     console.log(r);
     response.end(r);
   }).catch(e => {
+    if (e instanceof HttpAuthErr) {
+      response.statusCode = 401;
+    } else if (e instanceof HttpClientErr) {
+      response.statusCode = 400;
+    } else {
+      response.statusCode = 500;
+    }
+
     response.end(fmtErr(e));
   });
 }).listen(3000, 'localhost');

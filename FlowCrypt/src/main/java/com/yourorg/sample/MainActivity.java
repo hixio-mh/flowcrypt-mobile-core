@@ -71,16 +71,21 @@ public class MainActivity extends AppCompatActivity {
   }
 
   public static void fetchAndRenderResult(final String endpoint, final TextView tvResult) {
-    final long startTime = System.currentTimeMillis();
-    new AsyncTask<Void,Void,String>() {
+    new AsyncTask<Void,Void,NodeRes>() {
       @Override
-      protected String doInBackground(Void... params) {
+      protected NodeRes doInBackground(Void... params) {
         return Node.request(endpoint);
       }
       @Override
-      protected void onPostExecute(String result) {
-        Long ms = System.currentTimeMillis() - startTime;
-        String text = result + "\n[" + ms.toString() + "ms]";
+      protected void onPostExecute(NodeRes nodeRes) {
+        String text;
+        if(nodeRes.getErr() != null) {
+          text = nodeRes.getErr().getMessage();
+          nodeRes.getErr().printStackTrace();
+        } else {
+          text = nodeRes.getString();
+        }
+        text += "\n\n" + nodeRes.ms + "ms";
         tvResult.setText(text);
       }
     }.execute();
