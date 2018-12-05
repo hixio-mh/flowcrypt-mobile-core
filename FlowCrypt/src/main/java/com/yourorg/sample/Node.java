@@ -238,7 +238,6 @@ class NativeNode {
       conn.setDoOutput(true);
       conn.setSSLSocketFactory(secrets.sslContext.getSocketFactory());
       HttpEntity parts = builder.build();
-//      conn.addRequestProperty("Content-length", String.valueOf(parts.getContentLength()));
       conn.addRequestProperty(parts.getContentType().getName(), parts.getContentType().getValue());
       OutputStream os = conn.getOutputStream();
       parts.writeTo(os);

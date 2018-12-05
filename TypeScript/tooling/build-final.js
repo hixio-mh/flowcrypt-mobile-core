@@ -2,7 +2,8 @@
 const fs = require('fs');
 
 const wipPath = 'build/final/flowcrypt-android-wip.js';
-const finalPath = 'build/final/flowcrypt-android.js';
+const finalPath = 'build/final/flowcrypt-android-prod.js';
+const finalPathDev = 'build/final/flowcrypt-android-dev.js';
 
 const wipSrc = fs.readFileSync(wipPath).toString();
 
@@ -33,5 +34,6 @@ ${fixedImportsSrc}
 }
 `;
 
+fs.writeFileSync(finalPathDev, fs.readFileSync('tooling/build-final-dev-prepend.txt').toString() + finalSrc);
 fs.writeFileSync(finalPath, finalSrc);
 fs.unlinkSync(wipPath);

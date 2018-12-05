@@ -26,7 +26,7 @@
     "_buildFinalWip": "cat build/bundles/openpgp-bundle.js build/bundles/flowcrypt-bundle.js > build/final/flowcrypt-android-wip.js",
     "_buildFinal": "node tooling/build-final.js",
     "build": "npm run-script _buildTs && npm run-script _buildBundles && npm run-script _buildFinalWip && npm run-script _buildFinal",
-    "deploy": "npm run-script build && cp build/final/flowcrypt-android.js ../FlowCrypt/src/main/assets/js/flowcrypt-android.js",
+    "deploy": "npm run-script build && cp build/final/flowcrypt-android-prod.js ../FlowCrypt/src/main/assets/js/flowcrypt-android.js",
     "pretest": "echo skipping pretest",
     "test": "echo tests not implemented yet",
     "preupdateCore": "rm -rf source/core source/lib",
