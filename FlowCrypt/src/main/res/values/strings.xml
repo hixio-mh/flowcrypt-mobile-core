@@ -4,4 +4,13 @@
     <string name="test_rsa_2048">2048</string>
     <string name="test_ecc_25519">25519</string>
     <string name="versions">VER</string>
+    <string name="encrypt">encrypt</string>
+    <string name="decrypt">decrypt</string>
+    <string name="_1m">1M</string>
+    <string name="_3m">3M</string>
+    <string name="_5m">5M</string>
+    <string name="_10m">10M</string>
+    <string name="_25m">25M</string>
+    <string name="_50m">50M</string>
+    <string name="data_to_encrypt_or_decrypt">data to encrypt or decrypt</string>
 </resources>

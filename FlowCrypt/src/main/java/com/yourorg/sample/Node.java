@@ -3,6 +3,10 @@ package com.yourorg.sample;
 import android.content.res.AssetManager;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.spongycastle.asn1.x500.X500Name;
@@ -19,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.StringWriter;
 import java.math.BigInteger;
 import java.net.URL;
@@ -57,8 +62,43 @@ public class Node {
     nativeNode.startIfNotRunning(am);
   }
 
-  public static NodeRes request(String endpoint) {
-    return nativeNode.request(endpoint);
+  public static NodeEncryptRes encrypt(byte[] data, String[] pubKeys) {
+    try {
+      JSONObject req = new JSONObject();
+      JSONArray pubKeysJsonArr = new JSONArray();
+      for(String pubKey: pubKeys) {
+        pubKeysJsonArr.put(pubKey);
+      }
+      req.put("pubKeys", pubKeysJsonArr);
+      return nativeNode.request("encrypt", req, data).convertTo(NodeEncryptRes.class);
+    } catch(JSONException e) {
+      throw new RuntimeException("Data could not be stringified as JSON", e);
+    }
+  }
+
+//  public static NodeRes encrypt(byte[] data, String[] pubKeys, String filename) {
+//
+//  }
+//
+//  public static NodeRes encrypt(byte[] data, String pwd) {
+//
+//  }
+//
+//  public static NodeRes encrypt(byte[] data, String pwd, String filename) {
+//
+//  }
+//
+//  public static NodeRes decrypt(byte[] data, String[] privateKeys, String[] passphrases) {
+//
+//  }
+//
+//  public static NodeRes decrypt(byte[] data, String pwd) {
+//
+//  }
+
+  @Deprecated
+  public static NodeRes rawRequest(String endpoint) {
+    return nativeNode.request(endpoint, null, null);
   }
 
 }
@@ -109,10 +149,19 @@ class NodeRes {
   private Boolean errWasTested = false;
   public long ms;
 
-  NodeRes(Exception err, InputStream inputStream, long startTime) {
+  public NodeRes(Exception err, InputStream inputStream, long ms) {
     this.err = err;
     this.data = inputStream;
-    this.ms = System.currentTimeMillis() - startTime;;
+    this.ms = ms;
+  }
+
+  public <T> T convertTo(Class<T> cls) {
+    try {
+      Class[] argClasses = new Class[]{Exception.class, InputStream.class, long.class};
+      return cls.getDeclaredConstructor(argClasses).newInstance(this.getErr(), this.getInputStream(), this.ms);
+    } catch(Exception e) {
+      throw new RuntimeException("NodeRes wrong constructor definition", e);
+    }
   }
 
   public Exception getErr() {
@@ -141,7 +190,18 @@ class NodeRes {
     return getBufferedReader().lines().collect(Collectors.joining());
   }
 
+}
 
+class NodeDecryptRes extends NodeRes {
+  public NodeDecryptRes(Exception err, InputStream inputStream, long startTime) {
+    super(err, inputStream, startTime);
+  }
+}
+
+class NodeEncryptRes extends NodeRes {
+  public NodeEncryptRes(Exception err, InputStream inputStream, long startTime) {
+    super(err, inputStream, startTime);
+  }
 }
 
 class NativeNode {
@@ -162,22 +222,35 @@ class NativeNode {
     }
   }
 
-  NodeRes request(String endpoint) {
+  NodeRes request(String endpoint, JSONObject req, byte[] data) {
     long startTime = System.currentTimeMillis();
     try {
+      MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+      builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+      builder.addTextBody("request", req != null ? req.toString() : "{}");
+      builder.addBinaryBody("data", new ByteArrayInputStream(data != null ? data : new byte[0]));
       URL url = new URL("https://localhost:3000/" + endpoint);
       HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+      conn.setRequestMethod("POST");
       conn.setRequestProperty("Authorization", secrets.authHeader);
+      conn.setRequestProperty("Connection", "Keep-Alive");
+      conn.setDoInput(true);
+      conn.setDoOutput(true);
       conn.setSSLSocketFactory(secrets.sslContext.getSocketFactory());
+      HttpEntity parts = builder.build();
+//      conn.addRequestProperty("Content-length", String.valueOf(parts.getContentLength()));
+      conn.addRequestProperty(parts.getContentType().getName(), parts.getContentType().getValue());
+      OutputStream os = conn.getOutputStream();
+      parts.writeTo(os);
       conn.connect();
       if(conn.getResponseCode() == 200) {
-        return new NodeRes(null, conn.getInputStream(), startTime);
+        return new NodeRes(null, conn.getInputStream(), System.currentTimeMillis() - startTime);
       } else {
-        return new NodeRes(NodeError.fromConnection(conn), null, startTime);
+        return new NodeRes(NodeError.fromConnection(conn), null, System.currentTimeMillis() - startTime);
       }
     } catch (Exception e) {
       e.printStackTrace();
-      return new NodeRes(e, null, startTime);
+      return new NodeRes(e, null, System.currentTimeMillis() - startTime);
     }
   }
 

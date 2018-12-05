@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
@@ -17,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
     Node.start(getAssets());
 
     final TextView tvResult = (TextView) findViewById(R.id.tvResult);
+    final EditText etData = (EditText) findViewById(R.id.etData);
 
     findViewById(R.id.btnVersions).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
@@ -68,13 +70,41 @@ public class MainActivity extends AppCompatActivity {
         renderRes("test2048-50M", tvResult);
       }
     });
+    findViewById(R.id.btnEncrypt).setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        encryptAndRender(etData, tvResult);
+      }
+    });
+  }
+
+  public static void encryptAndRender(final EditText etData, final TextView tvResult) {
+    new AsyncTask<Void,Void,NodeEncryptRes>() {
+      @Override
+      protected NodeEncryptRes doInBackground(Void... params) {
+        return Node.encrypt(etData.getText().toString().getBytes(), TestDataFactory.eccPubKeys);
+      }
+      @Override
+      protected void onPostExecute(NodeEncryptRes encryptRes) {
+        String text;
+        if(encryptRes.getErr() != null) {
+          text = encryptRes.getErr().getMessage();
+          encryptRes.getErr().printStackTrace();
+        } else {
+          text = encryptRes.getString();
+        }
+        System.out.println(text);
+        text += "\n\n" + encryptRes.ms + "ms";
+        tvResult.setText(text);
+      }
+    }.execute();
+
   }
 
   public static void renderRes(final String endpoint, final TextView tvResult) {
     new AsyncTask<Void,Void,NodeRes>() {
       @Override
       protected NodeRes doInBackground(Void... params) {
-        return Node.request(endpoint);
+        return Node.rawRequest(endpoint);
       }
       @Override
       protected void onPostExecute(NodeRes nodeRes) {
