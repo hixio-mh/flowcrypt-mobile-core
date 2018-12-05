@@ -58012,54 +58012,72 @@ const parseReq = r => new Promise(resolve => {
   });
   r.on('end', () => {
     resolve({
-      url: r.url || '',
-      request: {},
+      endpoint: 'unknown',
+      request: {
+        not: "implemented"
+      },
       data
     });
   });
 });
 
-const handleReq = async r => {
+const indexHtml = `
+<html><head></head><body>
+<form method="POST" target="_blank" enctype="multipart/form-data">
+  <input type="text" placeholder="endpoint" name="endpoint"> <button type="submit">submit post request</button><br>
+  <textarea name="request" cols="160" rows="4" placeholder="json"></textarea><br>
+  <textarea name="data" cols="160" rows="15" placeholder="data"></textarea><br>
+</form>
+</body></html>`;
+
+const handleReq = async (req, res) => {
   if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT) {
     throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_KEY or NODE_SSL_CRT');
   }
 
-  if (r.headers['authorization'] !== NODE_AUTH_HEADER) {
+  if (req.headers['authorization'] !== NODE_AUTH_HEADER) {
     throw new HttpAuthErr('Wrong Authorization');
   }
 
-  const {
-    url,
-    data
-  } = await parseReq(r);
+  if (req.url === '/' && req.method === 'GET') {
+    res.setHeader('content-type', 'text/html');
+    return indexHtml;
+  }
 
-  if (url === '/version') {
-    return JSON.stringify(process.versions);
-  } else if (url === '/encrypt') {
+  const {
+    endpoint,
+    data
+  } = await parseReq(req);
+
+  if (req.url === '/' && req.method === 'POST') {
     return data || '(no data)';
-  } else if (url === '/hash') {
+  }
+
+  if (endpoint === '/version') {
+    return JSON.stringify(process.versions);
+  } else if (endpoint === '/hash') {
     return pgp_js_1.Pgp.hash.sha256('hello');
-  } else if (url === '/test25519') {
+  } else if (endpoint === '/test25519') {
     return await testEncryptDecrypt(KEY_25519, 'encrypt this string');
-  } else if (url === '/test2048') {
+  } else if (endpoint === '/test2048') {
     return await testEncryptDecrypt(KEY_2048, 'encrypt this string');
-  } else if (url === '/test4096') {
+  } else if (endpoint === '/test4096') {
     return await testEncryptDecrypt(KEY_4096, 'encrypt this string');
-  } else if (url === '/test2048-1M') {
+  } else if (endpoint === '/test2048-1M') {
     return await testEncryptDecrypt(KEY_2048, newBigString(1));
-  } else if (url === '/test2048-3M') {
+  } else if (endpoint === '/test2048-3M') {
     return await testEncryptDecrypt(KEY_2048, newBigString(3));
-  } else if (url === '/test2048-5M') {
+  } else if (endpoint === '/test2048-5M') {
     return await testEncryptDecrypt(KEY_2048, newBigString(5));
-  } else if (url === '/test2048-10M') {
+  } else if (endpoint === '/test2048-10M') {
     return await testEncryptDecrypt(KEY_2048, newBigString(10));
-  } else if (url === '/test2048-25M') {
+  } else if (endpoint === '/test2048-25M') {
     return await testEncryptDecrypt(KEY_2048, newBigString(25));
-  } else if (url === '/test2048-50M') {
+  } else if (endpoint === '/test2048-50M') {
     return await testEncryptDecrypt(KEY_2048, newBigString(50));
   }
 
-  throw new HttpClientErr(`unknown path ${url}`);
+  throw new HttpClientErr(`unknown path ${endpoint}`);
 };
 
 const testEncryptDecrypt = async (privateKeyArmored, data) => {
@@ -58098,8 +58116,7 @@ https.createServer({
   key: NODE_SSL_KEY,
   cert: NODE_SSL_CRT
 }, (request, response) => {
-  handleReq(request).then(r => {
-    console.log(r);
+  handleReq(request, response).then(r => {
     response.end(r);
   }).catch(e => {
     if (e instanceof HttpAuthErr) {
