@@ -213,24 +213,119 @@ const newBigString = (mb: number): string => {
 class HttpAuthErr extends Error { }
 class HttpClientErr extends Error { }
 
-const parseReq = (r: IncomingMessage): Promise<{ endpoint: string, data?: string, request: {} }> => new Promise(resolve => {
-  let data = '';
+const parseReq = (r: IncomingMessage): Promise<{ endpoint: string, data?: string, request: {} }> => new Promise((resolve, reject) => {
+  const contentType = r.headers['content-type'];
+  if (!contentType) {
+    throw new HttpClientErr('could not figure out content type');
+  }
+  const boundary = (contentType.match(/^multipart\/form-data; boundary=(.+)$/) || [])[1];
+  if (!boundary || boundary.length < 5 || boundary.length > 72) {
+    throw new HttpClientErr('could not figure out content type boundary');
+  }
+  const startBoundary = `--${boundary}`;
+  const endBoundary = `--${boundary}--`;
+  let currentlyParsingPartHeaders = false;
+  let currentPartName = '';
+  let chunkLeftover = '';
+  let encounteredEndBoundary = false;
+  let parts: { [partName: string]: string } = {};
   r.on('data', chunk => {
-    data += chunk.toString();
+    // console.log(`[chunk]${chunk.toString()}[/chunk]`);
+    for (const line of chunk.toString().split(/\r?\n/)) {
+      // console.log(`[for currentPartName=${currentPartName}, currentlyParsingPartHeaders=${currentlyParsingPartHeaders}, encounteredEndBoundary=${encounteredEndBoundary}]`);
+      // console.log(`[line]${line}[/line]`);
+      const realLine = chunkLeftover + line;
+      // console.log(`[realLine]${realLine}[/realLine]`);
+      if (realLine === startBoundary) {
+        currentlyParsingPartHeaders = true;
+        chunkLeftover = '';
+        continue;
+      }
+      if (realLine === endBoundary) {
+        encounteredEndBoundary = true;
+        if (parts['endpoint'] && parts['request']) {
+          try {
+            const request = JSON.parse(parts['request']);
+            resolve({ endpoint: parts['endpoint'], request, data: parts['data'] });
+          } catch (e) {
+            reject(new HttpClientErr('cannot parse request part as json'));
+          }
+        } else {
+          reject(new HttpClientErr('missing endpoint or request part'));
+        }
+        break;
+      }
+      if (currentlyParsingPartHeaders) {
+        const contentDispositionMatch = realLine.match(/^Content-Disposition: form-data; name="([a-z]+)"/);
+        if (contentDispositionMatch) {
+          currentPartName = contentDispositionMatch[1];
+          parts[currentPartName] = ''; // initialize part
+          chunkLeftover = '';
+          continue;
+        }
+        if (realLine === 'Content-Type: application/octet-stream' || realLine === 'Content-Type: text/plain') {
+          chunkLeftover = '';
+          continue;
+        }
+        if (realLine === '') {
+          currentlyParsingPartHeaders = false;
+          continue;
+        }
+        chunkLeftover = realLine;
+        continue;
+      }
+      // this is data content
+      if (!parts[currentPartName]) {
+        parts[currentPartName] = realLine;
+      } else {
+        parts[currentPartName] += '\n' + realLine; // add back the \n we stole when splitting buffer
+      }
+    }
   });
   r.on('end', () => {
-    resolve({ endpoint: 'unknown', request: { not: "implemented" }, data });
+    if (!encounteredEndBoundary) {
+      reject(new HttpClientErr('Got to end of stream without encountering ending boundary'));
+    }
   });
 })
 
 const indexHtml = `
 <html><head></head><body>
 <form method="POST" target="_blank" enctype="multipart/form-data">
-  <input type="text" placeholder="endpoint" name="endpoint"> <button type="submit">submit post request</button><br>
+  <input type="text" placeholder="endpoint" name="endpoint"><br>
   <textarea name="request" cols="160" rows="4" placeholder="json"></textarea><br>
-  <textarea name="data" cols="160" rows="15" placeholder="data"></textarea><br>
+  <input name="data" type="file"> <button type="submit">submit post request</button>
 </form>
 </body></html>`;
+
+const delegateReqToEndpoint = async (endpoint: string, request: any, data?: string) => {
+  if (endpoint === 'version') {
+    return JSON.stringify(process.versions);
+  } else if (endpoint === 'encrypt') {
+    return JSON.stringify({ endpoint, data, request });
+  } else if (endpoint === 'hash') {
+    return Pgp.hash.sha256('hello');
+  } else if (endpoint === 'test25519') {
+    return await testEncryptDecrypt(KEY_25519, 'encrypt this string');
+  } else if (endpoint === 'test2048') {
+    return await testEncryptDecrypt(KEY_2048, 'encrypt this string');
+  } else if (endpoint === 'test4096') {
+    return await testEncryptDecrypt(KEY_4096, 'encrypt this string');
+  } else if (endpoint === 'test2048-1M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(1));
+  } else if (endpoint === 'test2048-3M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(3));
+  } else if (endpoint === 'test2048-5M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(5));
+  } else if (endpoint === 'test2048-10M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(10));
+  } else if (endpoint === 'test2048-25M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(25));
+  } else if (endpoint === 'test2048-50M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(50));
+  }
+  throw new HttpClientErr(`unknown endporint: ${endpoint}`);
+}
 
 const handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<string> => {
   if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT) {
@@ -243,34 +338,11 @@ const handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<str
     res.setHeader('content-type', 'text/html');
     return indexHtml;
   }
-  const { endpoint, data } = await parseReq(req);
   if (req.url === '/' && req.method === 'POST') {
-    return data || '(no data)';
+    const { endpoint, request, data } = await parseReq(req);
+    return await delegateReqToEndpoint(endpoint, request, data);
   }
-  if (endpoint === '/version') {
-    return JSON.stringify(process.versions);
-  } else if (endpoint === '/hash') {
-    return Pgp.hash.sha256('hello');
-  } else if (endpoint === '/test25519') {
-    return await testEncryptDecrypt(KEY_25519, 'encrypt this string');
-  } else if (endpoint === '/test2048') {
-    return await testEncryptDecrypt(KEY_2048, 'encrypt this string');
-  } else if (endpoint === '/test4096') {
-    return await testEncryptDecrypt(KEY_4096, 'encrypt this string');
-  } else if (endpoint === '/test2048-1M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(1));
-  } else if (endpoint === '/test2048-3M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(3));
-  } else if (endpoint === '/test2048-5M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(5));
-  } else if (endpoint === '/test2048-10M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(10));
-  } else if (endpoint === '/test2048-25M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(25));
-  } else if (endpoint === '/test2048-50M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(50));
-  }
-  throw new HttpClientErr(`unknown path ${endpoint}`);
+  throw new HttpClientErr(`unknown path ${req.url}`);
 }
 
 const testEncryptDecrypt = async (privateKeyArmored: string, data: string) => {
@@ -319,6 +391,7 @@ https.createServer({ key: NODE_SSL_KEY, cert: NODE_SSL_CRT }, (request, response
     } else if (e instanceof HttpClientErr) {
       response.statusCode = 400;
     } else {
+      console.error(e);
       response.statusCode = 500;
     }
     response.end(fmtErr(e));

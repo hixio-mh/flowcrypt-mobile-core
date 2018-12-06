@@ -227,9 +227,10 @@ class NativeNode {
     try {
       MultipartEntityBuilder builder = MultipartEntityBuilder.create();
       builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+      builder.addTextBody("endpoint", endpoint);
       builder.addTextBody("request", req != null ? req.toString() : "{}");
       builder.addBinaryBody("data", new ByteArrayInputStream(data != null ? data : new byte[0]));
-      URL url = new URL("https://localhost:3000/" + endpoint);
+      URL url = new URL("https://localhost:3000/");
       HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
       conn.setRequestMethod("POST");
       conn.setRequestProperty("Authorization", secrets.authHeader);

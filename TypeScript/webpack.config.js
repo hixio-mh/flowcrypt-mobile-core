@@ -12,8 +12,8 @@ module.exports = {
     'minimalistic-assert': './node_modules/minimalistic-assert/index.js',
   },
   output: {
-    path: __dirname + '/build/bundles',
-    filename: '[name]-bundle.js',
+    path: __dirname + '/build/bundles/raw',
+    filename: '[name].js',
     libraryTarget: 'commonjs2'
   },
   module: {

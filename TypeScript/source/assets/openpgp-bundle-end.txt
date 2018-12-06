@@ -1,0 +1,7 @@
+
+	const openpgp = module.exports;
+	module.exports = {};
+
+	global['openpgp'] = openpgp;
+
+})();

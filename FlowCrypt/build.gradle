@@ -67,4 +67,3 @@ dependencies {
     implementation 'org.apache.httpcomponents:httpmime:4.3.6'
     implementation 'org.apache.httpcomponents:httpcomponents-core:4.4.10'
 }
-

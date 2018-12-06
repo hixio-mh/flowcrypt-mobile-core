@@ -34,6 +34,6 @@ ${fixedImportsSrc}
 }
 `;
 
-fs.writeFileSync(finalPathDev, fs.readFileSync('tooling/build-final-dev-prepend.txt').toString() + finalSrc);
+fs.writeFileSync(finalPathDev, fs.readFileSync('source/assets/flowcrypt-android-dev-begin.txt').toString() + finalSrc);
 fs.writeFileSync(finalPath, finalSrc);
 fs.unlinkSync(wipPath);
