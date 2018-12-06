@@ -11,6 +11,8 @@
 import { Pgp } from './core/pgp.js';
 import * as https from 'https';
 import { IncomingMessage, ServerResponse } from 'http';
+import { Validate } from './node/requests';
+import { Str } from './core/common.js';
 
 declare let openpgp: typeof OpenPGP;
 declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_AUTH_HEADER: string;
@@ -298,31 +300,46 @@ const indexHtml = `
 </form>
 </body></html>`;
 
-const delegateReqToEndpoint = async (endpoint: string, request: any, data?: string) => {
+const fmtRes = (response: {}, data?: string | Uint8Array): string => {
+  let formatted = JSON.stringify(response) + '\n';
+  if (typeof data !== 'undefined') {
+    formatted += (typeof data === 'string' ? data : Str.fromUint8(data));
+  }
+  return formatted;
+}
+
+const delegateReqToEndpoint = async (endpoint: string, uncheckedReq: any, data?: string) => {
   if (endpoint === 'version') {
-    return JSON.stringify(process.versions);
+    return fmtRes(process.versions);
   } else if (endpoint === 'encrypt') {
-    return JSON.stringify({ endpoint, data, request });
+    const req = Validate.encrypt(uncheckedReq, data);
+    if (typeof req.filename === 'undefined') {
+      const encrypted = await Pgp.msg.encrypt(req.pubKeys, undefined, undefined, data!, undefined, true) as OpenPGP.EncryptArmorResult;
+      return fmtRes({}, encrypted.data);
+    } else {
+      const encrypted = await Pgp.msg.encrypt(req.pubKeys, undefined, undefined, data!, req.filename, false) as OpenPGP.EncryptBinaryResult;
+      return fmtRes({}, encrypted.message.packets.write());
+    }
   } else if (endpoint === 'hash') {
-    return Pgp.hash.sha256('hello');
+    return fmtRes({ hello: Pgp.hash.sha256('hello') });
   } else if (endpoint === 'test25519') {
-    return await testEncryptDecrypt(KEY_25519, 'encrypt this string');
+    return fmtRes(await testEncryptDecrypt(KEY_25519, 'encrypt this string'));
   } else if (endpoint === 'test2048') {
-    return await testEncryptDecrypt(KEY_2048, 'encrypt this string');
+    return fmtRes(await testEncryptDecrypt(KEY_2048, 'encrypt this string'));
   } else if (endpoint === 'test4096') {
-    return await testEncryptDecrypt(KEY_4096, 'encrypt this string');
+    return fmtRes(await testEncryptDecrypt(KEY_4096, 'encrypt this string'));
   } else if (endpoint === 'test2048-1M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(1));
+    return fmtRes(await testEncryptDecrypt(KEY_2048, newBigString(1)));
   } else if (endpoint === 'test2048-3M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(3));
+    return fmtRes(await testEncryptDecrypt(KEY_2048, newBigString(3)));
   } else if (endpoint === 'test2048-5M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(5));
+    return fmtRes(await testEncryptDecrypt(KEY_2048, newBigString(5)));
   } else if (endpoint === 'test2048-10M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(10));
+    return fmtRes(await testEncryptDecrypt(KEY_2048, newBigString(10)));
   } else if (endpoint === 'test2048-25M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(25));
+    return fmtRes(await testEncryptDecrypt(KEY_2048, newBigString(25)));
   } else if (endpoint === 'test2048-50M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(50));
+    return fmtRes(await testEncryptDecrypt(KEY_2048, newBigString(50)));
   }
   throw new HttpClientErr(`unknown endporint: ${endpoint}`);
 }
@@ -346,39 +363,28 @@ const handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<str
 }
 
 const testEncryptDecrypt = async (privateKeyArmored: string, data: string) => {
-
   let msg = '';
-
   let checkpoint = Date.now();
   const measure = (name: string) => {
     const now = Date.now();
     msg += `${name}: ${now - checkpoint}ms, \n`;
     checkpoint = now;
   }
-
   const passphrase = 'some long pp';
   const prv = openpgp.key.readArmored(privateKeyArmored).keys[0];
   const pub = prv.toPublic();
   measure('key parsed');
-
   const encrypted = await openpgp.encrypt({ data, publicKeys: [pub] });
-  // console.log(encrypted.data);
   measure('message encrypted');
-
   prv.decrypt(passphrase);
   measure('prv decrypted');
-
   await openpgp.decrypt({
     message: openpgp.message.readArmored((encrypted as any).data),
     privateKeys: [prv],
   })
-  // console.log(decrypted.data);
   measure('message decrypted');
-
   msg += `${JSON.stringify(pub.primaryKey.getAlgorithmInfo())} (data:${Math.round(data.length / 512)}K),\n`;
-
-  return msg;
-
+  return { msg };
 }
 
 https.createServer({ key: NODE_SSL_KEY, cert: NODE_SSL_CRT }, (request, response) => {

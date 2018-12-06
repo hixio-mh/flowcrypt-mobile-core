@@ -143,15 +143,22 @@ class NodeError extends Exception {
 }
 
 class NodeRes {
+  /**
+   * Responses from Node.js come formatted as a JSON before the first \n mark, and optional binary data afterwards
+   * stripRawJsonLine() will strip the first JSON line off the rest when accessing data (if not already stripped)
+   */
+
 
   private Exception err;
-  private InputStream data;
+  private InputStream inputStream;
   private Boolean errWasTested = false;
+  private String rawJsonResponse;
+  private BufferedReader br;
   public long ms;
 
   public NodeRes(Exception err, InputStream inputStream, long ms) {
     this.err = err;
-    this.data = inputStream;
+    this.inputStream = inputStream;
     this.ms = ms;
   }
 
@@ -169,25 +176,53 @@ class NodeRes {
     return err;
   }
 
-  public InputStream getInputStream() {
+  private InputStream getInputStream() {
     if(!errWasTested) {
       throw new Error("NodeRes getErr() must be called before accessing data");
     }
-    return data;
+    return inputStream;
   }
 
-  public BufferedReader getBufferedReader() {
-    if(data == null) {
+  private BufferedReader getInputStreamBufferedReader() {
+    if(inputStream == null) {
       return null;
     }
-    return new BufferedReader(new InputStreamReader(getInputStream()));
+    if(br == null) {
+      br = new BufferedReader(new InputStreamReader(getInputStream()));
+    }
+    return br;
   }
 
-  public String getString() {
-    if(data == null) {
+  private void stripRawJsonLine() {
+    if(rawJsonResponse == null) {
+      BufferedReader br = getInputStreamBufferedReader();
+      if(br != null) {
+        try {
+          rawJsonResponse = br.readLine();
+        } catch (IOException e) {
+          rawJsonResponse = "";
+        }
+      }
+    }
+  }
+
+  public String getRawJsonResponse() {
+    stripRawJsonLine();
+    return rawJsonResponse;
+  }
+
+  public String getDataString() {
+    stripRawJsonLine();
+    BufferedReader br = getInputStreamBufferedReader();
+    if(br == null) {
       return null;
     }
-    return getBufferedReader().lines().collect(Collectors.joining());
+    return br.lines().collect(Collectors.joining());
+  }
+
+  public BufferedReader getDataBufferedReader() {
+    stripRawJsonLine();
+    return getInputStreamBufferedReader();
   }
 
 }

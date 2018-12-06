@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
           text = encryptRes.getErr().getMessage();
           encryptRes.getErr().printStackTrace();
         } else {
-          text = encryptRes.getString();
+          text = encryptRes.getDataString();
         }
         System.out.println(text);
         text += "\n\n" + encryptRes.ms + "ms";
@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
           text = nodeRes.getErr().getMessage();
           nodeRes.getErr().printStackTrace();
         } else {
-          text = nodeRes.getString();
+          text = nodeRes.getRawJsonResponse();
         }
         text += "\n\n" + nodeRes.ms + "ms";
         tvResult.setText(text);

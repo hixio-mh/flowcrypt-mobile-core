@@ -88,12 +88,12 @@ const dereq_minimalistic_assert =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 29);
+/******/ 	return __webpack_require__(__webpack_require__.s = 30);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 29:
+/***/ 30:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -196,19 +196,19 @@ const dereq_bn =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 27);
+/******/ 	return __webpack_require__(__webpack_require__.s = 28);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 16:
+/***/ 17:
 /***/ (function(module, exports) {
 
 module.exports = require("buffer");
 
 /***/ }),
 
-/***/ 27:
+/***/ 28:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -266,7 +266,7 @@ module.exports = require("buffer");
   var Buffer;
 
   try {
-    Buffer = __webpack_require__(16).Buffer;
+    Buffer = __webpack_require__(17).Buffer;
   } catch (e) {}
 
   BN.isBN = function isBN(num) {
@@ -3662,11 +3662,11 @@ module.exports = require("buffer");
     return res._forceRed(this);
   };
 })( false || module, undefined);
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(28)(module)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(29)(module)))
 
 /***/ }),
 
-/***/ 28:
+/***/ 29:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3784,7 +3784,7 @@ const dereq_asn1 =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 8);
+/******/ 	return __webpack_require__(__webpack_require__.s = 9);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -3796,36 +3796,37 @@ const dereq_asn1 =
 /* 5 */,
 /* 6 */,
 /* 7 */,
-/* 8 */
+/* 8 */,
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var asn1 = exports;
-asn1.bignum = __webpack_require__(9);
-asn1.define = __webpack_require__(10).define;
-asn1.base = __webpack_require__(13);
-asn1.constants = __webpack_require__(19);
-asn1.decoders = __webpack_require__(21);
-asn1.encoders = __webpack_require__(24);
+asn1.bignum = __webpack_require__(10);
+asn1.define = __webpack_require__(11).define;
+asn1.base = __webpack_require__(14);
+asn1.constants = __webpack_require__(20);
+asn1.decoders = __webpack_require__(22);
+asn1.encoders = __webpack_require__(25);
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports) {
 
 module.exports = dereq_bn;
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var asn1 = __webpack_require__(8);
+var asn1 = __webpack_require__(9);
 
-var inherits = __webpack_require__(11);
+var inherits = __webpack_require__(12);
 
 var api = exports;
 
@@ -3846,7 +3847,7 @@ Entity.prototype._createNamed = function createNamed(base) {
   var named;
 
   try {
-    named = __webpack_require__(12).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
+    named = __webpack_require__(13).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
   } catch (e) {
     named = function (entity) {
       this._initNamed(entity);
@@ -3887,29 +3888,16 @@ reporter) {
 };
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports) {
 
 module.exports = require("util").inherits;
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports) {
 
 module.exports = require("vm");
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var base = exports;
-base.Reporter = __webpack_require__(14).Reporter;
-base.DecoderBuffer = __webpack_require__(15).DecoderBuffer;
-base.EncoderBuffer = __webpack_require__(15).EncoderBuffer;
-base.Node = __webpack_require__(17);
 
 /***/ }),
 /* 14 */
@@ -3918,7 +3906,20 @@ base.Node = __webpack_require__(17);
 "use strict";
 
 
-var inherits = __webpack_require__(11);
+var base = exports;
+base.Reporter = __webpack_require__(15).Reporter;
+base.DecoderBuffer = __webpack_require__(16).DecoderBuffer;
+base.EncoderBuffer = __webpack_require__(16).EncoderBuffer;
+base.Node = __webpack_require__(18);
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var inherits = __webpack_require__(12);
 
 function Reporter(options) {
   this._reporterState = {
@@ -4034,17 +4035,17 @@ ReporterError.prototype.rethrow = function rethrow(msg) {
 };
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(11);
+var inherits = __webpack_require__(12);
 
-var Reporter = __webpack_require__(13).Reporter;
+var Reporter = __webpack_require__(14).Reporter;
 
-var Buffer = __webpack_require__(16).Buffer;
+var Buffer = __webpack_require__(17).Buffer;
 
 function DecoderBuffer(base, options) {
   Reporter.call(this, options);
@@ -4146,25 +4147,25 @@ EncoderBuffer.prototype.join = function join(out, offset) {
 };
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports) {
 
 module.exports = require("buffer");
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Reporter = __webpack_require__(13).Reporter;
+var Reporter = __webpack_require__(14).Reporter;
 
-var EncoderBuffer = __webpack_require__(13).EncoderBuffer;
+var EncoderBuffer = __webpack_require__(14).EncoderBuffer;
 
-var DecoderBuffer = __webpack_require__(13).DecoderBuffer;
+var DecoderBuffer = __webpack_require__(14).DecoderBuffer;
 
-var assert = __webpack_require__(18); // Supported tags
+var assert = __webpack_require__(19); // Supported tags
 
 
 var tags = ['seq', 'seqof', 'set', 'setof', 'objid', 'bool', 'gentime', 'utctime', 'null_', 'enum', 'int', 'objDesc', 'bitstr', 'bmpstr', 'charstr', 'genstr', 'graphstr', 'ia5str', 'iso646str', 'numstr', 'octstr', 'printstr', 't61str', 'unistr', 'utf8str', 'videostr']; // Public methods list
@@ -4635,13 +4636,13 @@ Node.prototype._isPrintstr = function isPrintstr(str) {
 };
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports) {
 
 module.exports = dereq_minimalistic_assert;
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4660,16 +4661,16 @@ constants._reverse = function reverse(map) {
   return res;
 };
 
-constants.der = __webpack_require__(20);
+constants.der = __webpack_require__(21);
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var constants = __webpack_require__(19);
+var constants = __webpack_require__(20);
 
 exports.tagClass = {
   0: 'universal',
@@ -4712,26 +4713,26 @@ exports.tag = {
 exports.tagByName = constants._reverse(exports.tag);
 
 /***/ }),
-/* 21 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var decoders = exports;
-decoders.der = __webpack_require__(22);
-decoders.pem = __webpack_require__(23);
-
-/***/ }),
 /* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(11);
+var decoders = exports;
+decoders.der = __webpack_require__(23);
+decoders.pem = __webpack_require__(24);
 
-var asn1 = __webpack_require__(8);
+/***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var inherits = __webpack_require__(12);
+
+var asn1 = __webpack_require__(9);
 
 var base = asn1.base;
 var bignum = asn1.bignum; // Import DER constants
@@ -5003,17 +5004,17 @@ function derDecodeLen(buf, primitive, fail) {
 }
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(11);
+var inherits = __webpack_require__(12);
 
-var Buffer = __webpack_require__(16).Buffer;
+var Buffer = __webpack_require__(17).Buffer;
 
-var DERDecoder = __webpack_require__(22);
+var DERDecoder = __webpack_require__(23);
 
 function PEMDecoder(entity) {
   DERDecoder.call(this, entity);
@@ -5055,28 +5056,28 @@ PEMDecoder.prototype.decode = function decode(data, options) {
 };
 
 /***/ }),
-/* 24 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var encoders = exports;
-encoders.der = __webpack_require__(25);
-encoders.pem = __webpack_require__(26);
-
-/***/ }),
 /* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(11);
+var encoders = exports;
+encoders.der = __webpack_require__(26);
+encoders.pem = __webpack_require__(27);
 
-var Buffer = __webpack_require__(16).Buffer;
+/***/ }),
+/* 26 */
+/***/ (function(module, exports, __webpack_require__) {
 
-var asn1 = __webpack_require__(8);
+"use strict";
+
+
+var inherits = __webpack_require__(12);
+
+var Buffer = __webpack_require__(17).Buffer;
+
+var asn1 = __webpack_require__(9);
 
 var base = asn1.base; // Import DER constants
 
@@ -5315,15 +5316,15 @@ function encodeTag(tag, primitive, cls, reporter) {
 }
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(11);
+var inherits = __webpack_require__(12);
 
-var DEREncoder = __webpack_require__(25);
+var DEREncoder = __webpack_require__(26);
 
 function PEMEncoder(entity) {
   DEREncoder.call(this, entity);
@@ -57813,6 +57814,10 @@ const pgp_js_1 = __webpack_require__(1);
 
 const https = __webpack_require__(7);
 
+const requests_1 = __webpack_require__(8);
+
+const common_js_1 = __webpack_require__(3);
+
 const KEY_2048 = `-----BEGIN PGP PRIVATE KEY BLOCK-----
 Version: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption
 Comment: Seamlessly send and receive encrypted email
@@ -58113,35 +58118,51 @@ const indexHtml = `
 </form>
 </body></html>`;
 
-const delegateReqToEndpoint = async (endpoint, request, data) => {
+const fmtRes = (response, data) => {
+  let formatted = JSON.stringify(response) + '\n';
+
+  if (typeof data !== 'undefined') {
+    formatted += typeof data === 'string' ? data : common_js_1.Str.fromUint8(data);
+  }
+
+  return formatted;
+};
+
+const delegateReqToEndpoint = async (endpoint, uncheckedReq, data) => {
   if (endpoint === 'version') {
-    return JSON.stringify(process.versions);
+    return fmtRes(process.versions);
   } else if (endpoint === 'encrypt') {
-    return JSON.stringify({
-      endpoint,
-      data,
-      request
-    });
+    const req = requests_1.Validate.encrypt(uncheckedReq, data);
+
+    if (typeof req.filename === 'undefined') {
+      const encrypted = await pgp_js_1.Pgp.msg.encrypt(req.pubKeys, undefined, undefined, data, undefined, true);
+      return fmtRes({}, encrypted.data);
+    } else {
+      const encrypted = await pgp_js_1.Pgp.msg.encrypt(req.pubKeys, undefined, undefined, data, req.filename, false);
+      return fmtRes({}, encrypted.message.packets.write());
+    }
   } else if (endpoint === 'hash') {
-    return pgp_js_1.Pgp.hash.sha256('hello');
+    return fmtRes({
+      hello: pgp_js_1.Pgp.hash.sha256('hello')
+    });
   } else if (endpoint === 'test25519') {
-    return await testEncryptDecrypt(KEY_25519, 'encrypt this string');
+    return fmtRes((await testEncryptDecrypt(KEY_25519, 'encrypt this string')));
   } else if (endpoint === 'test2048') {
-    return await testEncryptDecrypt(KEY_2048, 'encrypt this string');
+    return fmtRes((await testEncryptDecrypt(KEY_2048, 'encrypt this string')));
   } else if (endpoint === 'test4096') {
-    return await testEncryptDecrypt(KEY_4096, 'encrypt this string');
+    return fmtRes((await testEncryptDecrypt(KEY_4096, 'encrypt this string')));
   } else if (endpoint === 'test2048-1M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(1));
+    return fmtRes((await testEncryptDecrypt(KEY_2048, newBigString(1))));
   } else if (endpoint === 'test2048-3M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(3));
+    return fmtRes((await testEncryptDecrypt(KEY_2048, newBigString(3))));
   } else if (endpoint === 'test2048-5M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(5));
+    return fmtRes((await testEncryptDecrypt(KEY_2048, newBigString(5))));
   } else if (endpoint === 'test2048-10M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(10));
+    return fmtRes((await testEncryptDecrypt(KEY_2048, newBigString(10))));
   } else if (endpoint === 'test2048-25M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(25));
+    return fmtRes((await testEncryptDecrypt(KEY_2048, newBigString(25))));
   } else if (endpoint === 'test2048-50M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(50));
+    return fmtRes((await testEncryptDecrypt(KEY_2048, newBigString(50))));
   }
 
   throw new HttpClientErr(`unknown endporint: ${endpoint}`);
@@ -58190,19 +58211,19 @@ const testEncryptDecrypt = async (privateKeyArmored, data) => {
   const encrypted = await openpgp.encrypt({
     data,
     publicKeys: [pub]
-  }); // console.log(encrypted.data);
-
+  });
   measure('message encrypted');
   prv.decrypt(passphrase);
   measure('prv decrypted');
   await openpgp.decrypt({
     message: openpgp.message.readArmored(encrypted.data),
     privateKeys: [prv]
-  }); // console.log(decrypted.data);
-
+  });
   measure('message decrypted');
   msg += `${JSON.stringify(pub.primaryKey.getAlgorithmInfo())} (data:${Math.round(data.length / 512)}K),\n`;
-  return msg;
+  return {
+    msg
+  };
 };
 
 https.createServer({
@@ -60033,6 +60054,58 @@ exports.Catch = Catch;
 /***/ (function(module, exports) {
 
 module.exports = require("https");
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+class Validate {}
+
+Validate.encrypt = (v, data) => {
+  if (Validate.isObj(v) && Validate.hasProp(v, 'pubKeys', 'string[]') && Validate.hasProp(v, 'filename', 'string?') && typeof data === 'string') {
+    return v;
+  }
+
+  throw new Error('Wrong request structure for NodeRequest.encrypt');
+};
+
+Validate.isObj = v => {
+  return v && typeof v === 'object';
+};
+
+Validate.hasProp = (v, name, type) => {
+  if (!Validate.isObj(v)) {
+    return false;
+  }
+
+  if (type === 'number' || type === 'string') {
+    return typeof v[name] === type;
+  }
+
+  if (type === 'string?') {
+    return typeof v[name] === 'string' || typeof v[name] === 'undefined';
+  }
+
+  if (type === 'string[]') {
+    return Array.isArray(v[name]) && v[name].map(x => typeof x === 'string');
+  }
+
+  if (type === 'object') {
+    return Validate.isObj(v[name]);
+  }
+
+  return false;
+};
+
+exports.Validate = Validate;
 
 /***/ })
 /******/ ]);
