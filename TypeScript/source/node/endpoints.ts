@@ -28,13 +28,27 @@ export class Endpoints {
   }
 
   public decryptMsg = async (uncheckedReq: any, data: string | undefined): Promise<string> => {
-    return fmtRes({ not: "implemented" }, "not imlemented");
+    const { keys, passphrases, msgPwd } = Validate.decryptMsg(uncheckedReq, data);
+    const decrypted = await PgpMsg.decrypt({ keys, passphrases }, data!, msgPwd, false);
+    if (!decrypted.success) {
+      decrypted.message = undefined;
+      return fmtRes(decrypted);
+    }
+    return fmtRes({ blocks: await PgpMsg.fmtDecrypted(decrypted.content.text!) });
   }
 
   public decryptFile = async (uncheckedReq: any, data: string | undefined): Promise<string> => {
-    // const req = Validate.decryptFile(uncheckedReq, data);
-    return fmtRes({ not: "implemented" }, "not imlemented");
-    //   const decrypted = await Pgp.msg.decrypt()
-    //   // return fmtRes({name, contentType}, decrypted);
+    const { keys, passphrases, msgPwd } = Validate.decryptFile(uncheckedReq, data);
+    const decrypted = await PgpMsg.decrypt({ keys, passphrases }, data!, msgPwd, true);
+    if (!decrypted.success) {
+      decrypted.message = undefined;
+      return fmtRes(decrypted);
+    }
+    const decryptedData = decrypted.content.uint8;
+    decrypted.content.uint8 = undefined;
+    return fmtRes(decrypted, decryptedData);
   }
+
 }
+
+

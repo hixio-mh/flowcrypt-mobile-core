@@ -6,7 +6,7 @@ import { Str, Value } from './common.js';
 import { KeyInfo } from '../platform/store.js';
 
 type Att$treatAs = "publicKey" | "message" | "hidden" | "signature" | "encrypted" | "standard";
-type AttMeta = {
+export type AttMeta = {
   data?: string | Uint8Array; type?: string; name?: string; length?: number; url?: string;
   inline?: boolean; id?: string; msgId?: string; treatAs?: Att$treatAs; cid?: string;
 };

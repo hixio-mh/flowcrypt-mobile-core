@@ -7,7 +7,8 @@ type Obj = { [k: string]: any };
 export namespace NodeRequest {
 
   export type encrypt = { pubKeys: string[], filename?: string };
-  export type decryptFile = { prvKeys: string[], passphrases: string[], msgPwd?: string };
+  export type decryptFile = { keys: { private: string; longid: string }[], passphrases: string[], msgPwd?: string };
+  export type decryptMsg = { keys: { private: string; longid: string }[], passphrases: string[], msgPwd?: string };
 
 }
 
@@ -21,7 +22,14 @@ export class Validate {
   }
 
   public static decryptFile = (v: any, data: any): NodeRequest.decryptFile => {
-    if (isObj(v) && hasProp(v, 'prvKeys', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'passphrases', 'string[]') && hasData(data)) {
+    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'passphrases', 'string[]') && hasData(data)) {
+      return v as NodeRequest.decryptFile;
+    }
+    throw new Error('Wrong request structure for NodeRequest.decryptFile');
+  }
+
+  public static decryptMsg = (v: any, data: any): NodeRequest.decryptMsg => {
+    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'passphrases', 'string[]') && hasData(data)) {
       return v as NodeRequest.decryptFile;
     }
     throw new Error('Wrong request structure for NodeRequest.decryptFile');
@@ -33,7 +41,7 @@ const isObj = (v: any): v is Obj => {
   return v && typeof v === 'object';
 }
 
-const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 'number' | 'string?') => {
+const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 'number' | 'string?' | 'PrvKeyInfo[]') => {
   if (!isObj(v)) {
     return false;
   }
@@ -45,6 +53,9 @@ const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 
   }
   if (type === 'string[]') {
     return Array.isArray(v[name]) && v[name].map((x: any) => typeof x === 'string');
+  }
+  if (type === 'PrvKeyInfo[]') {
+    return Array.isArray(v[name]) && v[name].map((ki: any) => hasProp(ki, 'private', 'string') && hasProp(ki, 'longid', 'string'));
   }
   if (type === 'object') {
     return isObj(v[name]);
