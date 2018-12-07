@@ -88,12 +88,12 @@ const dereq_minimalistic_assert =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 30);
+/******/ 	return __webpack_require__(__webpack_require__.s = 34);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 30:
+/***/ 34:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -196,19 +196,19 @@ const dereq_bn =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 28);
+/******/ 	return __webpack_require__(__webpack_require__.s = 32);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 17:
+/***/ 21:
 /***/ (function(module, exports) {
 
 module.exports = require("buffer");
 
 /***/ }),
 
-/***/ 28:
+/***/ 32:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -266,7 +266,7 @@ module.exports = require("buffer");
   var Buffer;
 
   try {
-    Buffer = __webpack_require__(17).Buffer;
+    Buffer = __webpack_require__(21).Buffer;
   } catch (e) {}
 
   BN.isBN = function isBN(num) {
@@ -3662,11 +3662,11 @@ module.exports = require("buffer");
     return res._forceRed(this);
   };
 })( false || module, undefined);
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(29)(module)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(33)(module)))
 
 /***/ }),
 
-/***/ 29:
+/***/ 33:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3784,7 +3784,7 @@ const dereq_asn1 =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 9);
+/******/ 	return __webpack_require__(__webpack_require__.s = 13);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -3797,36 +3797,40 @@ const dereq_asn1 =
 /* 6 */,
 /* 7 */,
 /* 8 */,
-/* 9 */
+/* 9 */,
+/* 10 */,
+/* 11 */,
+/* 12 */,
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var asn1 = exports;
-asn1.bignum = __webpack_require__(10);
-asn1.define = __webpack_require__(11).define;
-asn1.base = __webpack_require__(14);
-asn1.constants = __webpack_require__(20);
-asn1.decoders = __webpack_require__(22);
-asn1.encoders = __webpack_require__(25);
+asn1.bignum = __webpack_require__(14);
+asn1.define = __webpack_require__(15).define;
+asn1.base = __webpack_require__(18);
+asn1.constants = __webpack_require__(24);
+asn1.decoders = __webpack_require__(26);
+asn1.encoders = __webpack_require__(29);
 
 /***/ }),
-/* 10 */
+/* 14 */
 /***/ (function(module, exports) {
 
 module.exports = dereq_bn;
 
 /***/ }),
-/* 11 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var asn1 = __webpack_require__(9);
+var asn1 = __webpack_require__(13);
 
-var inherits = __webpack_require__(12);
+var inherits = __webpack_require__(16);
 
 var api = exports;
 
@@ -3847,7 +3851,7 @@ Entity.prototype._createNamed = function createNamed(base) {
   var named;
 
   try {
-    named = __webpack_require__(13).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
+    named = __webpack_require__(17).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
   } catch (e) {
     named = function (entity) {
       this._initNamed(entity);
@@ -3888,38 +3892,38 @@ reporter) {
 };
 
 /***/ }),
-/* 12 */
+/* 16 */
 /***/ (function(module, exports) {
 
 module.exports = require("util").inherits;
 
 /***/ }),
-/* 13 */
+/* 17 */
 /***/ (function(module, exports) {
 
 module.exports = require("vm");
 
 /***/ }),
-/* 14 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var base = exports;
-base.Reporter = __webpack_require__(15).Reporter;
-base.DecoderBuffer = __webpack_require__(16).DecoderBuffer;
-base.EncoderBuffer = __webpack_require__(16).EncoderBuffer;
-base.Node = __webpack_require__(18);
+base.Reporter = __webpack_require__(19).Reporter;
+base.DecoderBuffer = __webpack_require__(20).DecoderBuffer;
+base.EncoderBuffer = __webpack_require__(20).EncoderBuffer;
+base.Node = __webpack_require__(22);
 
 /***/ }),
-/* 15 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(12);
+var inherits = __webpack_require__(16);
 
 function Reporter(options) {
   this._reporterState = {
@@ -4035,17 +4039,17 @@ ReporterError.prototype.rethrow = function rethrow(msg) {
 };
 
 /***/ }),
-/* 16 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(12);
+var inherits = __webpack_require__(16);
 
-var Reporter = __webpack_require__(14).Reporter;
+var Reporter = __webpack_require__(18).Reporter;
 
-var Buffer = __webpack_require__(17).Buffer;
+var Buffer = __webpack_require__(21).Buffer;
 
 function DecoderBuffer(base, options) {
   Reporter.call(this, options);
@@ -4147,25 +4151,25 @@ EncoderBuffer.prototype.join = function join(out, offset) {
 };
 
 /***/ }),
-/* 17 */
+/* 21 */
 /***/ (function(module, exports) {
 
 module.exports = require("buffer");
 
 /***/ }),
-/* 18 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Reporter = __webpack_require__(14).Reporter;
+var Reporter = __webpack_require__(18).Reporter;
 
-var EncoderBuffer = __webpack_require__(14).EncoderBuffer;
+var EncoderBuffer = __webpack_require__(18).EncoderBuffer;
 
-var DecoderBuffer = __webpack_require__(14).DecoderBuffer;
+var DecoderBuffer = __webpack_require__(18).DecoderBuffer;
 
-var assert = __webpack_require__(19); // Supported tags
+var assert = __webpack_require__(23); // Supported tags
 
 
 var tags = ['seq', 'seqof', 'set', 'setof', 'objid', 'bool', 'gentime', 'utctime', 'null_', 'enum', 'int', 'objDesc', 'bitstr', 'bmpstr', 'charstr', 'genstr', 'graphstr', 'ia5str', 'iso646str', 'numstr', 'octstr', 'printstr', 't61str', 'unistr', 'utf8str', 'videostr']; // Public methods list
@@ -4636,13 +4640,13 @@ Node.prototype._isPrintstr = function isPrintstr(str) {
 };
 
 /***/ }),
-/* 19 */
+/* 23 */
 /***/ (function(module, exports) {
 
 module.exports = dereq_minimalistic_assert;
 
 /***/ }),
-/* 20 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4661,16 +4665,16 @@ constants._reverse = function reverse(map) {
   return res;
 };
 
-constants.der = __webpack_require__(21);
+constants.der = __webpack_require__(25);
 
 /***/ }),
-/* 21 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var constants = __webpack_require__(20);
+var constants = __webpack_require__(24);
 
 exports.tagClass = {
   0: 'universal',
@@ -4713,26 +4717,26 @@ exports.tag = {
 exports.tagByName = constants._reverse(exports.tag);
 
 /***/ }),
-/* 22 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var decoders = exports;
-decoders.der = __webpack_require__(23);
-decoders.pem = __webpack_require__(24);
+decoders.der = __webpack_require__(27);
+decoders.pem = __webpack_require__(28);
 
 /***/ }),
-/* 23 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(12);
+var inherits = __webpack_require__(16);
 
-var asn1 = __webpack_require__(9);
+var asn1 = __webpack_require__(13);
 
 var base = asn1.base;
 var bignum = asn1.bignum; // Import DER constants
@@ -5004,17 +5008,17 @@ function derDecodeLen(buf, primitive, fail) {
 }
 
 /***/ }),
-/* 24 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(12);
+var inherits = __webpack_require__(16);
 
-var Buffer = __webpack_require__(17).Buffer;
+var Buffer = __webpack_require__(21).Buffer;
 
-var DERDecoder = __webpack_require__(23);
+var DERDecoder = __webpack_require__(27);
 
 function PEMDecoder(entity) {
   DERDecoder.call(this, entity);
@@ -5056,28 +5060,28 @@ PEMDecoder.prototype.decode = function decode(data, options) {
 };
 
 /***/ }),
-/* 25 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var encoders = exports;
-encoders.der = __webpack_require__(26);
-encoders.pem = __webpack_require__(27);
+encoders.der = __webpack_require__(30);
+encoders.pem = __webpack_require__(31);
 
 /***/ }),
-/* 26 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(12);
+var inherits = __webpack_require__(16);
 
-var Buffer = __webpack_require__(17).Buffer;
+var Buffer = __webpack_require__(21).Buffer;
 
-var asn1 = __webpack_require__(9);
+var asn1 = __webpack_require__(13);
 
 var base = asn1.base; // Import DER constants
 
@@ -5316,15 +5320,15 @@ function encodeTag(tag, primitive, cls, reporter) {
 }
 
 /***/ }),
-/* 27 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(12);
+var inherits = __webpack_require__(16);
 
-var DEREncoder = __webpack_require__(26);
+var DEREncoder = __webpack_require__(30);
 
 function PEMEncoder(entity) {
   DEREncoder.call(this, entity);
@@ -57799,10 +57803,10 @@ module.exports =
 
 "use strict";
 /* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
-/// <reference path="./types/openpgp.d.ts" />
-/// <reference path="./types/jquery.d.ts" />
 /// <reference path="./types/android.d.ts" />
 /// <reference path="../node_modules/@types/node/index.d.ts" />
+/// <reference path="./types/openpgp.d.ts" />
+/// <reference path="./types/jquery.d.ts" />
 /// <reference path="../node_modules/@types/chrome/index.d.ts" />
 
 
@@ -57810,222 +57814,110 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const pgp_js_1 = __webpack_require__(1);
+const https = __webpack_require__(1);
 
-const https = __webpack_require__(7);
+const parse_1 = __webpack_require__(2);
 
-const requests_1 = __webpack_require__(8);
+const responses_1 = __webpack_require__(3);
 
-const common_js_1 = __webpack_require__(3);
+const tests_1 = __webpack_require__(10);
 
-const KEY_2048 = `-----BEGIN PGP PRIVATE KEY BLOCK-----
-Version: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption
-Comment: Seamlessly send and receive encrypted email
+const endpoints_1 = __webpack_require__(11);
 
-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
-=15Xc
------END PGP PRIVATE KEY BLOCK-----`;
-const KEY_4096 = `-----BEGIN PGP PRIVATE KEY BLOCK-----
-Version: FlowCrypt  Email Encryption - flowcrypt.com
-Comment: Seamlessly send, receive and search encrypted email
+const endpoints = new endpoints_1.Endpoints();
 
-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
-Dn6h
-=5aR+
------END PGP PRIVATE KEY BLOCK-----`;
-const KEY_25519 = `-----BEGIN PGP PRIVATE KEY BLOCK-----\r\nVersion: FlowCrypt 6.3.5 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\n\r\nxYYEXAZt6RYJKwYBBAHaRw8BAQdAHk2PLEMfkVLjxI6Vdg+dnJ5ElKcAX78x\nP+GVCYDZyfL+CQMI1riV1EDicFNg4/f/0U/ZJZ9udC0F7GvtFKagL3EIqz6f\nm+bm2E5qdDdyM2Z/7U2YOOVPc/HBxTg9SHrCTAYmfLtXEwU21uRzKIW9Y6N0\nLs0RdXNyIDx1c3JAdXNyLmNvbT7CdwQQFgoAKQUCXAZt6QYLCQcIAwIJEAY2\nNbPjPrFMBBUICgIDFgIBAhkBAhsDAh4BAADkfQD/cn4xmKOznw6jXw7m9jfe\nzABESbvxpAsBSL0lYyTF1g4BAPYKXnzBAMOjLHZ+CZL01A5I435MJoZ8ho+V\n233bcqoPx4sEXAZt6RIKKwYBBAGXVQEFAQEHQGqQsqsYFqSb8xU2Jy+m0ofh\nztR2KR1ukc+V+Daytv91AwEIB/4JAwhPqxwBR+9JFWD07K5gQ/ahdz6fd7jf\npiGAGZfJc3qN/W9MTqZcsl0qIiM4IaMeAuqlqm5xVHSHA3r7SnyfGtzDURM+\nc9pzQRYLwp33TgHXwmEEGBYIABMFAlwGbekJEAY2NbPjPrFMAhsMAACUKwD+\nMQFdjWEZwfAnJZQWLx3jpFxNyuKjUER5hRfphIXGeqUA/0wqTCpbBWQlcwml\n8jqIREq1Q/lDO3/9QPULKioe2ZoM\r\n=8qZ6\r\n-----END PGP PRIVATE KEY BLOCK-----\r\n", publicKeyArmored: "-----BEGIN PGP PUBLIC KEY BLOCK-----\r\nVersion: FlowCrypt 6.3.5 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\n\r\nxjMEXAZt6RYJKwYBBAHaRw8BAQdAHk2PLEMfkVLjxI6Vdg+dnJ5ElKcAX78x\nP+GVCYDZyfLNEXVzciA8dXNyQHVzci5jb20+wncEEBYKACkFAlwGbekGCwkH\nCAMCCRAGNjWz4z6xTAQVCAoCAxYCAQIZAQIbAwIeAQAA5H0A/3J+MZijs58O\no18O5vY33swAREm78aQLAUi9JWMkxdYOAQD2Cl58wQDDoyx2fgmS9NQOSON+\nTCaGfIaPldt923KqD844BFwGbekSCisGAQQBl1UBBQEBB0BqkLKrGBakm/MV\nNicvptKH4c7UdikdbpHPlfg2srb/dQMBCAfCYQQYFggAEwUCXAZt6QkQBjY1\ns+M+sUwCGwwAAJQrAP4xAV2NYRnB8CcllBYvHeOkXE3K4qNQRHmFF+mEhcZ6\npQD/TCpMKlsFZCVzCaXyOohESrVD+UM7f/1A9QsqKh7Zmgw=\r\n=WZgv\r\n-----END PGP PUBLIC KEY BLOCK-----\r\n\r\n", revocationCertificate: "-----BEGIN PGP PUBLIC KEY BLOCK-----\r\nVersion: FlowCrypt 6.3.5 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\nComment: This is a revocation certificate\r\n\r\nwmEEIBYKABMFAlwGbekJEAY2NbPjPrFMAh0AAACUaQD/c9eod5CrHQ0b79gF\nTVLvdGmInmhFoDOMsO69uHpAyToBAPEEApEycDN9rktUU1k/qSjV1zkWAjQ2\ndfQw8KTe8zYE\r\n=Ogjo\r\n-----END PGP PUBLIC KEY BLOCK-----\r\n\r\n`;
+const delegateReqToEndpoint = async (endpointName, uncheckedReq, optionalData) => {
+  if (endpointName.indexOf('test') === 0) {
+    return responses_1.fmtRes((await tests_1.testEndpointHandler(endpointName)));
+  }
 
-const fmtErr = e => {
-  return JSON.stringify({
-    error: {
-      message: String(e),
-      stack: e && typeof e === 'object' ? e.stack || '' : ''
+  const endpointHandler = endpoints[endpointName];
+
+  if (endpointHandler) {
+    return endpointHandler(uncheckedReq, optionalData);
+  }
+
+  throw new responses_1.HttpClientErr(`unknown endpoint: ${endpointName}`);
+};
+
+const handleReq = async (req, res) => {
+  if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT) {
+    throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_KEY or NODE_SSL_CRT');
+  }
+
+  if (req.headers['authorization'] !== NODE_AUTH_HEADER) {
+    throw new responses_1.HttpAuthErr('Wrong Authorization');
+  }
+
+  if (req.url === '/' && req.method === 'GET') {
+    res.setHeader('content-type', 'text/html');
+    return responses_1.indexHtml;
+  }
+
+  if (req.url === '/' && req.method === 'POST') {
+    const {
+      endpoint,
+      request,
+      data
+    } = await parse_1.parseReq(req);
+    return await delegateReqToEndpoint(endpoint, request, data);
+  }
+
+  throw new responses_1.HttpClientErr(`unknown path ${req.url}`);
+};
+
+https.createServer({
+  key: NODE_SSL_KEY,
+  cert: NODE_SSL_CRT
+}, (request, response) => {
+  handleReq(request, response).then(r => {
+    response.end(r);
+  }).catch(e => {
+    if (e instanceof responses_1.HttpAuthErr) {
+      response.statusCode = 401;
+      response.setHeader('WWW-Authenticate', 'Basic realm="flowcrypt-android-node"');
+    } else if (e instanceof responses_1.HttpClientErr) {
+      response.statusCode = 400;
+    } else {
+      console.error(e);
+      response.statusCode = 500;
     }
+
+    response.end(responses_1.fmtErr(e));
   });
-};
+}).listen(3000, 'localhost');
 
-const newBigString = mb => {
-  return new Array(mb * 1024 * 1024 / 2).join('x'); // in js, each character is a 16-bit value
-};
+/***/ }),
+/* 1 */
+/***/ (function(module, exports) {
 
-class HttpAuthErr extends Error {}
+module.exports = require("https");
 
-class HttpClientErr extends Error {}
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
 
-const parseReq = r => new Promise((resolve, reject) => {
+"use strict";
+/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+const responses_1 = __webpack_require__(3);
+
+exports.parseReq = r => new Promise((resolve, reject) => {
   const contentType = r.headers['content-type'];
 
   if (!contentType) {
-    throw new HttpClientErr('could not figure out content type');
+    throw new responses_1.HttpClientErr('could not figure out content type');
   }
 
   const boundary = (contentType.match(/^multipart\/form-data; boundary=(.+)$/) || [])[1];
 
   if (!boundary || boundary.length < 5 || boundary.length > 72) {
-    throw new HttpClientErr('could not figure out content type boundary');
+    throw new responses_1.HttpClientErr('could not figure out content type boundary');
   }
 
   const startBoundary = `--${boundary}`;
@@ -58060,10 +57952,10 @@ const parseReq = r => new Promise((resolve, reject) => {
               data: parts['data']
             });
           } catch (e) {
-            reject(new HttpClientErr('cannot parse request part as json'));
+            reject(new responses_1.HttpClientErr('cannot parse request part as json'));
           }
         } else {
-          reject(new HttpClientErr('missing endpoint or request part'));
+          reject(new responses_1.HttpClientErr('missing endpoint or request part'));
         }
 
         break;
@@ -58104,151 +57996,13 @@ const parseReq = r => new Promise((resolve, reject) => {
   });
   r.on('end', () => {
     if (!encounteredEndBoundary) {
-      reject(new HttpClientErr('Got to end of stream without encountering ending boundary'));
+      reject(new responses_1.HttpClientErr('Got to end of stream without encountering ending boundary'));
     }
   });
 });
 
-const indexHtml = `
-<html><head></head><body>
-<form method="POST" target="_blank" enctype="multipart/form-data">
-  <input type="text" placeholder="endpoint" name="endpoint"><br>
-  <textarea name="request" cols="160" rows="4" placeholder="json"></textarea><br>
-  <input name="data" type="file"> <button type="submit">submit post request</button>
-</form>
-</body></html>`;
-
-const fmtRes = (response, data) => {
-  let formatted = JSON.stringify(response) + '\n';
-
-  if (typeof data !== 'undefined') {
-    formatted += typeof data === 'string' ? data : common_js_1.Str.fromUint8(data);
-  }
-
-  return formatted;
-};
-
-const delegateReqToEndpoint = async (endpoint, uncheckedReq, data) => {
-  if (endpoint === 'version') {
-    return fmtRes(process.versions);
-  } else if (endpoint === 'encrypt') {
-    const req = requests_1.Validate.encrypt(uncheckedReq, data);
-
-    if (typeof req.filename === 'undefined') {
-      const encrypted = await pgp_js_1.Pgp.msg.encrypt(req.pubKeys, undefined, undefined, data, undefined, true);
-      return fmtRes({}, encrypted.data);
-    } else {
-      const encrypted = await pgp_js_1.Pgp.msg.encrypt(req.pubKeys, undefined, undefined, data, req.filename, false);
-      return fmtRes({}, encrypted.message.packets.write());
-    }
-  } else if (endpoint === 'hash') {
-    return fmtRes({
-      hello: pgp_js_1.Pgp.hash.sha256('hello')
-    });
-  } else if (endpoint === 'test25519') {
-    return fmtRes((await testEncryptDecrypt(KEY_25519, 'encrypt this string')));
-  } else if (endpoint === 'test2048') {
-    return fmtRes((await testEncryptDecrypt(KEY_2048, 'encrypt this string')));
-  } else if (endpoint === 'test4096') {
-    return fmtRes((await testEncryptDecrypt(KEY_4096, 'encrypt this string')));
-  } else if (endpoint === 'test2048-1M') {
-    return fmtRes((await testEncryptDecrypt(KEY_2048, newBigString(1))));
-  } else if (endpoint === 'test2048-3M') {
-    return fmtRes((await testEncryptDecrypt(KEY_2048, newBigString(3))));
-  } else if (endpoint === 'test2048-5M') {
-    return fmtRes((await testEncryptDecrypt(KEY_2048, newBigString(5))));
-  } else if (endpoint === 'test2048-10M') {
-    return fmtRes((await testEncryptDecrypt(KEY_2048, newBigString(10))));
-  } else if (endpoint === 'test2048-25M') {
-    return fmtRes((await testEncryptDecrypt(KEY_2048, newBigString(25))));
-  } else if (endpoint === 'test2048-50M') {
-    return fmtRes((await testEncryptDecrypt(KEY_2048, newBigString(50))));
-  }
-
-  throw new HttpClientErr(`unknown endporint: ${endpoint}`);
-};
-
-const handleReq = async (req, res) => {
-  if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT) {
-    throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_KEY or NODE_SSL_CRT');
-  }
-
-  if (req.headers['authorization'] !== NODE_AUTH_HEADER) {
-    throw new HttpAuthErr('Wrong Authorization');
-  }
-
-  if (req.url === '/' && req.method === 'GET') {
-    res.setHeader('content-type', 'text/html');
-    return indexHtml;
-  }
-
-  if (req.url === '/' && req.method === 'POST') {
-    const {
-      endpoint,
-      request,
-      data
-    } = await parseReq(req);
-    return await delegateReqToEndpoint(endpoint, request, data);
-  }
-
-  throw new HttpClientErr(`unknown path ${req.url}`);
-};
-
-const testEncryptDecrypt = async (privateKeyArmored, data) => {
-  let msg = '';
-  let checkpoint = Date.now();
-
-  const measure = name => {
-    const now = Date.now();
-    msg += `${name}: ${now - checkpoint}ms, \n`;
-    checkpoint = now;
-  };
-
-  const passphrase = 'some long pp';
-  const prv = openpgp.key.readArmored(privateKeyArmored).keys[0];
-  const pub = prv.toPublic();
-  measure('key parsed');
-  const encrypted = await openpgp.encrypt({
-    data,
-    publicKeys: [pub]
-  });
-  measure('message encrypted');
-  prv.decrypt(passphrase);
-  measure('prv decrypted');
-  await openpgp.decrypt({
-    message: openpgp.message.readArmored(encrypted.data),
-    privateKeys: [prv]
-  });
-  measure('message decrypted');
-  msg += `${JSON.stringify(pub.primaryKey.getAlgorithmInfo())} (data:${Math.round(data.length / 512)}K),\n`;
-  return {
-    msg
-  };
-};
-
-https.createServer({
-  key: NODE_SSL_KEY,
-  cert: NODE_SSL_CRT
-}, (request, response) => {
-  handleReq(request, response).then(r => {
-    response.end(r);
-  }).catch(e => {
-    if (e instanceof HttpAuthErr) {
-      response.statusCode = 401;
-      response.setHeader('WWW-Authenticate', 'Basic realm="flowcrypt-android-node"');
-    } else if (e instanceof HttpClientErr) {
-      response.statusCode = 400;
-    } else {
-      console.error(e);
-      response.statusCode = 500;
-    }
-
-    response.end(fmtErr(e));
-  });
-}).listen(3000, 'localhost');
-
 /***/ }),
-/* 1 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -58259,11 +58013,452 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const store_js_1 = __webpack_require__(2);
+const common_js_1 = __webpack_require__(4);
 
-const common_js_1 = __webpack_require__(3);
+class HttpAuthErr extends Error {}
 
-const catch_js_1 = __webpack_require__(6);
+exports.HttpAuthErr = HttpAuthErr;
+
+class HttpClientErr extends Error {}
+
+exports.HttpClientErr = HttpClientErr;
+
+exports.fmtRes = (response, data) => {
+  let formatted = JSON.stringify(response) + '\n';
+
+  if (typeof data !== 'undefined') {
+    formatted += typeof data === 'string' ? data : common_js_1.Str.fromUint8(data);
+  }
+
+  return formatted;
+};
+
+exports.fmtErr = e => {
+  return JSON.stringify({
+    error: {
+      message: String(e),
+      stack: e && typeof e === 'object' ? e.stack || '' : ''
+    }
+  });
+};
+
+exports.indexHtml = `
+<html><head></head><body>
+<form method="POST" target="_blank" enctype="multipart/form-data">
+  <input type="text" placeholder="endpoint" name="endpoint"><br>
+  <textarea name="request" cols="160" rows="4" placeholder="json"></textarea><br>
+  <input name="data" type="file"> <button type="submit">submit post request</button>
+</form>
+</body></html>`;
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+const pgp_js_1 = __webpack_require__(5);
+
+const att_js_1 = __webpack_require__(9);
+
+class Str {}
+
+Str.parseEmail = emailStr => {
+  if (Value.is('<').in(emailStr) && Value.is('>').in(emailStr)) {
+    return {
+      email: emailStr.substr(emailStr.indexOf('<') + 1, emailStr.indexOf('>') - emailStr.indexOf('<') - 1).replace(/["']/g, '').trim().toLowerCase(),
+      name: emailStr.substr(0, emailStr.indexOf('<')).replace(/["']/g, '').trim(),
+      full: emailStr
+    };
+  }
+
+  return {
+    email: emailStr.replace(/["']/g, '').trim().toLowerCase(),
+    name: undefined,
+    full: emailStr
+  };
+};
+
+Str.prettyPrint = obj => typeof obj === 'object' ? JSON.stringify(obj, undefined, 2).replace(/ /g, '&nbsp;').replace(/\n/g, '<br>') : String(obj);
+
+Str.normalizeSpaces = str => str.replace(RegExp(String.fromCharCode(160), 'g'), String.fromCharCode(32)).replace(/\n /g, '\n');
+
+Str.normalizeDashes = str => str.replace(/^—–|—–$/gm, '-----');
+
+Str.normalize = str => Str.normalizeSpaces(Str.normalizeDashes(str));
+
+Str.numberFormat = number => {
+  const nStr = number + '';
+  const x = nStr.split('.');
+  let x1 = x[0];
+  const x2 = x.length > 1 ? '.' + x[1] : '';
+  const rgx = /(\d+)(\d{3})/;
+
+  while (rgx.test(x1)) {
+    x1 = x1.replace(rgx, '$1' + ',' + '$2');
+  }
+
+  return x1 + x2;
+}; // tslint:disable-next-line:max-line-length
+
+
+Str.isEmailValid = email => /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/i.test(email);
+
+Str.monthName = monthIndex => ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][monthIndex];
+
+Str.sloppyRandom = (length = 5) => {
+  let id = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
+  for (let i = 0; i < length; i++) {
+    id += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+
+  return id;
+};
+
+Str.regexEscape = toBeUsedInRegex => toBeUsedInRegex.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+Str.htmlAttrEncode = values => Str.base64urlUtfEncode(JSON.stringify(values));
+
+Str.htmlAttrDecode = encoded => JSON.parse(Str.base64urlUtfDecode(encoded)); // tslint:disable-line:no-unsafe-any
+
+/**
+ * used for 3rd party API calls - do not change w/o testing Gmail api attachments
+ */
+
+
+Str.base64urlEncode = str => typeof str === 'undefined' ? str : btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+/**
+ * // used for 3rd party API calls - do not change w/o testing Gmail api attachments
+ */
+
+
+Str.base64urlDecode = str => typeof str === 'undefined' ? str : atob(str.replace(/-/g, '+').replace(/_/g, '/'));
+
+Str.fromUint8 = u8a => {
+  if (typeof u8a === 'string') {
+    return u8a;
+  }
+
+  const chunkSize = 0x8000;
+  const c = [];
+
+  for (let i = 0; i < u8a.length; i += chunkSize) {
+    c.push(String.fromCharCode.apply(undefined, u8a.subarray(i, i + chunkSize)));
+  }
+
+  return c.join('');
+};
+
+Str.toUint8 = raw => {
+  if (raw instanceof Uint8Array) {
+    return raw;
+  }
+
+  const rawLength = raw.length;
+  const uint8 = new Uint8Array(new ArrayBuffer(rawLength));
+
+  for (let i = 0; i < rawLength; i++) {
+    uint8[i] = raw.charCodeAt(i);
+  }
+
+  return uint8;
+};
+
+Str.fromEqualSignNotationAsUtf = str => {
+  return str.replace(/(=[A-F0-9]{2})+/g, equalSignUtfPart => {
+    return Str.uint8AsUtf(equalSignUtfPart.replace(/^=/, '').split('=').map(twoHexDigits => parseInt(twoHexDigits, 16)));
+  });
+};
+
+Str.uint8AsUtf = a => {
+  const length = a.length;
+  let bytesLeftInChar = 0;
+  let utf8string = '';
+  let binaryChar = '';
+
+  for (let i = 0; i < length; i++) {
+    if (a[i] < 128) {
+      if (bytesLeftInChar) {
+        // utf-8 continuation byte missing, assuming the last character was an 8-bit ASCII character
+        utf8string += String.fromCharCode(a[i - 1]);
+      }
+
+      bytesLeftInChar = 0;
+      binaryChar = '';
+      utf8string += String.fromCharCode(a[i]);
+    } else {
+      if (!bytesLeftInChar) {
+        // beginning of new multi-byte character
+        if (a[i] >= 128 && a[i] < 192) {
+          // 10xx xxxx
+          utf8string += String.fromCharCode(a[i]); // extended 8-bit ASCII compatibility, european ASCII characters
+        } else if (a[i] >= 192 && a[i] < 224) {
+          // 110x xxxx
+          bytesLeftInChar = 1;
+          binaryChar = a[i].toString(2).substr(3);
+        } else if (a[i] >= 224 && a[i] < 240) {
+          // 1110 xxxx
+          bytesLeftInChar = 2;
+          binaryChar = a[i].toString(2).substr(4);
+        } else if (a[i] >= 240 && a[i] < 248) {
+          // 1111 0xxx
+          bytesLeftInChar = 3;
+          binaryChar = a[i].toString(2).substr(5);
+        } else if (a[i] >= 248 && a[i] < 252) {
+          // 1111 10xx
+          bytesLeftInChar = 4;
+          binaryChar = a[i].toString(2).substr(6);
+        } else if (a[i] >= 252 && a[i] < 254) {
+          // 1111 110x
+          bytesLeftInChar = 5;
+          binaryChar = a[i].toString(2).substr(7);
+        } else {
+          console.log('Str.uint8_as_utf: invalid utf-8 character beginning byte: ' + a[i]);
+        }
+      } else {
+        // continuation of a multi-byte character
+        binaryChar += a[i].toString(2).substr(2);
+        bytesLeftInChar--;
+      }
+
+      if (binaryChar && !bytesLeftInChar) {
+        utf8string += String.fromCharCode(parseInt(binaryChar, 2));
+        binaryChar = '';
+      }
+    }
+  }
+
+  return utf8string;
+};
+
+Str.toHex = str => {
+  let r = '';
+
+  for (let i = 0; i < str.length; i++) {
+    const n = str.charCodeAt(i).toString(16);
+    r += n.length < 2 ? `0${n}` : n;
+  }
+
+  return r;
+};
+
+Str.fromHex = hex => {
+  let str = '';
+
+  for (let i = 0; i < hex.length; i += 2) {
+    const v = parseInt(hex.substr(i, 2), 16);
+
+    if (v) {
+      str += String.fromCharCode(v);
+    }
+  }
+
+  return str;
+};
+
+Str.isFcAttLinkData = o => {
+  return o && typeof o === 'object' && typeof o.name !== 'undefined' && typeof o.size !== 'undefined' && typeof o.type !== 'undefined';
+};
+
+Str.extractFcAtts = (decryptedContent, fcAtts) => {
+  if (Value.is('cryptup_file').in(decryptedContent)) {
+    decryptedContent = decryptedContent.replace(/<a[^>]+class="cryptup_file"[^>]+>[^<]+<\/a>\n?/gm, foundLink => {
+      const el = $(foundLink);
+      const fcData = el.attr('cryptup-data');
+
+      if (fcData) {
+        const a = Str.htmlAttrDecode(fcData);
+
+        if (Str.isFcAttLinkData(a)) {
+          fcAtts.push(new att_js_1.Att({
+            type: a.type,
+            name: a.name,
+            length: a.size,
+            url: el.attr('href')
+          }));
+        }
+      }
+
+      return '';
+    });
+  }
+
+  return decryptedContent;
+};
+
+Str.extractFcReplyToken = decryptedContent => {
+  const fcTokenElement = $(`<div>${decryptedContent}</div>`).find('.cryptup_reply');
+
+  if (fcTokenElement.length) {
+    const fcData = fcTokenElement.attr('cryptup-data');
+
+    if (fcData) {
+      return Str.htmlAttrDecode(fcData);
+    }
+  }
+};
+
+Str.stripFcTeplyToken = decryptedContent => decryptedContent.replace(/<div[^>]+class="cryptup_reply"[^>]+><\/div>/, '');
+
+Str.stripPublicKeys = (decryptedContent, foundPublicKeys) => {
+  let {
+    blocks,
+    normalized
+  } = pgp_js_1.Pgp.armor.detectBlocks(decryptedContent); // tslint:disable-line:prefer-const
+
+  for (const block of blocks) {
+    if (block.type === 'publicKey') {
+      foundPublicKeys.push(block.content);
+      normalized = normalized.replace(block.content, '');
+    }
+  }
+
+  return normalized;
+};
+
+Str.intToHex = intAsStr => {
+  let dec = intAsStr.toString().split(''),
+      sum = [],
+      hex = [],
+      i,
+      s; // tslint:disable-line:prefer-const
+
+  while (dec.length) {
+    s = Number(dec.shift());
+
+    for (i = 0; s || i < sum.length; i++) {
+      s += (sum[i] || 0) * 10;
+      sum[i] = s % 16;
+      s = (s - sum[i]) / 16;
+    }
+  }
+
+  while (sum.length) {
+    hex.push(sum.pop().toString(16));
+  }
+
+  return hex.join('');
+};
+
+Str.capitalize = string => string.trim().split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+
+Str.toUtcTimestamp = (datetimeStr, asStr = false) => asStr ? String(Date.parse(datetimeStr)) : Date.parse(datetimeStr);
+
+Str.datetimeToDate = date => date.substr(0, 10).replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;');
+
+Str.base64urlUtfEncode = str => {
+  // https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings
+  if (typeof str === 'undefined') {
+    return str;
+  }
+
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode(parseInt(String(p1), 16)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+};
+
+Str.base64urlUtfDecode = str => {
+  // https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings
+  if (typeof str === 'undefined') {
+    return str;
+  } // tslint:disable-next-line:no-unsafe-any
+
+
+  return decodeURIComponent(Array.prototype.map.call(atob(str.replace(/-/g, '+').replace(/_/g, '/')), c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+};
+
+exports.Str = Str;
+
+class Value {}
+
+Value.arr = {
+  unique: array => {
+    const unique = [];
+
+    for (const v of array) {
+      if (!Value.is(v).in(unique)) {
+        unique.push(v);
+      }
+    }
+
+    return unique;
+  },
+  fromDomNodeList: obj => {
+    const array = [];
+
+    for (let i = obj.length >>> 0; i--;) {
+      // iterate backwards ensuring that length is an UInt32
+      array[i] = obj[i];
+    }
+
+    return array;
+  },
+  withoutKey: (array, i) => array.splice(0, i).concat(array.splice(i + 1, array.length)),
+  withoutVal: (array, withoutVal) => {
+    const result = [];
+
+    for (const value of array) {
+      if (value !== withoutVal) {
+        result.push(value);
+      }
+    }
+
+    return result;
+  },
+  contains: (arr, value) => Boolean(arr && typeof arr.indexOf === 'function' && arr.indexOf(value) !== -1),
+  sum: arr => arr.reduce((a, b) => a + b, 0),
+  average: arr => Value.arr.sum(arr) / arr.length,
+  zeroes: length => new Array(length).map(() => 0)
+};
+Value.obj = {
+  keyByValue: (obj, v) => {
+    for (const k of Object.keys(obj)) {
+      if (obj[k] === v) {
+        return k;
+      }
+    }
+
+    return undefined;
+  }
+};
+Value.int = {
+  lousyRandom: (minVal, maxVal) => minVal + Math.round(Math.random() * (maxVal - minVal)),
+  getFutureTimestampInMonths: monthsToAdd => new Date().getTime() + 1000 * 3600 * 24 * 30 * monthsToAdd,
+  hoursAsMiliseconds: h => h * 1000 * 60 * 60
+};
+
+Value.noop = () => undefined;
+
+Value.is = v => ({
+  in: arrayOrStr => Value.arr.contains(arrayOrStr, v)
+}); // Value.this(v).in(array_or_string)
+
+
+exports.Value = Value;
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+const store_js_1 = __webpack_require__(6);
+
+const common_js_1 = __webpack_require__(4);
+
+const catch_js_1 = __webpack_require__(8);
 
 if (typeof openpgp !== 'undefined') {
   openpgp.config.versionstring = `FlowCrypt ${catch_js_1.Catch.version()} Gmail Encryption`;
@@ -59241,7 +59436,7 @@ Pgp.internal = {
 exports.Pgp = Pgp;
 
 /***/ }),
-/* 2 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -59252,11 +59447,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const common_js_1 = __webpack_require__(3);
+const common_js_1 = __webpack_require__(4);
 
-const mnemonic_js_1 = __webpack_require__(5);
+const mnemonic_js_1 = __webpack_require__(7);
 
-const pgp_js_1 = __webpack_require__(1);
+const pgp_js_1 = __webpack_require__(5);
 
 class Store {
   static async passphraseGet(acctEmail, longid, ignoreSession = false) {
@@ -59315,554 +59510,7 @@ Store.dbContactSearch = async (db, query) => {
 exports.Store = Store;
 
 /***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-const pgp_js_1 = __webpack_require__(1);
-
-const att_js_1 = __webpack_require__(4);
-
-class Str {}
-
-Str.parseEmail = emailStr => {
-  if (Value.is('<').in(emailStr) && Value.is('>').in(emailStr)) {
-    return {
-      email: emailStr.substr(emailStr.indexOf('<') + 1, emailStr.indexOf('>') - emailStr.indexOf('<') - 1).replace(/["']/g, '').trim().toLowerCase(),
-      name: emailStr.substr(0, emailStr.indexOf('<')).replace(/["']/g, '').trim(),
-      full: emailStr
-    };
-  }
-
-  return {
-    email: emailStr.replace(/["']/g, '').trim().toLowerCase(),
-    name: undefined,
-    full: emailStr
-  };
-};
-
-Str.prettyPrint = obj => typeof obj === 'object' ? JSON.stringify(obj, undefined, 2).replace(/ /g, '&nbsp;').replace(/\n/g, '<br>') : String(obj);
-
-Str.normalizeSpaces = str => str.replace(RegExp(String.fromCharCode(160), 'g'), String.fromCharCode(32)).replace(/\n /g, '\n');
-
-Str.normalizeDashes = str => str.replace(/^—–|—–$/gm, '-----');
-
-Str.normalize = str => Str.normalizeSpaces(Str.normalizeDashes(str));
-
-Str.numberFormat = number => {
-  const nStr = number + '';
-  const x = nStr.split('.');
-  let x1 = x[0];
-  const x2 = x.length > 1 ? '.' + x[1] : '';
-  const rgx = /(\d+)(\d{3})/;
-
-  while (rgx.test(x1)) {
-    x1 = x1.replace(rgx, '$1' + ',' + '$2');
-  }
-
-  return x1 + x2;
-}; // tslint:disable-next-line:max-line-length
-
-
-Str.isEmailValid = email => /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/i.test(email);
-
-Str.monthName = monthIndex => ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][monthIndex];
-
-Str.sloppyRandom = (length = 5) => {
-  let id = '';
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-
-  for (let i = 0; i < length; i++) {
-    id += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-
-  return id;
-};
-
-Str.regexEscape = toBeUsedInRegex => toBeUsedInRegex.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-Str.htmlAttrEncode = values => Str.base64urlUtfEncode(JSON.stringify(values));
-
-Str.htmlAttrDecode = encoded => JSON.parse(Str.base64urlUtfDecode(encoded)); // tslint:disable-line:no-unsafe-any
-
-/**
- * used for 3rd party API calls - do not change w/o testing Gmail api attachments
- */
-
-
-Str.base64urlEncode = str => typeof str === 'undefined' ? str : btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-/**
- * // used for 3rd party API calls - do not change w/o testing Gmail api attachments
- */
-
-
-Str.base64urlDecode = str => typeof str === 'undefined' ? str : atob(str.replace(/-/g, '+').replace(/_/g, '/'));
-
-Str.fromUint8 = u8a => {
-  if (typeof u8a === 'string') {
-    return u8a;
-  }
-
-  const chunkSize = 0x8000;
-  const c = [];
-
-  for (let i = 0; i < u8a.length; i += chunkSize) {
-    c.push(String.fromCharCode.apply(undefined, u8a.subarray(i, i + chunkSize)));
-  }
-
-  return c.join('');
-};
-
-Str.toUint8 = raw => {
-  if (raw instanceof Uint8Array) {
-    return raw;
-  }
-
-  const rawLength = raw.length;
-  const uint8 = new Uint8Array(new ArrayBuffer(rawLength));
-
-  for (let i = 0; i < rawLength; i++) {
-    uint8[i] = raw.charCodeAt(i);
-  }
-
-  return uint8;
-};
-
-Str.fromEqualSignNotationAsUtf = str => {
-  return str.replace(/(=[A-F0-9]{2})+/g, equalSignUtfPart => {
-    return Str.uint8AsUtf(equalSignUtfPart.replace(/^=/, '').split('=').map(twoHexDigits => parseInt(twoHexDigits, 16)));
-  });
-};
-
-Str.uint8AsUtf = a => {
-  const length = a.length;
-  let bytesLeftInChar = 0;
-  let utf8string = '';
-  let binaryChar = '';
-
-  for (let i = 0; i < length; i++) {
-    if (a[i] < 128) {
-      if (bytesLeftInChar) {
-        // utf-8 continuation byte missing, assuming the last character was an 8-bit ASCII character
-        utf8string += String.fromCharCode(a[i - 1]);
-      }
-
-      bytesLeftInChar = 0;
-      binaryChar = '';
-      utf8string += String.fromCharCode(a[i]);
-    } else {
-      if (!bytesLeftInChar) {
-        // beginning of new multi-byte character
-        if (a[i] >= 128 && a[i] < 192) {
-          // 10xx xxxx
-          utf8string += String.fromCharCode(a[i]); // extended 8-bit ASCII compatibility, european ASCII characters
-        } else if (a[i] >= 192 && a[i] < 224) {
-          // 110x xxxx
-          bytesLeftInChar = 1;
-          binaryChar = a[i].toString(2).substr(3);
-        } else if (a[i] >= 224 && a[i] < 240) {
-          // 1110 xxxx
-          bytesLeftInChar = 2;
-          binaryChar = a[i].toString(2).substr(4);
-        } else if (a[i] >= 240 && a[i] < 248) {
-          // 1111 0xxx
-          bytesLeftInChar = 3;
-          binaryChar = a[i].toString(2).substr(5);
-        } else if (a[i] >= 248 && a[i] < 252) {
-          // 1111 10xx
-          bytesLeftInChar = 4;
-          binaryChar = a[i].toString(2).substr(6);
-        } else if (a[i] >= 252 && a[i] < 254) {
-          // 1111 110x
-          bytesLeftInChar = 5;
-          binaryChar = a[i].toString(2).substr(7);
-        } else {
-          console.log('Str.uint8_as_utf: invalid utf-8 character beginning byte: ' + a[i]);
-        }
-      } else {
-        // continuation of a multi-byte character
-        binaryChar += a[i].toString(2).substr(2);
-        bytesLeftInChar--;
-      }
-
-      if (binaryChar && !bytesLeftInChar) {
-        utf8string += String.fromCharCode(parseInt(binaryChar, 2));
-        binaryChar = '';
-      }
-    }
-  }
-
-  return utf8string;
-};
-
-Str.toHex = str => {
-  let r = '';
-
-  for (let i = 0; i < str.length; i++) {
-    const n = str.charCodeAt(i).toString(16);
-    r += n.length < 2 ? `0${n}` : n;
-  }
-
-  return r;
-};
-
-Str.fromHex = hex => {
-  let str = '';
-
-  for (let i = 0; i < hex.length; i += 2) {
-    const v = parseInt(hex.substr(i, 2), 16);
-
-    if (v) {
-      str += String.fromCharCode(v);
-    }
-  }
-
-  return str;
-};
-
-Str.isFcAttLinkData = o => {
-  return o && typeof o === 'object' && typeof o.name !== 'undefined' && typeof o.size !== 'undefined' && typeof o.type !== 'undefined';
-};
-
-Str.extractFcAtts = (decryptedContent, fcAtts) => {
-  if (Value.is('cryptup_file').in(decryptedContent)) {
-    decryptedContent = decryptedContent.replace(/<a[^>]+class="cryptup_file"[^>]+>[^<]+<\/a>\n?/gm, foundLink => {
-      const el = $(foundLink);
-      const fcData = el.attr('cryptup-data');
-
-      if (fcData) {
-        const a = Str.htmlAttrDecode(fcData);
-
-        if (Str.isFcAttLinkData(a)) {
-          fcAtts.push(new att_js_1.Att({
-            type: a.type,
-            name: a.name,
-            length: a.size,
-            url: el.attr('href')
-          }));
-        }
-      }
-
-      return '';
-    });
-  }
-
-  return decryptedContent;
-};
-
-Str.extractFcReplyToken = decryptedContent => {
-  const fcTokenElement = $(`<div>${decryptedContent}</div>`).find('.cryptup_reply');
-
-  if (fcTokenElement.length) {
-    const fcData = fcTokenElement.attr('cryptup-data');
-
-    if (fcData) {
-      return Str.htmlAttrDecode(fcData);
-    }
-  }
-};
-
-Str.stripFcTeplyToken = decryptedContent => decryptedContent.replace(/<div[^>]+class="cryptup_reply"[^>]+><\/div>/, '');
-
-Str.stripPublicKeys = (decryptedContent, foundPublicKeys) => {
-  let {
-    blocks,
-    normalized
-  } = pgp_js_1.Pgp.armor.detectBlocks(decryptedContent); // tslint:disable-line:prefer-const
-
-  for (const block of blocks) {
-    if (block.type === 'publicKey') {
-      foundPublicKeys.push(block.content);
-      normalized = normalized.replace(block.content, '');
-    }
-  }
-
-  return normalized;
-};
-
-Str.intToHex = intAsStr => {
-  let dec = intAsStr.toString().split(''),
-      sum = [],
-      hex = [],
-      i,
-      s; // tslint:disable-line:prefer-const
-
-  while (dec.length) {
-    s = Number(dec.shift());
-
-    for (i = 0; s || i < sum.length; i++) {
-      s += (sum[i] || 0) * 10;
-      sum[i] = s % 16;
-      s = (s - sum[i]) / 16;
-    }
-  }
-
-  while (sum.length) {
-    hex.push(sum.pop().toString(16));
-  }
-
-  return hex.join('');
-};
-
-Str.capitalize = string => string.trim().split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
-
-Str.toUtcTimestamp = (datetimeStr, asStr = false) => asStr ? String(Date.parse(datetimeStr)) : Date.parse(datetimeStr);
-
-Str.datetimeToDate = date => date.substr(0, 10).replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;');
-
-Str.base64urlUtfEncode = str => {
-  // https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings
-  if (typeof str === 'undefined') {
-    return str;
-  }
-
-  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode(parseInt(String(p1), 16)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-};
-
-Str.base64urlUtfDecode = str => {
-  // https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings
-  if (typeof str === 'undefined') {
-    return str;
-  } // tslint:disable-next-line:no-unsafe-any
-
-
-  return decodeURIComponent(Array.prototype.map.call(atob(str.replace(/-/g, '+').replace(/_/g, '/')), c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-};
-
-exports.Str = Str;
-
-class Value {}
-
-Value.arr = {
-  unique: array => {
-    const unique = [];
-
-    for (const v of array) {
-      if (!Value.is(v).in(unique)) {
-        unique.push(v);
-      }
-    }
-
-    return unique;
-  },
-  fromDomNodeList: obj => {
-    const array = [];
-
-    for (let i = obj.length >>> 0; i--;) {
-      // iterate backwards ensuring that length is an UInt32
-      array[i] = obj[i];
-    }
-
-    return array;
-  },
-  withoutKey: (array, i) => array.splice(0, i).concat(array.splice(i + 1, array.length)),
-  withoutVal: (array, withoutVal) => {
-    const result = [];
-
-    for (const value of array) {
-      if (value !== withoutVal) {
-        result.push(value);
-      }
-    }
-
-    return result;
-  },
-  contains: (arr, value) => Boolean(arr && typeof arr.indexOf === 'function' && arr.indexOf(value) !== -1),
-  sum: arr => arr.reduce((a, b) => a + b, 0),
-  average: arr => Value.arr.sum(arr) / arr.length,
-  zeroes: length => new Array(length).map(() => 0)
-};
-Value.obj = {
-  keyByValue: (obj, v) => {
-    for (const k of Object.keys(obj)) {
-      if (obj[k] === v) {
-        return k;
-      }
-    }
-
-    return undefined;
-  }
-};
-Value.int = {
-  lousyRandom: (minVal, maxVal) => minVal + Math.round(Math.random() * (maxVal - minVal)),
-  getFutureTimestampInMonths: monthsToAdd => new Date().getTime() + 1000 * 3600 * 24 * 30 * monthsToAdd,
-  hoursAsMiliseconds: h => h * 1000 * 60 * 60
-};
-
-Value.noop = () => undefined;
-
-Value.is = v => ({
-  in: arrayOrStr => Value.arr.contains(arrayOrStr, v)
-}); // Value.this(v).in(array_or_string)
-
-
-exports.Value = Value;
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-const common_js_1 = __webpack_require__(3);
-
-class Att {
-  constructor({
-    data,
-    type,
-    name,
-    length,
-    url,
-    inline,
-    id,
-    msgId,
-    treatAs,
-    cid
-  }) {
-    this.text = undefined;
-    this.bytes = undefined;
-    this.treatAsValue = undefined;
-
-    this.setData = data => {
-      if (this.hasData()) {
-        throw new Error('Att: data already set');
-      }
-
-      if (data instanceof Uint8Array) {
-        this.bytes = data;
-      } else if (typeof data === 'string') {
-        this.text = data;
-      }
-
-      this.length = data.length;
-    };
-
-    this.hasData = () => {
-      if (typeof this.bytes === 'undefined' && typeof this.text === 'undefined') {
-        return false;
-      }
-
-      return true;
-    };
-
-    this.data = () => {
-      if (typeof this.bytes !== 'undefined') {
-        return this.bytes;
-      }
-
-      if (typeof this.text !== 'undefined') {
-        return this.text;
-      }
-
-      throw new Error('Att has no data set');
-    };
-
-    this.asText = () => {
-      if (typeof this.text === 'undefined' && typeof this.bytes !== 'undefined') {
-        this.text = common_js_1.Str.fromUint8(this.bytes);
-      }
-
-      if (typeof this.text !== 'undefined') {
-        return this.text;
-      }
-
-      throw new Error('Att has no data set');
-    };
-
-    this.asBytes = () => {
-      if (typeof this.bytes === 'undefined' && typeof this.text !== 'undefined') {
-        this.bytes = common_js_1.Str.toUint8(this.text);
-      }
-
-      if (typeof this.bytes !== 'undefined') {
-        return this.bytes;
-      }
-
-      throw new Error('Att has no data set');
-    };
-
-    this.treatAs = () => {
-      // todo - should return a probability in the range of certain-likely-maybe
-      // could also return possible types as an array - which makes basic usage more difficult - to think through
-      // better option - add an "unknown" type: when encountered, code consuming this should inspect a chunk of contents
-      if (this.treatAsValue) {
-        // pre-set
-        return this.treatAsValue;
-      } else if (common_js_1.Value.is(this.name).in(['PGPexch.htm.pgp', 'PGPMIME version identification', 'Version.txt'])) {
-        return 'hidden'; // PGPexch.htm.pgp is html alternative of textual body content produced by PGP Desktop and GPG4o
-      } else if (this.name === 'signature.asc' || this.type === 'application/pgp-signature') {
-        return 'signature';
-      } else if (!this.name && !common_js_1.Value.is('image/').in(this.type)) {
-        // this.name may be '' or undefined - catch either
-        return this.length < 100 ? 'hidden' : 'message';
-      } else if (common_js_1.Value.is(this.name).in(['message', 'msg.asc', 'message.asc', 'encrypted.asc', 'encrypted.eml.pgp', 'Message.pgp'])) {
-        return 'message';
-      } else if (this.name.match(/(\.pgp$)|(\.gpg$)|(\.[a-zA-Z0-9]{3,4}\.asc$)/g)) {
-        // ends with one of .gpg, .pgp, .???.asc, .????.asc
-        return 'encrypted';
-      } else if (this.name.match(/^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\.asc$/g)) {
-        // name starts with a key id
-        return 'publicKey';
-      } else if (common_js_1.Value.is('public').in(this.name.toLowerCase()) && this.name.match(/[A-F0-9]{8}.*\.asc$/g)) {
-        // name contains the word "public", any key id and ends with .asc
-        return 'publicKey';
-      } else if (this.name.match(/\.asc$/) && this.length < 100000 && !this.inline) {
-        return 'message';
-      } else {
-        return 'standard';
-      }
-    };
-
-    if (typeof data === 'undefined' && typeof url === 'undefined' && typeof id === 'undefined') {
-      throw new Error('Att: one of data|url|id has to be set');
-    }
-
-    if (id && !msgId) {
-      throw new Error('Att: if id is set, msgId must be set too');
-    }
-
-    if (typeof data !== null && typeof data !== 'undefined') {
-      this.setData(data);
-    }
-
-    this.name = name || '';
-    this.type = type || 'application/octet-stream';
-    this.length = data ? data.length : length || NaN;
-    this.url = url || undefined;
-    this.inline = inline !== true;
-    this.id = id || undefined;
-    this.msgId = msgId || undefined;
-    this.treatAsValue = treatAs || undefined;
-    this.cid = cid || undefined;
-  }
-
-}
-
-Att.pgpNamePatterns = () => ['*.pgp', '*.gpg', '*.asc', 'noname', 'message', 'PGPMIME version identification', ''];
-
-Att.keyinfoAsPubkeyAtt = ki => new Att({
-  data: ki.public,
-  type: 'application/pgp-keys',
-  name: `0x${ki.longid}.asc`
-});
-
-exports.Att = Att;
-
-/***/ }),
-/* 5 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -59903,7 +59551,7 @@ exports.mnemonic = hex => {
 };
 
 /***/ }),
-/* 6 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -60050,13 +59698,466 @@ Catch.version = (format = 'original') => {
 exports.Catch = Catch;
 
 /***/ }),
-/* 7 */
-/***/ (function(module, exports) {
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
 
-module.exports = require("https");
+"use strict";
+/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+const common_js_1 = __webpack_require__(4);
+
+class Att {
+  constructor({
+    data,
+    type,
+    name,
+    length,
+    url,
+    inline,
+    id,
+    msgId,
+    treatAs,
+    cid
+  }) {
+    this.text = undefined;
+    this.bytes = undefined;
+    this.treatAsValue = undefined;
+
+    this.setData = data => {
+      if (this.hasData()) {
+        throw new Error('Att: data already set');
+      }
+
+      if (data instanceof Uint8Array) {
+        this.bytes = data;
+      } else if (typeof data === 'string') {
+        this.text = data;
+      }
+
+      this.length = data.length;
+    };
+
+    this.hasData = () => {
+      if (typeof this.bytes === 'undefined' && typeof this.text === 'undefined') {
+        return false;
+      }
+
+      return true;
+    };
+
+    this.data = () => {
+      if (typeof this.bytes !== 'undefined') {
+        return this.bytes;
+      }
+
+      if (typeof this.text !== 'undefined') {
+        return this.text;
+      }
+
+      throw new Error('Att has no data set');
+    };
+
+    this.asText = () => {
+      if (typeof this.text === 'undefined' && typeof this.bytes !== 'undefined') {
+        this.text = common_js_1.Str.fromUint8(this.bytes);
+      }
+
+      if (typeof this.text !== 'undefined') {
+        return this.text;
+      }
+
+      throw new Error('Att has no data set');
+    };
+
+    this.asBytes = () => {
+      if (typeof this.bytes === 'undefined' && typeof this.text !== 'undefined') {
+        this.bytes = common_js_1.Str.toUint8(this.text);
+      }
+
+      if (typeof this.bytes !== 'undefined') {
+        return this.bytes;
+      }
+
+      throw new Error('Att has no data set');
+    };
+
+    this.treatAs = () => {
+      // todo - should return a probability in the range of certain-likely-maybe
+      // could also return possible types as an array - which makes basic usage more difficult - to think through
+      // better option - add an "unknown" type: when encountered, code consuming this should inspect a chunk of contents
+      if (this.treatAsValue) {
+        // pre-set
+        return this.treatAsValue;
+      } else if (common_js_1.Value.is(this.name).in(['PGPexch.htm.pgp', 'PGPMIME version identification', 'Version.txt'])) {
+        return 'hidden'; // PGPexch.htm.pgp is html alternative of textual body content produced by PGP Desktop and GPG4o
+      } else if (this.name === 'signature.asc' || this.type === 'application/pgp-signature') {
+        return 'signature';
+      } else if (!this.name && !common_js_1.Value.is('image/').in(this.type)) {
+        // this.name may be '' or undefined - catch either
+        return this.length < 100 ? 'hidden' : 'message';
+      } else if (common_js_1.Value.is(this.name).in(['message', 'msg.asc', 'message.asc', 'encrypted.asc', 'encrypted.eml.pgp', 'Message.pgp'])) {
+        return 'message';
+      } else if (this.name.match(/(\.pgp$)|(\.gpg$)|(\.[a-zA-Z0-9]{3,4}\.asc$)/g)) {
+        // ends with one of .gpg, .pgp, .???.asc, .????.asc
+        return 'encrypted';
+      } else if (this.name.match(/^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\.asc$/g)) {
+        // name starts with a key id
+        return 'publicKey';
+      } else if (common_js_1.Value.is('public').in(this.name.toLowerCase()) && this.name.match(/[A-F0-9]{8}.*\.asc$/g)) {
+        // name contains the word "public", any key id and ends with .asc
+        return 'publicKey';
+      } else if (this.name.match(/\.asc$/) && this.length < 100000 && !this.inline) {
+        return 'message';
+      } else {
+        return 'standard';
+      }
+    };
+
+    if (typeof data === 'undefined' && typeof url === 'undefined' && typeof id === 'undefined') {
+      throw new Error('Att: one of data|url|id has to be set');
+    }
+
+    if (id && !msgId) {
+      throw new Error('Att: if id is set, msgId must be set too');
+    }
+
+    if (typeof data !== null && typeof data !== 'undefined') {
+      this.setData(data);
+    }
+
+    this.name = name || '';
+    this.type = type || 'application/octet-stream';
+    this.length = data ? data.length : length || NaN;
+    this.url = url || undefined;
+    this.inline = inline !== true;
+    this.id = id || undefined;
+    this.msgId = msgId || undefined;
+    this.treatAsValue = treatAs || undefined;
+    this.cid = cid || undefined;
+  }
+
+}
+
+Att.pgpNamePatterns = () => ['*.pgp', '*.gpg', '*.asc', 'noname', 'message', 'PGPMIME version identification', ''];
+
+Att.keyinfoAsPubkeyAtt = ki => new Att({
+  data: ki.public,
+  type: 'application/pgp-keys',
+  name: `0x${ki.longid}.asc`
+});
+
+exports.Att = Att;
 
 /***/ }),
-/* 8 */
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+/// <reference path="../types/openpgp.d.ts" />
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+const responses_1 = __webpack_require__(3);
+
+const KEY_2048 = `-----BEGIN PGP PRIVATE KEY BLOCK-----
+Version: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption
+Comment: Seamlessly send and receive encrypted email
+
+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
+=15Xc
+-----END PGP PRIVATE KEY BLOCK-----`;
+const KEY_4096 = `-----BEGIN PGP PRIVATE KEY BLOCK-----
+Version: FlowCrypt  Email Encryption - flowcrypt.com
+Comment: Seamlessly send, receive and search encrypted email
+
+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
+Dn6h
+=5aR+
+-----END PGP PRIVATE KEY BLOCK-----`;
+const KEY_25519 = `-----BEGIN PGP PRIVATE KEY BLOCK-----\r\nVersion: FlowCrypt 6.3.5 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\n\r\nxYYEXAZt6RYJKwYBBAHaRw8BAQdAHk2PLEMfkVLjxI6Vdg+dnJ5ElKcAX78x\nP+GVCYDZyfL+CQMI1riV1EDicFNg4/f/0U/ZJZ9udC0F7GvtFKagL3EIqz6f\nm+bm2E5qdDdyM2Z/7U2YOOVPc/HBxTg9SHrCTAYmfLtXEwU21uRzKIW9Y6N0\nLs0RdXNyIDx1c3JAdXNyLmNvbT7CdwQQFgoAKQUCXAZt6QYLCQcIAwIJEAY2\nNbPjPrFMBBUICgIDFgIBAhkBAhsDAh4BAADkfQD/cn4xmKOznw6jXw7m9jfe\nzABESbvxpAsBSL0lYyTF1g4BAPYKXnzBAMOjLHZ+CZL01A5I435MJoZ8ho+V\n233bcqoPx4sEXAZt6RIKKwYBBAGXVQEFAQEHQGqQsqsYFqSb8xU2Jy+m0ofh\nztR2KR1ukc+V+Daytv91AwEIB/4JAwhPqxwBR+9JFWD07K5gQ/ahdz6fd7jf\npiGAGZfJc3qN/W9MTqZcsl0qIiM4IaMeAuqlqm5xVHSHA3r7SnyfGtzDURM+\nc9pzQRYLwp33TgHXwmEEGBYIABMFAlwGbekJEAY2NbPjPrFMAhsMAACUKwD+\nMQFdjWEZwfAnJZQWLx3jpFxNyuKjUER5hRfphIXGeqUA/0wqTCpbBWQlcwml\n8jqIREq1Q/lDO3/9QPULKioe2ZoM\r\n=8qZ6\r\n-----END PGP PRIVATE KEY BLOCK-----\r\n", publicKeyArmored: "-----BEGIN PGP PUBLIC KEY BLOCK-----\r\nVersion: FlowCrypt 6.3.5 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\n\r\nxjMEXAZt6RYJKwYBBAHaRw8BAQdAHk2PLEMfkVLjxI6Vdg+dnJ5ElKcAX78x\nP+GVCYDZyfLNEXVzciA8dXNyQHVzci5jb20+wncEEBYKACkFAlwGbekGCwkH\nCAMCCRAGNjWz4z6xTAQVCAoCAxYCAQIZAQIbAwIeAQAA5H0A/3J+MZijs58O\no18O5vY33swAREm78aQLAUi9JWMkxdYOAQD2Cl58wQDDoyx2fgmS9NQOSON+\nTCaGfIaPldt923KqD844BFwGbekSCisGAQQBl1UBBQEBB0BqkLKrGBakm/MV\nNicvptKH4c7UdikdbpHPlfg2srb/dQMBCAfCYQQYFggAEwUCXAZt6QkQBjY1\ns+M+sUwCGwwAAJQrAP4xAV2NYRnB8CcllBYvHeOkXE3K4qNQRHmFF+mEhcZ6\npQD/TCpMKlsFZCVzCaXyOohESrVD+UM7f/1A9QsqKh7Zmgw=\r\n=WZgv\r\n-----END PGP PUBLIC KEY BLOCK-----\r\n\r\n", revocationCertificate: "-----BEGIN PGP PUBLIC KEY BLOCK-----\r\nVersion: FlowCrypt 6.3.5 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\nComment: This is a revocation certificate\r\n\r\nwmEEIBYKABMFAlwGbekJEAY2NbPjPrFMAh0AAACUaQD/c9eod5CrHQ0b79gF\nTVLvdGmInmhFoDOMsO69uHpAyToBAPEEApEycDN9rktUU1k/qSjV1zkWAjQ2\ndfQw8KTe8zYE\r\n=Ogjo\r\n-----END PGP PUBLIC KEY BLOCK-----\r\n\r\n`;
+
+const newBigString = mb => {
+  return new Array(mb * 1024 * 1024 / 2).join('x'); // in js, each character is a 16-bit value
+};
+
+const testEncryptDecrypt = async (privateKeyArmored, data) => {
+  let msg = '';
+  let checkpoint = Date.now();
+
+  const measure = name => {
+    const now = Date.now();
+    msg += `${name}: ${now - checkpoint}ms, \n`;
+    checkpoint = now;
+  };
+
+  const passphrase = 'some long pp';
+  const prv = openpgp.key.readArmored(privateKeyArmored).keys[0];
+  const pub = prv.toPublic();
+  measure('key parsed');
+  const encrypted = await openpgp.encrypt({
+    data,
+    publicKeys: [pub]
+  });
+  measure('message encrypted');
+  prv.decrypt(passphrase);
+  measure('prv decrypted');
+  await openpgp.decrypt({
+    message: openpgp.message.readArmored(encrypted.data),
+    privateKeys: [prv]
+  });
+  measure('message decrypted');
+  msg += `${JSON.stringify(pub.primaryKey.getAlgorithmInfo())} (data:${Math.round(data.length / 512)}K),\n`;
+  return {
+    msg
+  };
+};
+
+exports.testEndpointHandler = async endpoint => {
+  if (endpoint === 'test25519') {
+    return await testEncryptDecrypt(KEY_25519, 'encrypt this string');
+  } else if (endpoint === 'test2048') {
+    return await testEncryptDecrypt(KEY_2048, 'encrypt this string');
+  } else if (endpoint === 'test4096') {
+    return await testEncryptDecrypt(KEY_4096, 'encrypt this string');
+  } else if (endpoint === 'test2048-1M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(1));
+  } else if (endpoint === 'test2048-3M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(3));
+  } else if (endpoint === 'test2048-5M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(5));
+  } else if (endpoint === 'test2048-10M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(10));
+  } else if (endpoint === 'test2048-25M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(25));
+  } else if (endpoint === 'test2048-50M') {
+    return await testEncryptDecrypt(KEY_2048, newBigString(50));
+  }
+
+  throw new responses_1.HttpClientErr(`unknown test endpoint: ${endpoint}`);
+};
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+/// <reference path="../types/openpgp.d.ts" />
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+const pgp_1 = __webpack_require__(5);
+
+const validate_1 = __webpack_require__(12);
+
+const responses_1 = __webpack_require__(3);
+
+class Endpoints {
+  constructor() {
+    this.version = async (uncheckedReq, data) => {
+      return responses_1.fmtRes(process.versions);
+    };
+
+    this.encrypt = async (uncheckedReq, data) => {
+      const req = validate_1.Validate.encrypt(uncheckedReq, data);
+
+      if (typeof req.filename === 'undefined') {
+        const encrypted = await pgp_1.Pgp.msg.encrypt(req.pubKeys, undefined, undefined, data, undefined, true);
+        return responses_1.fmtRes({}, encrypted.data);
+      } else {
+        const encrypted = await pgp_1.Pgp.msg.encrypt(req.pubKeys, undefined, undefined, data, req.filename, false);
+        return responses_1.fmtRes({}, encrypted.message.packets.write());
+      }
+    };
+
+    this.decrypt = async (uncheckedReq, data) => {
+      return responses_1.fmtRes({
+        not: "implemented"
+      }, 'not implemented');
+    };
+  }
+
+}
+
+exports.Endpoints = Endpoints;
+
+/***/ }),
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
