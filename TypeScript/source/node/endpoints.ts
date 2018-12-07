@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { Pgp } from '../core/pgp';
+import { PgpMsg } from '../core/pgp';
 import { Validate } from './validate';
 import { fmtRes } from './responses';
 
@@ -19,10 +19,10 @@ export class Endpoints {
   public encrypt = async (uncheckedReq: any, data: string | undefined): Promise<string> => {
     const req = Validate.encrypt(uncheckedReq, data);
     if (typeof req.filename === 'undefined') {
-      const encrypted = await Pgp.msg.encrypt(req.pubKeys, undefined, undefined, data!, undefined, true) as OpenPGP.EncryptArmorResult;
+      const encrypted = await PgpMsg.encrypt(req.pubKeys, undefined, undefined, data!, undefined, true) as OpenPGP.EncryptArmorResult;
       return fmtRes({}, encrypted.data);
     } else {
-      const encrypted = await Pgp.msg.encrypt(req.pubKeys, undefined, undefined, data!, req.filename, false) as OpenPGP.EncryptBinaryResult;
+      const encrypted = await PgpMsg.encrypt(req.pubKeys, undefined, undefined, data!, req.filename, false) as OpenPGP.EncryptBinaryResult;
       return fmtRes({}, encrypted.message.packets.write());
     }
   }

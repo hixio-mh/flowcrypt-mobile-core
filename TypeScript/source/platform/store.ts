@@ -14,11 +14,18 @@ export type Contact = {
   pending_lookup: number; last_use: number | null;
   date: number | null; /* todo - should be removed. email provider search seems to return this? */
 };
-export type KeyInfo = {
-  public: string; private: string; fingerprint: string; longid: string; primary: boolean;
-  decrypted?: OpenPGP.key.Key; keywords: string;
-};
-
+export interface PrvKeyInfo {
+  private: string;
+  longid: string;
+  decrypted?: OpenPGP.key.Key;
+}
+export interface KeyInfo extends PrvKeyInfo {
+  public: string;
+  fingerprint: string;
+  primary: boolean;
+  keywords: string;
+}
+export type KeyInfosWithPassphrases = { keys: PrvKeyInfo[]; passphrases: string[]; };
 export class Store {
 
 
