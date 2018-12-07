@@ -27,11 +27,11 @@ type KeyDetails$ids = {
   longid: string;
   fingerprint: string;
   keywords: string;
-}
+};
 export interface KeyDetails {
   private?: string;
   public: string;
-  ids: KeyDetails$ids[],
+  ids: KeyDetails$ids[];
   users: string[];
 }
 
@@ -353,7 +353,7 @@ export class Pgp {
     },
     parse: (armored: string): { original: string, normalized: string, keys: KeyDetails[] } => {
       const { normalized, keys } = Pgp.key.normalize(armored);
-      return { original: armored, normalized, keys: keys.map(Pgp.key.serialize) }
+      return { original: armored, normalized, keys: keys.map(Pgp.key.serialize) };
     },
     serialize: (k: OpenPGP.key.Key): KeyDetails => {
       const keyPackets: OpenPGP.packet.AnyKeyPacket[] = [];
@@ -373,7 +373,7 @@ export class Pgp {
           }
           return undefined;
         }).filter(Boolean) as KeyDetails$ids[],
-      }
+      };
     },
   };
 
