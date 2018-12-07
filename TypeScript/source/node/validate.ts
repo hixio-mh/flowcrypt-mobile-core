@@ -6,19 +6,27 @@ type Obj = { [k: string]: any };
 
 export namespace NodeRequest {
 
-  export type encrypt = { pubKeys: string[], filename?: string };
-  export type decryptFile = { keys: { private: string; longid: string }[], passphrases: string[], msgPwd?: string };
+  export type encryptMsg = { pubKeys: string[] };
+  export type encryptFile = { pubKeys: string[], name: string };
   export type decryptMsg = { keys: { private: string; longid: string }[], passphrases: string[], msgPwd?: string };
+  export type decryptFile = { keys: { private: string; longid: string }[], passphrases: string[], msgPwd?: string };
 
 }
 
 export class Validate {
 
-  public static encrypt = (v: any, data: any): NodeRequest.encrypt => {
-    if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasProp(v, 'filename', 'string?') && hasData(data)) {
-      return v as NodeRequest.encrypt;
+  public static encryptMsg = (v: any, data: any): NodeRequest.encryptMsg => {
+    if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasData(data)) {
+      return v as NodeRequest.encryptMsg;
     }
-    throw new Error('Wrong request structure for NodeRequest.encrypt');
+    throw new Error('Wrong request structure for NodeRequest.encryptMsg');
+  }
+
+  public static encryptFile = (v: any, data: any): NodeRequest.encryptFile => {
+    if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasProp(v, 'filename', 'string') && hasData(data)) {
+      return v as NodeRequest.encryptFile;
+    }
+    throw new Error('Wrong request structure for NodeRequest.encryptFile');
   }
 
   public static decryptFile = (v: any, data: any): NodeRequest.decryptFile => {

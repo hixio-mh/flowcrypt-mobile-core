@@ -1,12 +1,13 @@
-package com.yourorg.sample;
+package com.yourorg.sample.node;
 
 import android.content.res.AssetManager;
+
+import com.yourorg.sample.node.results.RawNodeResult;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.spongycastle.asn1.x500.X500Name;
@@ -46,199 +47,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 import javax.xml.bind.DatatypeConverter;
 
-public class Node {
-
-  private static NativeNode nativeNode;
-
-  static {
-    try {
-      nativeNode = new NativeNode();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
-
-  public static void start(AssetManager am) {
-    nativeNode.startIfNotRunning(am);
-  }
-
-  public static NodeEncryptRes encrypt(byte[] data, String[] pubKeys) {
-    try {
-      JSONObject req = new JSONObject();
-      JSONArray pubKeysJsonArr = new JSONArray();
-      for(String pubKey: pubKeys) {
-        pubKeysJsonArr.put(pubKey);
-      }
-      req.put("pubKeys", pubKeysJsonArr);
-      return nativeNode.request("encrypt", req, data).convertTo(NodeEncryptRes.class);
-    } catch(JSONException e) {
-      throw new RuntimeException("Data could not be stringified as JSON", e);
-    }
-  }
-
-//  public static NodeRes encrypt(byte[] data, String[] pubKeys, String filename) {
-//
-//  }
-//
-//  public static NodeRes encrypt(byte[] data, String pwd) {
-//
-//  }
-//
-//  public static NodeRes encrypt(byte[] data, String pwd, String filename) {
-//
-//  }
-//
-//  public static NodeRes decrypt(byte[] data, String[] privateKeys, String[] passphrases) {
-//
-//  }
-//
-//  public static NodeRes decrypt(byte[] data, String pwd) {
-//
-//  }
-
-  @Deprecated
-  public static NodeRes rawRequest(String endpoint) {
-    return nativeNode.request(endpoint, null, null);
-  }
-
-}
-
-class NodeError extends Exception {
-
-  static NodeError fromConnection(HttpsURLConnection conn) {
-    int errCode;
-    try {
-      errCode = conn.getResponseCode();
-    } catch (IOException e) {
-      return new NodeError(0, e.getMessage(), null);
-    }
-    String res = new BufferedReader(new InputStreamReader(conn.getErrorStream())).lines().collect(Collectors.joining());
-    try {
-      JSONObject obj = new JSONObject(res);
-      JSONObject error = obj.getJSONObject("error");
-      String stack = error.getString("stack");
-      return new NodeError(errCode, error.getString("message"), newStackTraceElement(stack));
-    } catch (JSONException e) {
-      return new NodeError(errCode, "Node http err without err obj",  newStackTraceElement("[RES]" + res));
-    }
-  }
-
-  private NodeError(int httpErrCode, String errMsg, StackTraceElement addStackTraceElement) {
-    super(Integer.valueOf(httpErrCode).toString() + " " + errMsg);
-    StackTraceElement[] origStack = getStackTrace();
-    StackTraceElement[] newStack = Arrays.copyOf(origStack, origStack.length + 1);
-    newStack[origStack.length] = addStackTraceElement;
-    setStackTrace(newStack);
-  }
-
-  static private StackTraceElement newStackTraceElement(String data) {
-    return new StackTraceElement(
-      "==========================================",
-      "\n[node.js] " + data,
-      "flowcrypt-android.js",
-      -1
-    );
-  }
-
-}
-
-class NodeRes {
-  /**
-   * Responses from Node.js come formatted as a JSON before the first \n mark, and optional binary data afterwards
-   * stripRawJsonLine() will strip the first JSON line off the rest when accessing data (if not already stripped)
-   */
-
-
-  private Exception err;
-  private InputStream inputStream;
-  private Boolean errWasTested = false;
-  private String rawJsonResponse;
-  private BufferedReader br;
-  public long ms;
-
-  public NodeRes(Exception err, InputStream inputStream, long ms) {
-    this.err = err;
-    this.inputStream = inputStream;
-    this.ms = ms;
-  }
-
-  public <T> T convertTo(Class<T> cls) {
-    try {
-      Class[] argClasses = new Class[]{Exception.class, InputStream.class, long.class};
-      return cls.getDeclaredConstructor(argClasses).newInstance(this.getErr(), this.getInputStream(), this.ms);
-    } catch(Exception e) {
-      throw new RuntimeException("NodeRes wrong constructor definition", e);
-    }
-  }
-
-  public Exception getErr() {
-    errWasTested = true;
-    return err;
-  }
-
-  private InputStream getInputStream() {
-    if(!errWasTested) {
-      throw new Error("NodeRes getErr() must be called before accessing data");
-    }
-    return inputStream;
-  }
-
-  private BufferedReader getInputStreamBufferedReader() {
-    if(inputStream == null) {
-      return null;
-    }
-    if(br == null) {
-      br = new BufferedReader(new InputStreamReader(getInputStream()));
-    }
-    return br;
-  }
-
-  private void stripRawJsonLine() {
-    if(rawJsonResponse == null) {
-      BufferedReader br = getInputStreamBufferedReader();
-      if(br != null) {
-        try {
-          rawJsonResponse = br.readLine();
-        } catch (IOException e) {
-          rawJsonResponse = "";
-        }
-      }
-    }
-  }
-
-  public String getRawJsonResponse() {
-    stripRawJsonLine();
-    return rawJsonResponse;
-  }
-
-  public String getDataString() {
-    stripRawJsonLine();
-    BufferedReader br = getInputStreamBufferedReader();
-    if(br == null) {
-      return null;
-    }
-    return br.lines().collect(Collectors.joining());
-  }
-
-  public BufferedReader getDataBufferedReader() {
-    stripRawJsonLine();
-    return getInputStreamBufferedReader();
-  }
-
-}
-
-class NodeDecryptRes extends NodeRes {
-  public NodeDecryptRes(Exception err, InputStream inputStream, long startTime) {
-    super(err, inputStream, startTime);
-  }
-}
-
-class NodeEncryptRes extends NodeRes {
-  public NodeEncryptRes(Exception err, InputStream inputStream, long startTime) {
-    super(err, inputStream, startTime);
-  }
-}
-
 class NativeNode {
 
   static { // Used to load the 'native-lib' library on application startup.s
@@ -257,7 +65,7 @@ class NativeNode {
     }
   }
 
-  NodeRes request(String endpoint, JSONObject req, byte[] data) {
+  RawNodeResult request(String endpoint, JSONObject req, byte[] data) {
     long startTime = System.currentTimeMillis();
     try {
       MultipartEntityBuilder builder = MultipartEntityBuilder.create();
@@ -279,13 +87,13 @@ class NativeNode {
       parts.writeTo(os);
       conn.connect();
       if(conn.getResponseCode() == 200) {
-        return new NodeRes(null, conn.getInputStream(), System.currentTimeMillis() - startTime);
+        return new RawNodeResult(null, conn.getInputStream(), System.currentTimeMillis() - startTime);
       } else {
-        return new NodeRes(NodeError.fromConnection(conn), null, System.currentTimeMillis() - startTime);
+        return new RawNodeResult(NodeError.fromConnection(conn), null, System.currentTimeMillis() - startTime);
       }
     } catch (Exception e) {
       e.printStackTrace();
-      return new NodeRes(e, null, System.currentTimeMillis() - startTime);
+      return new RawNodeResult(e, null, System.currentTimeMillis() - startTime);
     }
   }
 
@@ -329,6 +137,45 @@ class NativeNode {
    */
   @SuppressWarnings("JniMissingFunction")
   public native Integer startNodeWithArguments(String[] arguments);
+
+}
+
+class NodeError extends Exception {
+
+  static NodeError fromConnection(HttpsURLConnection conn) {
+    int errCode;
+    try {
+      errCode = conn.getResponseCode();
+    } catch (IOException e) {
+      return new NodeError(0, e.getMessage(), null);
+    }
+    String res = new BufferedReader(new InputStreamReader(conn.getErrorStream())).lines().collect(Collectors.joining());
+    try {
+      JSONObject obj = new JSONObject(res);
+      JSONObject error = obj.getJSONObject("error");
+      String stack = error.getString("stack");
+      return new NodeError(errCode, error.getString("message"), newStackTraceElement(stack));
+    } catch (JSONException e) {
+      return new NodeError(errCode, "Node http err without err obj",  newStackTraceElement("[RES]" + res));
+    }
+  }
+
+  private NodeError(int httpErrCode, String errMsg, StackTraceElement addStackTraceElement) {
+    super(Integer.valueOf(httpErrCode).toString() + " " + errMsg);
+    StackTraceElement[] origStack = getStackTrace();
+    StackTraceElement[] newStack = Arrays.copyOf(origStack, origStack.length + 1);
+    newStack[origStack.length] = addStackTraceElement;
+    setStackTrace(newStack);
+  }
+
+  static private StackTraceElement newStackTraceElement(String data) {
+    return new StackTraceElement(
+        "==========================================",
+        "\n[node.js] " + data,
+        "flowcrypt-android.js",
+        -1
+    );
+  }
 
 }
 

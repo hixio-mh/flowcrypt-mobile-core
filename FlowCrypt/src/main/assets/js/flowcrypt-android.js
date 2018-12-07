@@ -88,12 +88,12 @@ const dereq_minimalistic_assert =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 34);
+/******/ 	return __webpack_require__(__webpack_require__.s = 35);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 34:
+/***/ 35:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -196,19 +196,19 @@ const dereq_bn =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 32);
+/******/ 	return __webpack_require__(__webpack_require__.s = 33);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 21:
+/***/ 22:
 /***/ (function(module, exports) {
 
 module.exports = require("buffer");
 
 /***/ }),
 
-/***/ 32:
+/***/ 33:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -266,7 +266,7 @@ module.exports = require("buffer");
   var Buffer;
 
   try {
-    Buffer = __webpack_require__(21).Buffer;
+    Buffer = __webpack_require__(22).Buffer;
   } catch (e) {}
 
   BN.isBN = function isBN(num) {
@@ -3662,11 +3662,11 @@ module.exports = require("buffer");
     return res._forceRed(this);
   };
 })( false || module, undefined);
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(33)(module)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(34)(module)))
 
 /***/ }),
 
-/***/ 33:
+/***/ 34:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3784,7 +3784,7 @@ const dereq_asn1 =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 13);
+/******/ 	return __webpack_require__(__webpack_require__.s = 14);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -3801,36 +3801,37 @@ const dereq_asn1 =
 /* 10 */,
 /* 11 */,
 /* 12 */,
-/* 13 */
+/* 13 */,
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var asn1 = exports;
-asn1.bignum = __webpack_require__(14);
-asn1.define = __webpack_require__(15).define;
-asn1.base = __webpack_require__(18);
-asn1.constants = __webpack_require__(24);
-asn1.decoders = __webpack_require__(26);
-asn1.encoders = __webpack_require__(29);
+asn1.bignum = __webpack_require__(15);
+asn1.define = __webpack_require__(16).define;
+asn1.base = __webpack_require__(19);
+asn1.constants = __webpack_require__(25);
+asn1.decoders = __webpack_require__(27);
+asn1.encoders = __webpack_require__(30);
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports) {
 
 module.exports = dereq_bn;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var asn1 = __webpack_require__(13);
+var asn1 = __webpack_require__(14);
 
-var inherits = __webpack_require__(16);
+var inherits = __webpack_require__(17);
 
 var api = exports;
 
@@ -3851,7 +3852,7 @@ Entity.prototype._createNamed = function createNamed(base) {
   var named;
 
   try {
-    named = __webpack_require__(17).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
+    named = __webpack_require__(18).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
   } catch (e) {
     named = function (entity) {
       this._initNamed(entity);
@@ -3892,29 +3893,16 @@ reporter) {
 };
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports) {
 
 module.exports = require("util").inherits;
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports) {
 
 module.exports = require("vm");
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var base = exports;
-base.Reporter = __webpack_require__(19).Reporter;
-base.DecoderBuffer = __webpack_require__(20).DecoderBuffer;
-base.EncoderBuffer = __webpack_require__(20).EncoderBuffer;
-base.Node = __webpack_require__(22);
 
 /***/ }),
 /* 19 */
@@ -3923,7 +3911,20 @@ base.Node = __webpack_require__(22);
 "use strict";
 
 
-var inherits = __webpack_require__(16);
+var base = exports;
+base.Reporter = __webpack_require__(20).Reporter;
+base.DecoderBuffer = __webpack_require__(21).DecoderBuffer;
+base.EncoderBuffer = __webpack_require__(21).EncoderBuffer;
+base.Node = __webpack_require__(23);
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var inherits = __webpack_require__(17);
 
 function Reporter(options) {
   this._reporterState = {
@@ -4039,17 +4040,17 @@ ReporterError.prototype.rethrow = function rethrow(msg) {
 };
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(16);
+var inherits = __webpack_require__(17);
 
-var Reporter = __webpack_require__(18).Reporter;
+var Reporter = __webpack_require__(19).Reporter;
 
-var Buffer = __webpack_require__(21).Buffer;
+var Buffer = __webpack_require__(22).Buffer;
 
 function DecoderBuffer(base, options) {
   Reporter.call(this, options);
@@ -4151,25 +4152,25 @@ EncoderBuffer.prototype.join = function join(out, offset) {
 };
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports) {
 
 module.exports = require("buffer");
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Reporter = __webpack_require__(18).Reporter;
+var Reporter = __webpack_require__(19).Reporter;
 
-var EncoderBuffer = __webpack_require__(18).EncoderBuffer;
+var EncoderBuffer = __webpack_require__(19).EncoderBuffer;
 
-var DecoderBuffer = __webpack_require__(18).DecoderBuffer;
+var DecoderBuffer = __webpack_require__(19).DecoderBuffer;
 
-var assert = __webpack_require__(23); // Supported tags
+var assert = __webpack_require__(24); // Supported tags
 
 
 var tags = ['seq', 'seqof', 'set', 'setof', 'objid', 'bool', 'gentime', 'utctime', 'null_', 'enum', 'int', 'objDesc', 'bitstr', 'bmpstr', 'charstr', 'genstr', 'graphstr', 'ia5str', 'iso646str', 'numstr', 'octstr', 'printstr', 't61str', 'unistr', 'utf8str', 'videostr']; // Public methods list
@@ -4640,13 +4641,13 @@ Node.prototype._isPrintstr = function isPrintstr(str) {
 };
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports) {
 
 module.exports = dereq_minimalistic_assert;
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4665,16 +4666,16 @@ constants._reverse = function reverse(map) {
   return res;
 };
 
-constants.der = __webpack_require__(25);
+constants.der = __webpack_require__(26);
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var constants = __webpack_require__(24);
+var constants = __webpack_require__(25);
 
 exports.tagClass = {
   0: 'universal',
@@ -4717,26 +4718,26 @@ exports.tag = {
 exports.tagByName = constants._reverse(exports.tag);
 
 /***/ }),
-/* 26 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var decoders = exports;
-decoders.der = __webpack_require__(27);
-decoders.pem = __webpack_require__(28);
-
-/***/ }),
 /* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(16);
+var decoders = exports;
+decoders.der = __webpack_require__(28);
+decoders.pem = __webpack_require__(29);
 
-var asn1 = __webpack_require__(13);
+/***/ }),
+/* 28 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var inherits = __webpack_require__(17);
+
+var asn1 = __webpack_require__(14);
 
 var base = asn1.base;
 var bignum = asn1.bignum; // Import DER constants
@@ -5008,17 +5009,17 @@ function derDecodeLen(buf, primitive, fail) {
 }
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(16);
+var inherits = __webpack_require__(17);
 
-var Buffer = __webpack_require__(21).Buffer;
+var Buffer = __webpack_require__(22).Buffer;
 
-var DERDecoder = __webpack_require__(27);
+var DERDecoder = __webpack_require__(28);
 
 function PEMDecoder(entity) {
   DERDecoder.call(this, entity);
@@ -5060,28 +5061,28 @@ PEMDecoder.prototype.decode = function decode(data, options) {
 };
 
 /***/ }),
-/* 29 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var encoders = exports;
-encoders.der = __webpack_require__(30);
-encoders.pem = __webpack_require__(31);
-
-/***/ }),
 /* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(16);
+var encoders = exports;
+encoders.der = __webpack_require__(31);
+encoders.pem = __webpack_require__(32);
 
-var Buffer = __webpack_require__(21).Buffer;
+/***/ }),
+/* 31 */
+/***/ (function(module, exports, __webpack_require__) {
 
-var asn1 = __webpack_require__(13);
+"use strict";
+
+
+var inherits = __webpack_require__(17);
+
+var Buffer = __webpack_require__(22).Buffer;
+
+var asn1 = __webpack_require__(14);
 
 var base = asn1.base; // Import DER constants
 
@@ -5320,15 +5321,15 @@ function encodeTag(tag, primitive, cls, reporter) {
 }
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(16);
+var inherits = __webpack_require__(17);
 
-var DEREncoder = __webpack_require__(30);
+var DEREncoder = __webpack_require__(31);
 
 function PEMEncoder(entity) {
   DEREncoder.call(this, entity);
@@ -57819,9 +57820,9 @@ const parse_1 = __webpack_require__(2);
 
 const responses_1 = __webpack_require__(3);
 
-const tests_1 = __webpack_require__(10);
+const tests_1 = __webpack_require__(11);
 
-const endpoints_1 = __webpack_require__(11);
+const endpoints_1 = __webpack_require__(12);
 
 global.atob = b64str => Buffer.from(b64str, 'base64').toString('binary');
 
@@ -58068,8 +58069,6 @@ Object.defineProperty(exports, "__esModule", {
 
 const pgp_js_1 = __webpack_require__(5);
 
-const att_js_1 = __webpack_require__(9);
-
 class Str {}
 
 Str.parseEmail = emailStr => {
@@ -58127,6 +58126,10 @@ Str.sloppyRandom = (length = 5) => {
 };
 
 Str.regexEscape = toBeUsedInRegex => toBeUsedInRegex.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+Str.asEscapedHtml = text => {
+  return text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\//g, '&#x2F;').replace(/\n/g, '<br>');
+};
 
 Str.htmlAttrEncode = values => Str.base64urlUtfEncode(JSON.stringify(values));
 
@@ -58271,7 +58274,7 @@ Str.isFcAttLinkData = o => {
   return o && typeof o === 'object' && typeof o.name !== 'undefined' && typeof o.size !== 'undefined' && typeof o.type !== 'undefined';
 };
 
-Str.extractFcAtts = (decryptedContent, fcAtts) => {
+Str.extractFcAtts = (decryptedContent, blocks) => {
   if (Value.is('cryptup_file').in(decryptedContent)) {
     decryptedContent = decryptedContent.replace(/<a[^>]+class="cryptup_file"[^>]+>[^<]+<\/a>\n?/gm, foundLink => {
       const el = $(foundLink);
@@ -58281,7 +58284,7 @@ Str.extractFcAtts = (decryptedContent, fcAtts) => {
         const a = Str.htmlAttrDecode(fcData);
 
         if (Str.isFcAttLinkData(a)) {
-          fcAtts.push(new att_js_1.Att({
+          blocks.push(pgp_js_1.Pgp.internal.msgBlockAttObj('attachment', '', {
             type: a.type,
             name: a.name,
             length: a.size,
@@ -58461,7 +58464,11 @@ const store_js_1 = __webpack_require__(6);
 
 const common_js_1 = __webpack_require__(4);
 
-const catch_js_1 = __webpack_require__(8);
+const mime_js_1 = __webpack_require__(8);
+
+const catch_js_1 = __webpack_require__(10);
+
+const mnemonic_js_1 = __webpack_require__(7);
 
 if (typeof openpgp !== 'undefined') {
   openpgp.config.versionstring = `FlowCrypt ${catch_js_1.Catch.version()} Gmail Encryption`;
@@ -58685,7 +58692,7 @@ Pgp.armor = {
     let startAt = 0;
 
     while (true) {
-      const r = Pgp.internal.cryptoArmorDetectBlockNext(normalized, startAt);
+      const r = Pgp.internal.detectBlockNext(normalized, startAt);
 
       if (r.found) {
         blocks = blocks.concat(r.found);
@@ -58779,24 +58786,29 @@ Pgp.key = {
     }
   },
   normalize: armored => {
+    let keys = [];
+
     try {
       armored = Pgp.armor.normalize(armored, 'key');
-      let key;
 
       if (RegExp(Pgp.armor.headers('publicKey', 're').begin).test(armored)) {
-        key = openpgp.key.readArmored(armored).keys[0];
+        keys = openpgp.key.readArmored(armored).keys;
+      } else if (RegExp(Pgp.armor.headers('privateKey', 're').begin).test(armored)) {
+        keys = openpgp.key.readArmored(armored).keys;
       } else if (RegExp(Pgp.armor.headers('message', 're').begin).test(armored)) {
-        key = new openpgp.key.Key(openpgp.message.readArmored(armored).packets);
+        keys = [new openpgp.key.Key(openpgp.message.readArmored(armored).packets)];
       }
 
-      if (key) {
-        return key.armor();
-      } else {
-        return armored;
-      }
+      return {
+        normalized: keys.map(k => k.armor()).join('\n'),
+        keys
+      };
     } catch (error) {
       catch_js_1.Catch.handleErr(error);
-      return undefined;
+      return {
+        normalized: '',
+        keys
+      };
     }
   },
   fingerprint: (key, formatting = 'default') => {
@@ -58885,6 +58897,45 @@ Pgp.key = {
     }
 
     return undefined;
+  },
+  parse: armored => {
+    const {
+      normalized,
+      keys
+    } = Pgp.key.normalize(armored);
+    return {
+      original: armored,
+      normalized,
+      keys: keys.map(Pgp.key.serialize)
+    };
+  },
+  serialize: k => {
+    const keyPackets = [];
+
+    for (const keyPacket of k.getKeys()) {
+      keyPackets.push(keyPacket);
+    }
+
+    return {
+      private: k.isPrivate() ? k.armor() : undefined,
+      public: k.toPublic().armor(),
+      users: k.getUserIds(),
+      ids: keyPackets.map(k => k.getFingerprint().toUpperCase()).map(fingerprint => {
+        if (fingerprint) {
+          const longid = Pgp.key.longid(fingerprint);
+
+          if (longid) {
+            return {
+              fingerprint,
+              longid,
+              keywords: mnemonic_js_1.mnemonic(longid)
+            };
+          }
+        }
+
+        return undefined;
+      }).filter(Boolean)
+    };
   }
 };
 Pgp.password = {
@@ -58914,12 +58965,24 @@ Pgp.password = {
   }
 };
 Pgp.internal = {
-  cryptoArmorBlockObj: (type, content, missingEnd = false) => ({
+  msgBlockObj: (type, content, missingEnd = false) => ({
     type,
     content,
     complete: !missingEnd
   }),
-  cryptoArmorDetectBlockNext: (origText, startAt) => {
+  msgBlockAttObj: (type, content, attMeta) => ({
+    type,
+    content,
+    complete: true,
+    attMeta
+  }),
+  msgBlockKeyObj: (type, content, keyDetails) => ({
+    type,
+    content,
+    complete: true,
+    keyDetails
+  }),
+  detectBlockNext: (origText, startAt) => {
     const result = {
       found: []
     };
@@ -58942,7 +59005,7 @@ Pgp.internal = {
               const potentialTextBeforeBlockBegun = origText.substring(startAt, begin).trim();
 
               if (potentialTextBeforeBlockBegun) {
-                result.found.push(Pgp.internal.cryptoArmorBlockObj('text', potentialTextBeforeBlockBegun));
+                result.found.push(Pgp.internal.msgBlockObj('text', potentialTextBeforeBlockBegun));
               }
             }
 
@@ -58966,22 +59029,22 @@ Pgp.internal = {
             if (endIndex !== -1) {
               // identified end of the same block
               if (type !== 'passwordMsg') {
-                result.found.push(Pgp.internal.cryptoArmorBlockObj(type, origText.substring(begin, endIndex + foundBlockEndHeaderLength).trim()));
+                result.found.push(Pgp.internal.msgBlockObj(type, origText.substring(begin, endIndex + foundBlockEndHeaderLength).trim()));
               } else {
                 const pwdMsgFullText = origText.substring(begin, endIndex + foundBlockEndHeaderLength).trim();
                 const pwdMsgShortIdMatch = pwdMsgFullText.match(/[a-zA-Z0-9]{10}$/);
 
                 if (pwdMsgShortIdMatch) {
-                  result.found.push(Pgp.internal.cryptoArmorBlockObj(type, pwdMsgShortIdMatch[0]));
+                  result.found.push(Pgp.internal.msgBlockObj(type, pwdMsgShortIdMatch[0]));
                 } else {
-                  result.found.push(Pgp.internal.cryptoArmorBlockObj('text', pwdMsgFullText));
+                  result.found.push(Pgp.internal.msgBlockObj('text', pwdMsgFullText));
                 }
               }
 
               result.continueAt = endIndex + foundBlockEndHeaderLength;
             } else {
               // corresponding end not found
-              result.found.push(Pgp.internal.cryptoArmorBlockObj(type, origText.substr(begin), true));
+              result.found.push(Pgp.internal.msgBlockObj(type, origText.substr(begin), true));
             }
 
             break;
@@ -58995,7 +59058,7 @@ Pgp.internal = {
       const potentialText = origText.substr(startAt).trim();
 
       if (potentialText) {
-        result.found.push(Pgp.internal.cryptoArmorBlockObj('text', potentialText));
+        result.found.push(Pgp.internal.msgBlockObj('text', potentialText));
       }
     }
 
@@ -59444,6 +59507,53 @@ PgpMsg.diagnosePubkeys = async (acctEmail, m) => {
   return diagnosis;
 };
 
+PgpMsg.fmtDecrypted = async decryptedContent => {
+  const blocks = [];
+
+  if (!mime_js_1.Mime.resemblesMsg(decryptedContent)) {
+    if (typeof $ === 'function') {
+      // skip on Node.js
+      decryptedContent = common_js_1.Str.extractFcAtts(decryptedContent, blocks);
+      decryptedContent = common_js_1.Str.stripFcTeplyToken(decryptedContent);
+    }
+
+    const armoredPubKeys = [];
+    decryptedContent = common_js_1.Str.stripPublicKeys(decryptedContent, armoredPubKeys);
+    blocks.push(Pgp.internal.msgBlockObj('html', common_js_1.Str.asEscapedHtml(decryptedContent)));
+    PgpMsg.pushArmoredPubkeysToBlocks(armoredPubKeys, blocks);
+  } else {
+    const decoded = await mime_js_1.Mime.decode(decryptedContent);
+
+    if (typeof decoded.html !== 'undefined') {
+      blocks.push(Pgp.internal.msgBlockObj('html', decoded.html));
+    } else if (typeof decoded.text !== 'undefined') {
+      blocks.push(Pgp.internal.msgBlockObj('html', common_js_1.Str.asEscapedHtml(decoded.text)));
+    } else {
+      blocks.push(Pgp.internal.msgBlockObj('html', common_js_1.Str.asEscapedHtml(decryptedContent)));
+    }
+
+    for (const att of decoded.atts) {
+      if (att.treatAs() !== 'publicKey') {
+        blocks.push(Pgp.internal.msgBlockAttObj('attachment', att.asText(), {
+          name: att.name
+        }));
+      } else {
+        PgpMsg.pushArmoredPubkeysToBlocks([att.asText()], blocks);
+      }
+    }
+  }
+
+  return blocks;
+};
+
+PgpMsg.pushArmoredPubkeysToBlocks = (armoredPubkeys, blocks) => {
+  for (const armoredPubkey of armoredPubkeys) {
+    for (const keyDetails of Pgp.key.parse(armoredPubkey).keys) {
+      blocks.push(Pgp.internal.msgBlockKeyObj('publicKey', keyDetails.public, keyDetails));
+    }
+  }
+};
+
 exports.PgpMsg = PgpMsg;
 
 /***/ }),
@@ -59572,141 +59682,367 @@ exports.mnemonic = hex => {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-const VERSION = '[BUILD_REPLACEABLE_VERSION]';
 
-class Catch {}
+const common_js_1 = __webpack_require__(4);
 
-Catch.RUNTIME_VERSION = VERSION;
-Catch.RUNTIME_ENVIRONMENT = 'undetermined'; // public static stringify = (e: any) => {
-//   if (e instanceof Error) {
-//     return `[typeof:Error:${e.name}] ${e.message}\n\n${e.stack}`;
-//   }
-//   if (typeof e === 'string') {
-//     return `[typeof:string] ${e}`;
-//   }
-//   try {
-//     return `[typeof:${(typeof e)}:${String(e)}] ${JSON.stringify(e)}`;
-//   } catch (cannotStringify) {
-//     return `[unstringifiable typeof:${(typeof e)}:${String(e)}]`;
-//   }
-// }
-// public static hasStack = (e: any): e is ObjWithStack => {
-//   return e && typeof e === 'object' && typeof (e as ObjWithStack).stack === 'string' && Boolean((e as ObjWithStack).stack);
-// }
-// public static onErrorInternalHandler = (errMsg: string | undefined, url: string, line: number, col: number, originalErr: any, isManuallyCalled: boolean) => {
-//   if (errMsg && Catch.IGNORE_ERR_MSG.indexOf(errMsg) !== -1) {
-//     return;
-//   }
-//   let exception: Error;
-//   if (typeof originalErr !== 'object') {
-//     exception = new Error(`THROWN_NON_OBJECT[${typeof originalErr}]: ${String(originalErr)}`);
-//   } else if (errMsg && url && typeof line !== 'undefined' && !col && !originalErr && !isManuallyCalled) {
-//     exception = new Error(`LIMITED_ERROR: ${errMsg}`);
-//   } else if (originalErr instanceof Error) {
-//     exception = originalErr;
-//   } else {
-//     exception = new Error(`THROWN_OBJECT: ${errMsg}`);
-//     if (Catch.hasStack(originalErr)) {
-//       exception.stack += `\n\nORIGINAL_THROWN_OBJECT_STACK:\n${originalErr.stack}\n\n`;
-//     }
-//     exception.stack += `\n\nORIGINAL_ERR:\n${Catch.stringify(originalErr)}`;
-//   }
-//   if (Catch.IGNORE_ERR_MSG.indexOf(exception.message) !== -1) {
-//     return;
-//   }
-//   console.error(originalErr);
-//   if (exception !== originalErr) {
-//     console.error(exception);
-//   }
-//   console.log(`%c[${exception.message}]\n${exception.stack}`, 'color: #F00; font-weight: bold;');
-//   if (isManuallyCalled !== true && Catch.ORIG_ONERROR && Catch.ORIG_ONERROR !== (Catch.onErrorInternalHandler as ErrorEventHandler)) {
-//     Catch.ORIG_ONERROR.apply(undefined, arguments); // Call any previously assigned handler
-//   }
-//   if ((exception.stack || '').indexOf('PRIVATE') !== -1 || exception instanceof UnreportableError) {
-//     return;
-//   }
-//   try {
-//     $.ajax({
-//       url: 'https://flowcrypt.com/api/help/error',
-//       method: 'POST',
-//       data: JSON.stringify({
-//         name: exception.name.substring(0, 50),
-//         message: exception.message.substring(0, 200),
-//         url: (url || '').substring(0, 100),
-//         line: line || 0,
-//         col: col || 0,
-//         trace: exception.stack || '',
-//         version: Catch.RUNTIME_VERSION,
-//         environment: Catch.RUNTIME_ENVIRONMENT,
-//       }),
-//       dataType: 'json',
-//       crossDomain: true,
-//       contentType: 'application/json; charset=UTF-8',
-//       async: true,
-//       success: (response: { saved: boolean }) => {
-//         if (response && typeof response === 'object' && response.saved === true) {
-//           console.log('%cFlowCrypt ERROR:' + Catch.CONSOLE_MSG, 'font-weight: bold;');
-//         } else {
-//           console.error('%cFlowCrypt EXCEPTION:' + Catch.CONSOLE_MSG, 'font-weight: bold;');
-//         }
-//       },
-//       error: (req, status, error) => {
-//         console.error('%cFlowCrypt FAILED:' + Catch.CONSOLE_MSG, 'font-weight: bold;');
-//       },
-//     });
-//   } catch (ajaxErr) {
-//     console.error(ajaxErr);
-//     console.error('%cFlowCrypt ISSUE:' + Catch.CONSOLE_MSG, 'font-weight: bold;');
-//   }
-//   try {
-//     Store.saveError(exception);
-//   } catch (storageErr) {
-//     console.error(`failed to locally log error ${String(exception)} because: ${String(storageErr)}`);
-//   }
-//   return true;
-// }
-// private static getErrorLineAndCol = (e: any) => {
-//   try {
-//     const callerLine = e.stack!.split('\n')[1]; // tslint:disable-line:no-unsafe-any
-//     const matched = callerLine.match(/\.js:([0-9]+):([0-9]+)\)?/); // tslint:disable-line:no-unsafe-any
-//     return { line: Number(matched![1]), col: Number(matched![2]) }; // tslint:disable-line:no-unsafe-any
-//   } catch (lineErr) {
-//     return { line: 0, col: 0 };
-//   }
-// }
+const pgp_js_1 = __webpack_require__(5);
 
-Catch.handleErr = e => {
-  return;
-}; // private static nameAndDetailsAsException = (name: string, details: any): Error => {
-//   try {
-//     throw new Error(name);
-//   } catch (e) {
-//     (e as Error).stack += `\n\n\ndetails:\n${Catch.stringify(details)}`;
-//     return e as Error;
-//   }
-// }
+const att_js_1 = __webpack_require__(9);
 
+const catch_js_1 = __webpack_require__(10);
 
-Catch.report = (name, details) => {// Catch.handleErr(Catch.nameAndDetailsAsException(name, details));
-}; // public static log = (name: string, details?: any) => {
-//   const e = Catch.nameAndDetailsAsException(`Catch.log: ${name}`, details);
-//   try {
-//     Store.saveError(e, name);
-//   } catch (storageErr) {
-//     console.error(`failed to locally log "${String(name)}" because "${String(storageErr)}"`);
-//   }
-// }
+class Mime {}
 
+Mime.process = async mimeMsg => {
+  const decoded = await Mime.decode(mimeMsg);
+  let blocks = [];
 
-Catch.version = (format = 'original') => {
-  if (format === 'int') {
-    return Number(Catch.RUNTIME_VERSION.replace(/\./g, ''));
-  } else {
-    return Catch.RUNTIME_VERSION;
+  if (decoded.text) {
+    // may be undefined or empty
+    blocks = blocks.concat(pgp_js_1.Pgp.armor.detectBlocks(decoded.text).blocks);
   }
+
+  for (const file of decoded.atts) {
+    const treatAs = file.treatAs();
+
+    if (treatAs === 'message') {
+      const armored = pgp_js_1.Pgp.armor.clip(file.asText());
+
+      if (armored) {
+        blocks.push(pgp_js_1.Pgp.internal.msgBlockObj('message', armored));
+      }
+    } else if (treatAs === 'signature') {
+      decoded.signature = decoded.signature || file.asText();
+    } else if (treatAs === 'publicKey') {
+      blocks = blocks.concat(pgp_js_1.Pgp.armor.detectBlocks(file.asText()).blocks);
+    }
+  }
+
+  if (decoded.signature) {
+    for (const block of blocks) {
+      if (block.type === 'text') {
+        block.type = 'signedMsg';
+        block.signature = decoded.signature;
+      }
+    }
+  }
+
+  return {
+    headers: decoded.headers,
+    blocks,
+    from: decoded.from,
+    to: decoded.to
+  };
 };
 
-exports.Catch = Catch;
+Mime.headersToFrom = parsedMimeMsg => {
+  const headerTo = [];
+  let headerFrom;
+
+  if (Array.isArray(parsedMimeMsg.headers.from) && parsedMimeMsg.headers.from[0] && parsedMimeMsg.headers.from[0].address) {
+    headerFrom = parsedMimeMsg.headers.from[0].address;
+  }
+
+  if (Array.isArray(parsedMimeMsg.headers.to)) {
+    for (const to of parsedMimeMsg.headers.to) {
+      if (to.address) {
+        headerTo.push(String(to.address));
+      }
+    }
+  }
+
+  return {
+    from: headerFrom,
+    to: headerTo
+  };
+};
+
+Mime.replyHeaders = parsedMimeMsg => {
+  const msgId = parsedMimeMsg.headers['message-id'] || '';
+  const refs = parsedMimeMsg.headers['in-reply-to'] || '';
+  return {
+    'in-reply-to': msgId,
+    'references': refs + ' ' + msgId
+  };
+};
+
+Mime.resemblesMsg = msg => {
+  let m = msg.slice(0, 1000); // noinspection SuspiciousInstanceOfGuard
+
+  if (m instanceof Uint8Array) {
+    m = common_js_1.Str.fromUint8(m);
+  }
+
+  m = m.toLowerCase();
+  const contentType = m.match(/content-type: +[0-9a-z\-\/]+/);
+
+  if (!contentType) {
+    return false;
+  }
+
+  if (m.match(/content-transfer-encoding: +[0-9a-z\-\/]+/) || m.match(/content-disposition: +[0-9a-z\-\/]+/) || m.match(/; boundary=/) || m.match(/; charset=/)) {
+    return true;
+  }
+
+  return Boolean(contentType.index === 0 && m.match(/boundary=/));
+};
+
+Mime.decode = mimeMsg => {
+  return new Promise(async resolve => {
+    const mimeContent = {
+      atts: [],
+      headers: {},
+      text: undefined,
+      html: undefined,
+      signature: undefined,
+      from: undefined,
+      to: []
+    };
+
+    try {
+      const parser = new window['emailjs-mime-parser'](); // tslint:disable-line:no-unsafe-any
+
+      const parsed = {};
+
+      parser.onheader = node => {
+        if (!String(node.path.join('.'))) {
+          // root node headers
+          for (const name of Object.keys(node.headers)) {
+            mimeContent.headers[name] = node.headers[name][0].value;
+          }
+        }
+      };
+
+      parser.onbody = node => {
+        const path = String(node.path.join('.'));
+
+        if (typeof parsed[path] === 'undefined') {
+          parsed[path] = node;
+        }
+      };
+
+      parser.onend = () => {
+        for (const node of Object.values(parsed)) {
+          if (Mime.getNodeType(node) === 'application/pgp-signature') {
+            mimeContent.signature = node.rawContent;
+          } else if (Mime.getNodeType(node) === 'text/html' && !Mime.getNodeFilename(node)) {
+            // html content may be broken up into smaller pieces by attachments in between
+            // AppleMail does this with inline attachments
+            mimeContent.html = (mimeContent.html || '') + Mime.getNodeContentAsText(node);
+          } else if (Mime.getNodeType(node) === 'text/plain' && !Mime.getNodeFilename(node)) {
+            mimeContent.text = Mime.getNodeContentAsText(node);
+          } else {
+            mimeContent.atts.push(new att_js_1.Att({
+              name: Mime.getNodeFilename(node),
+              type: Mime.getNodeType(node),
+              data: node.content,
+              cid: Mime.getNodeContentId(node)
+            }));
+          }
+        }
+
+        const {
+          from,
+          to
+        } = Mime.headersToFrom(mimeContent);
+        mimeContent.from = from;
+        mimeContent.to = to;
+        resolve(mimeContent);
+      };
+
+      parser.write(mimeMsg); // tslint:disable-line:no-unsafe-any
+
+      parser.end(); // tslint:disable-line:no-unsafe-any
+    } catch (e) {
+      catch_js_1.Catch.handleErr(e);
+      resolve(mimeContent);
+    }
+  });
+};
+
+Mime.encode = async (body, headers, atts = []) => {
+  const MimeBuilder = window['emailjs-mime-builder']; // tslint:disable-line:variable-name
+
+  const rootNode = new MimeBuilder('multipart/mixed'); // tslint:disable-line:no-unsafe-any
+
+  for (const key of Object.keys(headers)) {
+    rootNode.addHeader(key, headers[key]); // tslint:disable-line:no-unsafe-any
+  }
+
+  if (typeof body === 'string') {
+    body = {
+      'text/plain': body
+    };
+  }
+
+  let contentNode;
+
+  if (Object.keys(body).length === 1) {
+    contentNode = Mime.newContentNode(MimeBuilder, Object.keys(body)[0], body[Object.keys(body)[0]] || '');
+  } else {
+    contentNode = new MimeBuilder('multipart/alternative'); // tslint:disable-line:no-unsafe-any
+
+    for (const type of Object.keys(body)) {
+      contentNode.appendChild(Mime.newContentNode(MimeBuilder, type, body[type])); // already present, that's why part of for loop
+    }
+  }
+
+  rootNode.appendChild(contentNode); // tslint:disable-line:no-unsafe-any
+
+  for (const att of atts) {
+    const type = `${att.type}; name="${att.name}"`;
+    const header = {
+      'Content-Disposition': 'attachment',
+      'X-Att-Id': `f_${common_js_1.Str.sloppyRandom(10)}`,
+      'Content-Transfer-Encoding': 'base64'
+    };
+    rootNode.appendChild(new MimeBuilder(type, {
+      filename: att.name
+    }).setHeader(header).setContent(att.data())); // tslint:disable-line:no-unsafe-any
+  }
+
+  return rootNode.build(); // tslint:disable-line:no-unsafe-any
+};
+
+Mime.signed = mimeMsg => {
+  /*
+    Trying to grab the full signed content that may look like this in its entirety (it's a signed mime message. May also be signed plain text)
+    Unfortunately, emailjs-mime-parser was not able to do this, or I wasn't able to use it properly
+     --eSmP07Gus5SkSc9vNmF4C0AutMibfplSQ
+    Content-Type: multipart/mixed; boundary="XKKJ27hlkua53SDqH7d1IqvElFHJROQA1"
+    From: Henry Electrum <henry.electrum@gmail.com>
+    To: human@flowcrypt.com
+    Message-ID: <abd68ba1-35c3-ee8a-0d60-0319c608d56b@gmail.com>
+    Subject: compatibility - simples signed email
+     --XKKJ27hlkua53SDqH7d1IqvElFHJROQA1
+    Content-Type: text/plain; charset=utf-8
+    Content-Transfer-Encoding: quoted-printable
+     content
+     --XKKJ27hlkua53SDqH7d1IqvElFHJROQA1--
+    */
+  const signedHeaderIndex = mimeMsg.substr(0, 100000).toLowerCase().indexOf('content-type: multipart/signed');
+
+  if (signedHeaderIndex !== -1) {
+    mimeMsg = mimeMsg.substr(signedHeaderIndex);
+    const firstBoundaryIndex = mimeMsg.substr(0, 1000).toLowerCase().indexOf('boundary=');
+
+    if (firstBoundaryIndex) {
+      let boundary = mimeMsg.substr(firstBoundaryIndex, 100);
+      boundary = (boundary.match(/boundary="[^"]{1,70}"/gi) || boundary.match(/boundary=[a-z0-9][a-z0-9 ]{0,68}[a-z0-9]/gi) || [])[0];
+
+      if (boundary) {
+        boundary = boundary.replace(/^boundary="?|"$/gi, '');
+        const boundaryBegin = '\r\n--' + boundary + '\r\n';
+        const boundaryEnd = '--' + boundary + '--';
+        const endIndex = mimeMsg.indexOf(boundaryEnd);
+
+        if (endIndex !== -1) {
+          mimeMsg = mimeMsg.substr(0, endIndex + boundaryEnd.length);
+
+          if (mimeMsg) {
+            const res = {
+              full: mimeMsg
+            };
+            let firstPartStartIndex = mimeMsg.indexOf(boundaryBegin);
+
+            if (firstPartStartIndex !== -1) {
+              firstPartStartIndex += boundaryBegin.length;
+              const firstPartEndIndex = mimeMsg.indexOf(boundaryBegin, firstPartStartIndex);
+              const secondPartStartIndex = firstPartEndIndex + boundaryBegin.length;
+              const secondPartEndIndex = mimeMsg.indexOf(boundaryEnd, secondPartStartIndex);
+
+              if (secondPartEndIndex !== -1) {
+                const firstPart = mimeMsg.substr(firstPartStartIndex, firstPartEndIndex - firstPartStartIndex);
+                const secondPart = mimeMsg.substr(secondPartStartIndex, secondPartEndIndex - secondPartStartIndex);
+                const beginSignature = pgp_js_1.Pgp.armor.headers('signedMsg').middle;
+                const endSignature = String(pgp_js_1.Pgp.armor.headers('signedMsg').end);
+
+                if (firstPart.match(/^content-type: application\/pgp-signature/gi) && common_js_1.Value.is(beginSignature).in(firstPart) && common_js_1.Value.is(endSignature).in(firstPart)) {
+                  res.signature = pgp_js_1.Pgp.armor.clip(firstPart);
+                  res.signed = secondPart;
+                } else {
+                  res.signature = pgp_js_1.Pgp.armor.clip(secondPart);
+                  res.signed = firstPart;
+                }
+
+                return res;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return undefined;
+};
+
+Mime.getNodeType = node => {
+  if (node.headers['content-type'] && node.headers['content-type'][0]) {
+    return node.headers['content-type'][0].value;
+  }
+
+  return undefined;
+};
+
+Mime.getNodeContentId = node => {
+  if (node.headers['content-id'] && node.headers['content-id'][0]) {
+    return node.headers['content-id'][0].value;
+  }
+
+  return undefined;
+};
+
+Mime.getNodeFilename = node => {
+  if (node.headers['content-disposition'] && node.headers['content-disposition'][0]) {
+    const header = node.headers['content-disposition'][0];
+
+    if (header.params && header.params.filename) {
+      return String(header.params.filename);
+    }
+  }
+
+  if (node.headers['content-type'] && node.headers['content-type'][0]) {
+    const header = node.headers['content-type'][0];
+
+    if (header.params && header.params.name) {
+      return String(header.params.name);
+    }
+  }
+
+  return;
+};
+
+Mime.getNodeContentAsText = node => {
+  if (node.charset === 'utf-8' && node.contentTransferEncoding.value === 'base64') {
+    return common_js_1.Str.uint8AsUtf(node.content);
+  }
+
+  if (node.charset === 'utf-8' && node.contentTransferEncoding.value === 'quoted-printable') {
+    return common_js_1.Str.fromEqualSignNotationAsUtf(node.rawContent);
+  }
+
+  if (node.charset === 'iso-8859-2') {
+    // todo - use iso88592.labels for detection
+    return window.iso88592.decode(node.rawContent); // tslint:disable-line:no-unsafe-any
+  }
+
+  return node.rawContent;
+}; // tslint:disable-next-line:variable-name
+
+
+Mime.newContentNode = (MimeBuilder, type, content) => {
+  const node = new MimeBuilder(type).setContent(content); // tslint:disable-line:no-unsafe-any
+
+  if (type === 'text/plain') {
+    // gmail likes this
+    node.addHeader('Content-Transfer-Encoding', 'quoted-printable'); // tslint:disable-line:no-unsafe-any
+  }
+
+  return node;
+};
+
+exports.Mime = Mime;
 
 /***/ }),
 /* 9 */
@@ -59862,10 +60198,163 @@ Att.keyinfoAsPubkeyAtt = ki => new Att({
   name: `0x${ki.longid}.asc`
 });
 
+Att.fromMsgBlock = attBlock => {
+  const attMeta = attBlock.attMeta;
+  attMeta.data = attBlock.content || attMeta.data;
+  return new Att(attMeta);
+};
+
 exports.Att = Att;
 
 /***/ }),
 /* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+const VERSION = '[BUILD_REPLACEABLE_VERSION]';
+
+class Catch {}
+
+Catch.RUNTIME_VERSION = VERSION;
+Catch.RUNTIME_ENVIRONMENT = 'undetermined'; // public static stringify = (e: any) => {
+//   if (e instanceof Error) {
+//     return `[typeof:Error:${e.name}] ${e.message}\n\n${e.stack}`;
+//   }
+//   if (typeof e === 'string') {
+//     return `[typeof:string] ${e}`;
+//   }
+//   try {
+//     return `[typeof:${(typeof e)}:${String(e)}] ${JSON.stringify(e)}`;
+//   } catch (cannotStringify) {
+//     return `[unstringifiable typeof:${(typeof e)}:${String(e)}]`;
+//   }
+// }
+// public static hasStack = (e: any): e is ObjWithStack => {
+//   return e && typeof e === 'object' && typeof (e as ObjWithStack).stack === 'string' && Boolean((e as ObjWithStack).stack);
+// }
+// public static onErrorInternalHandler = (errMsg: string | undefined, url: string, line: number, col: number, originalErr: any, isManuallyCalled: boolean) => {
+//   if (errMsg && Catch.IGNORE_ERR_MSG.indexOf(errMsg) !== -1) {
+//     return;
+//   }
+//   let exception: Error;
+//   if (typeof originalErr !== 'object') {
+//     exception = new Error(`THROWN_NON_OBJECT[${typeof originalErr}]: ${String(originalErr)}`);
+//   } else if (errMsg && url && typeof line !== 'undefined' && !col && !originalErr && !isManuallyCalled) {
+//     exception = new Error(`LIMITED_ERROR: ${errMsg}`);
+//   } else if (originalErr instanceof Error) {
+//     exception = originalErr;
+//   } else {
+//     exception = new Error(`THROWN_OBJECT: ${errMsg}`);
+//     if (Catch.hasStack(originalErr)) {
+//       exception.stack += `\n\nORIGINAL_THROWN_OBJECT_STACK:\n${originalErr.stack}\n\n`;
+//     }
+//     exception.stack += `\n\nORIGINAL_ERR:\n${Catch.stringify(originalErr)}`;
+//   }
+//   if (Catch.IGNORE_ERR_MSG.indexOf(exception.message) !== -1) {
+//     return;
+//   }
+//   console.error(originalErr);
+//   if (exception !== originalErr) {
+//     console.error(exception);
+//   }
+//   console.log(`%c[${exception.message}]\n${exception.stack}`, 'color: #F00; font-weight: bold;');
+//   if (isManuallyCalled !== true && Catch.ORIG_ONERROR && Catch.ORIG_ONERROR !== (Catch.onErrorInternalHandler as ErrorEventHandler)) {
+//     Catch.ORIG_ONERROR.apply(undefined, arguments); // Call any previously assigned handler
+//   }
+//   if ((exception.stack || '').indexOf('PRIVATE') !== -1 || exception instanceof UnreportableError) {
+//     return;
+//   }
+//   try {
+//     $.ajax({
+//       url: 'https://flowcrypt.com/api/help/error',
+//       method: 'POST',
+//       data: JSON.stringify({
+//         name: exception.name.substring(0, 50),
+//         message: exception.message.substring(0, 200),
+//         url: (url || '').substring(0, 100),
+//         line: line || 0,
+//         col: col || 0,
+//         trace: exception.stack || '',
+//         version: Catch.RUNTIME_VERSION,
+//         environment: Catch.RUNTIME_ENVIRONMENT,
+//       }),
+//       dataType: 'json',
+//       crossDomain: true,
+//       contentType: 'application/json; charset=UTF-8',
+//       async: true,
+//       success: (response: { saved: boolean }) => {
+//         if (response && typeof response === 'object' && response.saved === true) {
+//           console.log('%cFlowCrypt ERROR:' + Catch.CONSOLE_MSG, 'font-weight: bold;');
+//         } else {
+//           console.error('%cFlowCrypt EXCEPTION:' + Catch.CONSOLE_MSG, 'font-weight: bold;');
+//         }
+//       },
+//       error: (req, status, error) => {
+//         console.error('%cFlowCrypt FAILED:' + Catch.CONSOLE_MSG, 'font-weight: bold;');
+//       },
+//     });
+//   } catch (ajaxErr) {
+//     console.error(ajaxErr);
+//     console.error('%cFlowCrypt ISSUE:' + Catch.CONSOLE_MSG, 'font-weight: bold;');
+//   }
+//   try {
+//     Store.saveError(exception);
+//   } catch (storageErr) {
+//     console.error(`failed to locally log error ${String(exception)} because: ${String(storageErr)}`);
+//   }
+//   return true;
+// }
+// private static getErrorLineAndCol = (e: any) => {
+//   try {
+//     const callerLine = e.stack!.split('\n')[1]; // tslint:disable-line:no-unsafe-any
+//     const matched = callerLine.match(/\.js:([0-9]+):([0-9]+)\)?/); // tslint:disable-line:no-unsafe-any
+//     return { line: Number(matched![1]), col: Number(matched![2]) }; // tslint:disable-line:no-unsafe-any
+//   } catch (lineErr) {
+//     return { line: 0, col: 0 };
+//   }
+// }
+
+Catch.handleErr = e => {
+  return;
+}; // private static nameAndDetailsAsException = (name: string, details: any): Error => {
+//   try {
+//     throw new Error(name);
+//   } catch (e) {
+//     (e as Error).stack += `\n\n\ndetails:\n${Catch.stringify(details)}`;
+//     return e as Error;
+//   }
+// }
+
+
+Catch.report = (name, details) => {// Catch.handleErr(Catch.nameAndDetailsAsException(name, details));
+}; // public static log = (name: string, details?: any) => {
+//   const e = Catch.nameAndDetailsAsException(`Catch.log: ${name}`, details);
+//   try {
+//     Store.saveError(e, name);
+//   } catch (storageErr) {
+//     console.error(`failed to locally log "${String(name)}" because "${String(storageErr)}"`);
+//   }
+// }
+
+
+Catch.version = (format = 'original') => {
+  if (format === 'int') {
+    return Number(Catch.RUNTIME_VERSION.replace(/\./g, ''));
+  } else {
+    return Catch.RUNTIME_VERSION;
+  }
+};
+
+exports.Catch = Catch;
+
+/***/ }),
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -60120,7 +60609,7 @@ exports.testEndpointHandler = async endpoint => {
 };
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -60134,7 +60623,7 @@ Object.defineProperty(exports, "__esModule", {
 
 const pgp_1 = __webpack_require__(5);
 
-const validate_1 = __webpack_require__(12);
+const validate_1 = __webpack_require__(13);
 
 const responses_1 = __webpack_require__(3);
 
@@ -60144,30 +60633,68 @@ class Endpoints {
       return responses_1.fmtRes(process.versions);
     };
 
-    this.encrypt = async (uncheckedReq, data) => {
-      const req = validate_1.Validate.encrypt(uncheckedReq, data);
+    this.encryptMsg = async (uncheckedReq, data) => {
+      const req = validate_1.Validate.encryptMsg(uncheckedReq, data);
+      const encrypted = await pgp_1.PgpMsg.encrypt(req.pubKeys, undefined, undefined, data, undefined, true);
+      return responses_1.fmtRes({}, encrypted.data);
+    };
 
-      if (typeof req.filename === 'undefined') {
-        const encrypted = await pgp_1.PgpMsg.encrypt(req.pubKeys, undefined, undefined, data, undefined, true);
-        return responses_1.fmtRes({}, encrypted.data);
-      } else {
-        const encrypted = await pgp_1.PgpMsg.encrypt(req.pubKeys, undefined, undefined, data, req.filename, false);
-        return responses_1.fmtRes({}, encrypted.message.packets.write());
-      }
+    this.encryptFile = async (uncheckedReq, data) => {
+      const req = validate_1.Validate.encryptFile(uncheckedReq, data);
+      const encrypted = await pgp_1.PgpMsg.encrypt(req.pubKeys, undefined, undefined, data, req.name, false);
+      return responses_1.fmtRes({}, encrypted.message.packets.write());
     };
 
     this.decryptMsg = async (uncheckedReq, data) => {
+      const {
+        keys,
+        passphrases,
+        msgPwd
+      } = validate_1.Validate.decryptMsg(uncheckedReq, data);
+      const decrypted = await pgp_1.PgpMsg.decrypt({
+        keys,
+        passphrases
+      }, data, msgPwd, false);
+
+      if (!decrypted.success) {
+        decrypted.message = undefined;
+        return responses_1.fmtRes(decrypted);
+      }
+
+      const blocks = await pgp_1.PgpMsg.fmtDecrypted(decrypted.content.text);
+      const blockMetas = blocks.map(b => ({
+        type: b.type,
+        length: b.content.length
+      })); // first line is a blockMetas JSON. Data below represent one JSON-stringified block per line. This is so that it can be read as a stream
+
       return responses_1.fmtRes({
-        not: "implemented"
-      }, "not imlemented");
+        success: true,
+        blockMetas
+      }, blocks.map(b => JSON.stringify(b)).join('\n'));
     };
 
     this.decryptFile = async (uncheckedReq, data) => {
-      // const req = Validate.decryptFile(uncheckedReq, data);
+      const {
+        keys,
+        passphrases,
+        msgPwd
+      } = validate_1.Validate.decryptFile(uncheckedReq, data);
+      const decryptedMeta = await pgp_1.PgpMsg.decrypt({
+        keys,
+        passphrases
+      }, data, msgPwd, true);
+
+      if (!decryptedMeta.success) {
+        decryptedMeta.message = undefined;
+        return responses_1.fmtRes(decryptedMeta);
+      }
+
+      const decryptedData = decryptedMeta.content.uint8;
+      decryptedMeta.content.uint8 = undefined;
       return responses_1.fmtRes({
-        not: "implemented"
-      }, "not imlemented"); //   const decrypted = await Pgp.msg.decrypt()
-      //   // return fmtRes({name, contentType}, decrypted);
+        success: true,
+        name: decryptedMeta.content.filename || ''
+      }, decryptedData);
     };
   }
 
@@ -60176,7 +60703,7 @@ class Endpoints {
 exports.Endpoints = Endpoints;
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -60189,16 +60716,32 @@ Object.defineProperty(exports, "__esModule", {
 
 class Validate {}
 
-Validate.encrypt = (v, data) => {
-  if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasProp(v, 'filename', 'string?') && hasData(data)) {
+Validate.encryptMsg = (v, data) => {
+  if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasData(data)) {
     return v;
   }
 
-  throw new Error('Wrong request structure for NodeRequest.encrypt');
+  throw new Error('Wrong request structure for NodeRequest.encryptMsg');
+};
+
+Validate.encryptFile = (v, data) => {
+  if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasProp(v, 'filename', 'string') && hasData(data)) {
+    return v;
+  }
+
+  throw new Error('Wrong request structure for NodeRequest.encryptFile');
 };
 
 Validate.decryptFile = (v, data) => {
-  if (isObj(v) && hasProp(v, 'prvKeys', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'passphrases', 'string[]') && hasData(data)) {
+  if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'passphrases', 'string[]') && hasData(data)) {
+    return v;
+  }
+
+  throw new Error('Wrong request structure for NodeRequest.decryptFile');
+};
+
+Validate.decryptMsg = (v, data) => {
+  if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'passphrases', 'string[]') && hasData(data)) {
     return v;
   }
 
@@ -60226,6 +60769,10 @@ const hasProp = (v, name, type) => {
 
   if (type === 'string[]') {
     return Array.isArray(v[name]) && v[name].map(x => typeof x === 'string');
+  }
+
+  if (type === 'PrvKeyInfo[]') {
+    return Array.isArray(v[name]) && v[name].map(ki => hasProp(ki, 'private', 'string') && hasProp(ki, 'longid', 'string'));
   }
 
   if (type === 'object') {

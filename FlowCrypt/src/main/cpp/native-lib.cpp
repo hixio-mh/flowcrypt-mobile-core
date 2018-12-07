@@ -5,7 +5,7 @@
 
 extern "C"
 JNIEXPORT jstring JNICALL
-Java_com_yourorg_sample_NativeNode_stringFromJNI(
+Java_com_yourorg_sample_node_NativeNode_stringFromJNI(
         JNIEnv *env,
         jobject /* this */) {
     std::string hello = "Hello from C++";
@@ -14,7 +14,7 @@ Java_com_yourorg_sample_NativeNode_stringFromJNI(
 
 //node's libUV requires all arguments being on contiguous memory.
 extern "C" jint JNICALL
-Java_com_yourorg_sample_NativeNode_startNodeWithArguments(
+Java_com_yourorg_sample_node_NativeNode_startNodeWithArguments(
         JNIEnv *env,
         jobject /* this */,
         jobjectArray arguments) {

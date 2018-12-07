@@ -16,15 +16,16 @@ export class Endpoints {
     return fmtRes(process.versions);
   }
 
-  public encrypt = async (uncheckedReq: any, data: string | undefined): Promise<string> => {
-    const req = Validate.encrypt(uncheckedReq, data);
-    if (typeof req.filename === 'undefined') {
-      const encrypted = await PgpMsg.encrypt(req.pubKeys, undefined, undefined, data!, undefined, true) as OpenPGP.EncryptArmorResult;
-      return fmtRes({}, encrypted.data);
-    } else {
-      const encrypted = await PgpMsg.encrypt(req.pubKeys, undefined, undefined, data!, req.filename, false) as OpenPGP.EncryptBinaryResult;
-      return fmtRes({}, encrypted.message.packets.write());
-    }
+  public encryptMsg = async (uncheckedReq: any, data: string | undefined): Promise<string> => {
+    const req = Validate.encryptMsg(uncheckedReq, data);
+    const encrypted = await PgpMsg.encrypt(req.pubKeys, undefined, undefined, data!, undefined, true) as OpenPGP.EncryptArmorResult;
+    return fmtRes({}, encrypted.data);
+  }
+
+  public encryptFile = async (uncheckedReq: any, data: string | undefined): Promise<string> => {
+    const req = Validate.encryptFile(uncheckedReq, data);
+    const encrypted = await PgpMsg.encrypt(req.pubKeys, undefined, undefined, data!, req.name, false) as OpenPGP.EncryptBinaryResult;
+    return fmtRes({}, encrypted.message.packets.write());
   }
 
   public decryptMsg = async (uncheckedReq: any, data: string | undefined): Promise<string> => {
@@ -34,19 +35,22 @@ export class Endpoints {
       decrypted.message = undefined;
       return fmtRes(decrypted);
     }
-    return fmtRes({ blocks: await PgpMsg.fmtDecrypted(decrypted.content.text!) });
+    const blocks = await PgpMsg.fmtDecrypted(decrypted.content.text!);
+    const blockMetas = blocks.map(b => ({ type: b.type, length: b.content.length }));
+    // first line is a blockMetas JSON. Data below represent one JSON-stringified block per line. This is so that it can be read as a stream
+    return fmtRes({ success: true, blockMetas }, blocks.map(b => JSON.stringify(b)).join('\n'));
   }
 
   public decryptFile = async (uncheckedReq: any, data: string | undefined): Promise<string> => {
     const { keys, passphrases, msgPwd } = Validate.decryptFile(uncheckedReq, data);
-    const decrypted = await PgpMsg.decrypt({ keys, passphrases }, data!, msgPwd, true);
-    if (!decrypted.success) {
-      decrypted.message = undefined;
-      return fmtRes(decrypted);
+    const decryptedMeta = await PgpMsg.decrypt({ keys, passphrases }, data!, msgPwd, true);
+    if (!decryptedMeta.success) {
+      decryptedMeta.message = undefined;
+      return fmtRes(decryptedMeta);
     }
-    const decryptedData = decrypted.content.uint8;
-    decrypted.content.uint8 = undefined;
-    return fmtRes(decrypted, decryptedData);
+    const decryptedData = decryptedMeta.content.uint8!;
+    decryptedMeta.content.uint8 = undefined;
+    return fmtRes({ success: true, name: decryptedMeta.content.filename || '' }, decryptedData);
   }
 
 }

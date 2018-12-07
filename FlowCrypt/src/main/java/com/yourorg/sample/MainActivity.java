@@ -7,6 +7,10 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.yourorg.sample.node.Node;
+import com.yourorg.sample.node.results.EncryptMsgResult;
+import com.yourorg.sample.node.results.TestNodeResult;
+
 public class MainActivity extends AppCompatActivity {
 
   @Override
@@ -22,75 +26,75 @@ public class MainActivity extends AppCompatActivity {
 
     findViewById(R.id.btnVersions).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        renderRes("version", tvResult);
+        testNodeAndRender("version", tvResult);
       }
     });
     findViewById(R.id.btnTest25519).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        renderRes("test25519", tvResult);
+        testNodeAndRender("test25519", tvResult);
       }
     });
     findViewById(R.id.btnTest2048).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        renderRes("test2048", tvResult);
+        testNodeAndRender("test2048", tvResult);
       }
     });
     findViewById(R.id.btnTest4096).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        renderRes("test4096", tvResult);
+        testNodeAndRender("test4096", tvResult);
       }
     });
     findViewById(R.id.btnTest2048_1M).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        renderRes("test2048-1M", tvResult);
+        testNodeAndRender("test2048-1M", tvResult);
       }
     });
     findViewById(R.id.btnTest2048_3M).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        renderRes("test2048-3M", tvResult);
+        testNodeAndRender("test2048-3M", tvResult);
       }
     });
     findViewById(R.id.btnTest2048_5M).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        renderRes("test2048-5M", tvResult);
+        testNodeAndRender("test2048-5M", tvResult);
       }
     });
     findViewById(R.id.btnTest2048_10M).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        renderRes("test2048-10M", tvResult);
+        testNodeAndRender("test2048-10M", tvResult);
       }
     });
     findViewById(R.id.btnTest2048_25M).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        renderRes("test2048-25M", tvResult);
+        testNodeAndRender("test2048-25M", tvResult);
       }
     });
     findViewById(R.id.btnTest2048_50M).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        renderRes("test2048-50M", tvResult);
+        testNodeAndRender("test2048-50M", tvResult);
       }
     });
     findViewById(R.id.btnEncrypt).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        encryptAndRender(etData, tvResult);
+        encryptMsgAndRender(etData, tvResult);
       }
     });
   }
 
-  public static void encryptAndRender(final EditText etData, final TextView tvResult) {
-    new AsyncTask<Void,Void,NodeEncryptRes>() {
+  public static void encryptMsgAndRender(final EditText etData, final TextView tvResult) {
+    new AsyncTask<Void,Void,EncryptMsgResult>() {
       @Override
-      protected NodeEncryptRes doInBackground(Void... params) {
-        return Node.encrypt(etData.getText().toString().getBytes(), TestDataFactory.eccPubKeys);
+      protected EncryptMsgResult doInBackground(Void... params) {
+        return Node.encryptMsg(etData.getText().toString().getBytes(), TestDataFactory.eccPubKeys);
       }
       @Override
-      protected void onPostExecute(NodeEncryptRes encryptRes) {
+      protected void onPostExecute(EncryptMsgResult encryptRes) {
         String text;
         if(encryptRes.getErr() != null) {
           text = encryptRes.getErr().getMessage();
           encryptRes.getErr().printStackTrace();
         } else {
-          text = encryptRes.getDataString();
+          text = encryptRes.getEncryptedDataString();
         }
         System.out.println(text);
         text += "\n\n" + encryptRes.ms + "ms";
@@ -100,22 +104,22 @@ public class MainActivity extends AppCompatActivity {
 
   }
 
-  public static void renderRes(final String endpoint, final TextView tvResult) {
-    new AsyncTask<Void,Void,NodeRes>() {
+  public static void testNodeAndRender(final String endpoint, final TextView tvResult) {
+    new AsyncTask<Void,Void,TestNodeResult>() {
       @Override
-      protected NodeRes doInBackground(Void... params) {
+      protected TestNodeResult doInBackground(Void... params) {
         return Node.rawRequest(endpoint);
       }
       @Override
-      protected void onPostExecute(NodeRes nodeRes) {
+      protected void onPostExecute(TestNodeResult nodeResult) {
         String text;
-        if(nodeRes.getErr() != null) {
-          text = nodeRes.getErr().getMessage();
-          nodeRes.getErr().printStackTrace();
+        if(nodeResult.getErr() != null) {
+          text = nodeResult.getErr().getMessage();
+          nodeResult.getErr().printStackTrace();
         } else {
-          text = nodeRes.getRawJsonResponse();
+          text = nodeResult.getRawJsonResponse();
         }
-        text += "\n\n" + nodeRes.ms + "ms";
+        text += "\n\n" + nodeResult.ms + "ms";
         tvResult.setText(text);
       }
     }.execute();
