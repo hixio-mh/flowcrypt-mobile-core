@@ -95,7 +95,7 @@ public class RawNodeResult {
     if(br == null) {
       return null;
     }
-    return br.lines().collect(Collectors.joining());
+    return br.lines().collect(Collectors.joining("\n"));
   }
 
   protected BufferedReader getDataBufferedReader() {
@@ -117,18 +117,6 @@ abstract class EncryptResult extends RawNodeResult {
 
   public BufferedReader getEncryptedDataBufferedReader() {
     return getDataBufferedReader();
-  }
-
-}
-
-class DecryptErr {
-
-  public final String type;
-  public final String error;
-
-  DecryptErr(String type, String error) {
-    this.type = type;
-    this.error = error;
   }
 
 }

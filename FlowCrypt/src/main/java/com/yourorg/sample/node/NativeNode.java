@@ -149,7 +149,7 @@ class NodeError extends Exception {
     } catch (IOException e) {
       return new NodeError(0, e.getMessage(), null);
     }
-    String res = new BufferedReader(new InputStreamReader(conn.getErrorStream())).lines().collect(Collectors.joining());
+    String res = new BufferedReader(new InputStreamReader(conn.getErrorStream())).lines().collect(Collectors.joining("\n"));
     try {
       JSONObject obj = new JSONObject(res);
       JSONObject error = obj.getJSONObject("error");
@@ -169,12 +169,7 @@ class NodeError extends Exception {
   }
 
   static private StackTraceElement newStackTraceElement(String data) {
-    return new StackTraceElement(
-        "==========================================",
-        "\n[node.js] " + data,
-        "flowcrypt-android.js",
-        -1
-    );
+    return new StackTraceElement("=========================", "\n[node.js] " + data, "flowcrypt-android.js", -1);
   }
 
 }

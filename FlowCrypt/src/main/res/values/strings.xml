@@ -5,7 +5,8 @@
     <string name="test_ecc_25519">25519</string>
     <string name="versions">VER</string>
     <string name="encrypt">encrypt</string>
-    <string name="decrypt">decrypt</string>
+    <string name="decrypt_file">decrypt file</string>
+    <string name="decrypt_msg">decrypt msg</string>
     <string name="_1m">1M</string>
     <string name="_3m">3M</string>
     <string name="_5m">5M</string>

@@ -44,7 +44,7 @@ public class Node {
 
   public static DecryptMsgResult decryptMsg(byte[] data, String[] prvKeys, String[] passphrases, String msgPwd) {
     Json req = new Json();
-    req.putStringArr("prvKeys", prvKeys);
+    req.putStringArr("keys", prvKeys);
     req.putStringArr("passphrases", passphrases);
     req.putString("msgPwd", msgPwd);
     return nativeNode.request("decryptMsg", req, data).convertTo(DecryptMsgResult.class);
@@ -52,7 +52,7 @@ public class Node {
 
   public static DecryptFileResult decryptFile(byte[] data, String[] prvKeys, String[] passphrases, String msgPwd) {
     Json req = new Json();
-    req.putStringArr("prvKeys", prvKeys);
+    req.putStringArr("keys", prvKeys);
     req.putStringArr("passphrases", passphrases);
     req.putString("msgPwd", msgPwd);
     return nativeNode.request("decryptFile", req, data).convertTo(DecryptFileResult.class);

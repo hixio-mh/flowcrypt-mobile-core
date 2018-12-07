@@ -127,6 +127,7 @@
         android:singleLine="false"
         android:text=''
         android:textSize="12sp"
+        android:textIsSelectable="true"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnEncrypt" />
 
@@ -154,13 +155,23 @@
         app:layout_constraintTop_toBottomOf="@+id/etData" />
 
     <Button
-        android:id="@+id/btnDecrypt"
+        android:id="@+id/btnDecryptFile"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:text="@string/decrypt"
+        android:text="@string/decrypt_file"
         app:layout_constraintStart_toEndOf="@+id/btnEncrypt"
+        app:layout_constraintTop_toBottomOf="@+id/etData" />
+
+    <Button
+        android:id="@+id/btnDecryptMsg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/decrypt_msg"
+        app:layout_constraintStart_toEndOf="@+id/btnDecryptFile"
         app:layout_constraintTop_toBottomOf="@+id/etData" />
 
 </android.support.constraint.ConstraintLayout>

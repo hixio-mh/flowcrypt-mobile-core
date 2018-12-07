@@ -8,7 +8,11 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.yourorg.sample.node.Node;
+import com.yourorg.sample.node.results.DecryptFileResult;
+import com.yourorg.sample.node.results.DecryptMsgResult;
 import com.yourorg.sample.node.results.EncryptMsgResult;
+import com.yourorg.sample.node.results.MsgBlock;
+import com.yourorg.sample.node.results.MsgBlockMeta;
 import com.yourorg.sample.node.results.TestNodeResult;
 
 public class MainActivity extends AppCompatActivity {
@@ -79,6 +83,16 @@ public class MainActivity extends AppCompatActivity {
         encryptMsgAndRender(etData, tvResult);
       }
     });
+    findViewById(R.id.btnDecryptFile).setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        decryptFileAndRender(etData, tvResult);
+      }
+    });
+    findViewById(R.id.btnDecryptMsg).setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        decryptMsgAndRender(etData, tvResult);
+      }
+    });
   }
 
   public static void encryptMsgAndRender(final EditText etData, final TextView tvResult) {
@@ -101,7 +115,60 @@ public class MainActivity extends AppCompatActivity {
         tvResult.setText(text);
       }
     }.execute();
+  }
 
+  public static void decryptMsgAndRender(final EditText etData, final TextView tvResult) {
+    new AsyncTask<Void,Void,DecryptMsgResult>() {
+      @Override
+      protected DecryptMsgResult doInBackground(Void... params) {
+        return Node.decryptMsg(etData.getText().toString().getBytes(), TestDataFactory.eccPrvKeys, TestDataFactory.passphrases, null);
+      }
+      @Override
+      protected void onPostExecute(DecryptMsgResult decryptFileRes) {
+        String text;
+        if(decryptFileRes.getErr() != null) {
+          text = decryptFileRes.getErr().getMessage();
+          decryptFileRes.getErr().printStackTrace();
+        } else if(decryptFileRes.getDecryptErr() != null) {
+          text = decryptFileRes.getDecryptErr().type + ": " + decryptFileRes.getDecryptErr().error;
+        } else {
+          text = "msgBlockMeta.length: " + decryptFileRes.getAllBlockMetas().length + "\n";
+          for(MsgBlockMeta msgBlockMeta: decryptFileRes.getAllBlockMetas()) {
+            text += "blockMeta: " + msgBlockMeta.type + ", length: " + msgBlockMeta.length + "\n";
+          }
+          for (MsgBlock block = decryptFileRes.getNextBlock(); block != null; block = decryptFileRes.getNextBlock()) {
+            text += "----- block " + block.getType() + " ------\n" + block.getContent() + "\n\n";
+          }
+        }
+        System.out.println(text);
+        text += "\n\n" + decryptFileRes.ms + "ms";
+        tvResult.setText(text);
+      }
+    }.execute();
+  }
+
+  public static void decryptFileAndRender(final EditText etData, final TextView tvResult) {
+    new AsyncTask<Void,Void,DecryptFileResult>() {
+      @Override
+      protected DecryptFileResult doInBackground(Void... params) {
+        return Node.decryptFile(etData.getText().toString().getBytes(), TestDataFactory.eccPrvKeys, TestDataFactory.passphrases, null);
+      }
+      @Override
+      protected void onPostExecute(DecryptFileResult decryptFileRes) {
+        String text;
+        if(decryptFileRes.getErr() != null) {
+          text = decryptFileRes.getErr().getMessage();
+          decryptFileRes.getErr().printStackTrace();
+        } else if(decryptFileRes.getDecryptErr() != null) {
+          text = decryptFileRes.getDecryptErr().type + ": " + decryptFileRes.getDecryptErr().error;
+        } else {
+          text = decryptFileRes.getDecryptedDataString();
+        }
+        System.out.println(text);
+        text += "\n\n" + decryptFileRes.ms + "ms";
+        tvResult.setText(text);
+      }
+    }.execute();
   }
 
   public static void testNodeAndRender(final String endpoint, final TextView tvResult) {
