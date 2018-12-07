@@ -57803,7 +57803,6 @@ module.exports =
 
 "use strict";
 /* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
-/// <reference path="./types/android.d.ts" />
 /// <reference path="../node_modules/@types/node/index.d.ts" />
 /// <reference path="./types/openpgp.d.ts" />
 /// <reference path="./types/jquery.d.ts" />
@@ -57823,6 +57822,10 @@ const responses_1 = __webpack_require__(3);
 const tests_1 = __webpack_require__(10);
 
 const endpoints_1 = __webpack_require__(11);
+
+global.atob = b64str => Buffer.from(b64str, 'base64').toString('binary');
+
+global.btoa = binary => Buffer.from(binary, 'binary').toString('base64');
 
 const endpoints = new endpoints_1.Endpoints();
 
@@ -60145,10 +60148,18 @@ class Endpoints {
       }
     };
 
-    this.decrypt = async (uncheckedReq, data) => {
+    this.decryptMsg = async (uncheckedReq, data) => {
       return responses_1.fmtRes({
         not: "implemented"
-      }, 'not implemented');
+      }, "not imlemented");
+    };
+
+    this.decryptFile = async (uncheckedReq, data) => {
+      // const req = Validate.decryptFile(uncheckedReq, data);
+      return responses_1.fmtRes({
+        not: "implemented"
+      }, "not imlemented"); //   const decrypted = await Pgp.msg.decrypt()
+      //   // return fmtRes({name, contentType}, decrypted);
     };
   }
 
@@ -60171,19 +60182,29 @@ Object.defineProperty(exports, "__esModule", {
 class Validate {}
 
 Validate.encrypt = (v, data) => {
-  if (Validate.isObj(v) && Validate.hasProp(v, 'pubKeys', 'string[]') && Validate.hasProp(v, 'filename', 'string?') && typeof data === 'string') {
+  if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasProp(v, 'filename', 'string?') && hasData(data)) {
     return v;
   }
 
   throw new Error('Wrong request structure for NodeRequest.encrypt');
 };
 
-Validate.isObj = v => {
+Validate.decryptFile = (v, data) => {
+  if (isObj(v) && hasProp(v, 'prvKeys', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'passphrases', 'string[]') && hasData(data)) {
+    return v;
+  }
+
+  throw new Error('Wrong request structure for NodeRequest.decryptFile');
+};
+
+exports.Validate = Validate;
+
+const isObj = v => {
   return v && typeof v === 'object';
 };
 
-Validate.hasProp = (v, name, type) => {
-  if (!Validate.isObj(v)) {
+const hasProp = (v, name, type) => {
+  if (!isObj(v)) {
     return false;
   }
 
@@ -60200,13 +60221,15 @@ Validate.hasProp = (v, name, type) => {
   }
 
   if (type === 'object') {
-    return Validate.isObj(v[name]);
+    return isObj(v[name]);
   }
 
   return false;
 };
 
-exports.Validate = Validate;
+const hasData = data => {
+  return typeof data === 'string';
+};
 
 /***/ })
 /******/ ]);

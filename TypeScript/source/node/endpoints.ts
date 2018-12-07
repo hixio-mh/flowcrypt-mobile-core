@@ -32,7 +32,7 @@ export class Endpoints {
   }
 
   public decryptFile = async (uncheckedReq: any, data: string | undefined): Promise<string> => {
-    const req = Validate.decryptFile(uncheckedReq, data);
+    // const req = Validate.decryptFile(uncheckedReq, data);
     return fmtRes({ not: "implemented" }, "not imlemented");
     //   const decrypted = await Pgp.msg.decrypt()
     //   // return fmtRes({name, contentType}, decrypted);

@@ -1,6 +1,5 @@
 /* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
 
-/// <reference path="./types/android.d.ts" />
 /// <reference path="../node_modules/@types/node/index.d.ts" />
 /// <reference path="./types/openpgp.d.ts" />
 /// <reference path="./types/jquery.d.ts" />
@@ -16,6 +15,9 @@ import { testEndpointHandler } from './node/tests';
 import { Endpoints } from './node/endpoints';
 
 declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_AUTH_HEADER: string;
+
+(global as any).atob = (b64str: string) => Buffer.from(b64str, 'base64').toString('binary');
+(global as any).btoa = (binary: string) => Buffer.from(binary, 'binary').toString('base64');
 
 const endpoints = new Endpoints();
 

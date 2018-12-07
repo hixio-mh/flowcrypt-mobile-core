@@ -33,7 +33,8 @@
     "updateCore": "npm run-script _updateCoreLib && npm run-script _updateCoreSrc && npm run-script _updateCoreTypes",
     "_updateCoreSrc": "cp -r ../../flowcrypt-browser/extension/js/common/core source/core",
     "_updateCoreLib": "mkdir source/lib && cd source/lib && LIBD='../../../../flowcrypt-browser/extension/lib' && cp -r $LIBD/emailjs . && cp $LIBD/openpgp.js . && cp $LIBD/iso-*.js . && cp $LIBD/zxcvbn.js .",
-    "_updateCoreTypes": "cp -r ../../flowcrypt-browser/extension/types source/"
+    "_updateCoreTypes": "cp -r ../../flowcrypt-browser/extension/types source/",
+    "donateCore": "rm -rf ../../flowcrypt-browser/extension/js/common/core && cp -r source/core ../../flowcrypt-browser/extension/js/common/core && cp -r source/types ../../flowcrypt-browser/extension/"
   },
   "repository": {
     "type": "git",

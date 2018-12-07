@@ -26,6 +26,12 @@
       "script": "deploy",
       "path": "TypeScript/",
       "problemMatcher": []
+    },
+    {
+      "type": "npm",
+      "script": "donateCore",
+      "path": "TypeScript/",
+      "problemMatcher": []
     }
   ]
 }
