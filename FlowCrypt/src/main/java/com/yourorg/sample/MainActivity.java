@@ -2,12 +2,15 @@ package com.yourorg.sample;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import com.yourorg.sample.node.Node;
+import com.yourorg.sample.node.NodeSecrets;
 import com.yourorg.sample.node.results.DecryptFileResult;
 import com.yourorg.sample.node.results.DecryptMsgResult;
 import com.yourorg.sample.node.results.EncryptMsgResult;
@@ -17,13 +20,22 @@ import com.yourorg.sample.node.results.TestNodeResult;
 
 public class MainActivity extends AppCompatActivity {
 
+  private String newTitle = "Node";
+  Handler newTitleHandler = new Handler(new Handler.Callback() {
+    @Override
+    public boolean handleMessage(Message msg) {
+      setTitle(newTitle);
+      return true;
+    }
+  });
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
 
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
-    Node.start(getAssets());
+    asyncGenSecretsAndStartNode();
 
     final TextView tvResult = (TextView) findViewById(R.id.tvResult);
     final EditText etData = (EditText) findViewById(R.id.etData);
@@ -93,6 +105,30 @@ public class MainActivity extends AppCompatActivity {
         decryptMsgAndRender(etData, tvResult);
       }
     });
+  }
+
+  public void asyncGenSecretsAndStartNode() {
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          newTitle = "Generating node secrets..";
+          newTitleHandler.sendEmptyMessage(0);
+          long secretsStart = System.currentTimeMillis();
+          NodeSecrets nodeSecrets = new NodeSecrets();
+          System.out.println("Generating secrets took " + (System.currentTimeMillis() - secretsStart) + "ms");
+          newTitle = "Starting Node..";
+          newTitleHandler.sendEmptyMessage(0);
+          long nodeStart = System.currentTimeMillis();
+          Node.start(getAssets(), nodeSecrets);
+          System.out.println("Starting node took additional " + (System.currentTimeMillis() - nodeStart) + "ms");
+          newTitle = "Node started";
+          newTitleHandler.sendEmptyMessage(0);
+        } catch(Exception e) {
+          throw new RuntimeException("Could not initialize Node", e);
+        }
+      }
+    }).start();
   }
 
   public static void encryptMsgAndRender(final EditText etData, final TextView tvResult) {
@@ -175,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
     new AsyncTask<Void,Void,TestNodeResult>() {
       @Override
       protected TestNodeResult doInBackground(Void... params) {
-        return Node.rawRequest(endpoint);
+        return Node.testRequest(endpoint);
       }
       @Override
       protected void onPostExecute(TestNodeResult nodeResult) {
