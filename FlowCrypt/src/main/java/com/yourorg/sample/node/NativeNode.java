@@ -45,7 +45,6 @@ import java.util.Date;
 import java.util.stream.Collectors;
 
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
@@ -210,14 +209,15 @@ class SecretsFactory {
     KeyPair srvKeypair = keyGen.generateKeyPair();
     int srvKu = KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.dataEncipherment | KeyUsage.keyAgreement;
     X509Certificate srvCrt = newSignedCrt(caKeypair, srvKeypair, new X500Name("CN=localhost"), srvKu);
-    // new sslContext for http client that accepts this self-signed cert and provides client cert
+    // create trust manager that trusts ca to verify server crt
     TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
     tmf.init(newKeyStore("ca", caCrt, null)); // trust our ca
-    SSLContext sslContext = SSLContext.getInstance("TLS");
+    // create key manager to supply client key and crt (client and server use the same keypair)
     KeyManagerFactory clientKmFactory = KeyManagerFactory.getInstance("X509");
-    clientKmFactory.init(newKeyStore("crt", srvCrt, srvKeypair), null); // supply our client cert (same as server cert)
-    KeyManager[] clientKm = clientKmFactory.getKeyManagers();
-    sslContext.init(clientKm, tmf.getTrustManagers(), secureRandom);
+    clientKmFactory.init(newKeyStore("crt", srvCrt, srvKeypair), null);
+    // new sslContext for http client that trusts the ca and provides client cert
+    SSLContext sslContext = SSLContext.getInstance("TLS");
+    sslContext.init(clientKmFactory.getKeyManagers(), tmf.getTrustManagers(), secureRandom);
     // return all that plus new passwords
     Secrets secrets = new Secrets();
     secrets.ca = crtToString(caCrt);
