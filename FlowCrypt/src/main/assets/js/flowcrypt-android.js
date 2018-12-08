@@ -57845,8 +57845,8 @@ const delegateReqToEndpoint = async (endpointName, uncheckedReq, optionalData) =
 };
 
 const handleReq = async (req, res) => {
-  if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT) {
-    throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_KEY or NODE_SSL_CRT');
+  if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT || !NODE_SSL_CA) {
+    throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_CA, NODE_SSL_KEY or NODE_SSL_CRT');
   }
 
   if (req.headers['authorization'] !== NODE_AUTH_HEADER) {
@@ -57873,8 +57873,9 @@ const handleReq = async (req, res) => {
 const serverOptins = {
   key: NODE_SSL_KEY,
   cert: NODE_SSL_CRT,
+  ca: NODE_SSL_CA,
   requestCert: true,
-  rejectUnauthorized: false
+  rejectUnauthorized: true
 };
 https.createServer(serverOptins, (request, response) => {
   handleReq(request, response).then(r => {

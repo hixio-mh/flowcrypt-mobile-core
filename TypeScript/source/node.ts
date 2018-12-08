@@ -14,7 +14,7 @@ import { fmtRes, fmtErr, indexHtml, HttpClientErr, HttpAuthErr } from './node/re
 import { testEndpointHandler } from './node/tests';
 import { Endpoints } from './node/endpoints';
 
-declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_AUTH_HEADER: string;
+declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, NODE_AUTH_HEADER: string;
 
 (global as any).atob = (b64str: string) => Buffer.from(b64str, 'base64').toString('binary');
 (global as any).btoa = (binary: string) => Buffer.from(binary, 'binary').toString('base64');
@@ -33,8 +33,8 @@ const delegateReqToEndpoint = async (endpointName: string, uncheckedReq: any, op
 }
 
 const handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<string> => {
-  if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT) {
-    throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_KEY or NODE_SSL_CRT');
+  if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT || !NODE_SSL_CA) {
+    throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_CA, NODE_SSL_KEY or NODE_SSL_CRT');
   }
   if (req.headers['authorization'] !== NODE_AUTH_HEADER) {
     throw new HttpAuthErr('Wrong Authorization');
@@ -52,8 +52,9 @@ const handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<str
 const serverOptins: https.ServerOptions = {
   key: NODE_SSL_KEY,
   cert: NODE_SSL_CRT,
+  ca: NODE_SSL_CA,
   requestCert: true,
-  rejectUnauthorized: false,
+  rejectUnauthorized: true,
 };
 https.createServer(serverOptins, (request, response) => {
   handleReq(request, response).then((r) => {
