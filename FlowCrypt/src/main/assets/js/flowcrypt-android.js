@@ -57870,10 +57870,13 @@ const handleReq = async (req, res) => {
   throw new responses_1.HttpClientErr(`unknown path ${req.url}`);
 };
 
-https.createServer({
+const serverOptins = {
   key: NODE_SSL_KEY,
-  cert: NODE_SSL_CRT
-}, (request, response) => {
+  cert: NODE_SSL_CRT,
+  requestCert: true,
+  rejectUnauthorized: false
+};
+https.createServer(serverOptins, (request, response) => {
   handleReq(request, response).then(r => {
     response.end(r);
   }).catch(e => {

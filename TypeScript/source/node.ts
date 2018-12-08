@@ -49,8 +49,13 @@ const handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<str
   }
   throw new HttpClientErr(`unknown path ${req.url}`);
 }
-
-https.createServer({ key: NODE_SSL_KEY, cert: NODE_SSL_CRT }, (request, response) => {
+const serverOptins: https.ServerOptions = {
+  key: NODE_SSL_KEY,
+  cert: NODE_SSL_CRT,
+  requestCert: true,
+  rejectUnauthorized: false,
+};
+https.createServer(serverOptins, (request, response) => {
   handleReq(request, response).then((r) => {
     response.end(r);
   }).catch((e) => {

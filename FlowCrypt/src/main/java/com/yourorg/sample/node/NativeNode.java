@@ -43,6 +43,8 @@ import java.util.Date;
 import java.util.stream.Collectors;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 import javax.xml.bind.DatatypeConverter;
@@ -213,11 +215,14 @@ class SecretsFactory {
     // new sslContext for http client that accepts this self-signed cert
     KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
     keyStore.load(null, null);
-    keyStore.setCertificateEntry("ca", crt);
+    keyStore.setCertificateEntry("crt", crt);
     TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
     tmf.init(keyStore);
     SSLContext sslContext = SSLContext.getInstance("TLS");
-    sslContext.init(null, tmf.getTrustManagers(), null);
+    KeyManagerFactory clientKmFactory = KeyManagerFactory.getInstance("X509");
+    clientKmFactory.init(keyStore, null); // the second param is password - could also try empty string
+    KeyManager[] clientKm = clientKmFactory.getKeyManagers();
+    sslContext.init(clientKm, tmf.getTrustManagers(), secureRandom);
     // return all that plus new passwords
     Secrets secrets = new Secrets();
     secrets.crt = crtToString(crt);
