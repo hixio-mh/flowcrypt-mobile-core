@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
     new AsyncTask<Void,Void,EncryptMsgResult>() {
       @Override
       protected EncryptMsgResult doInBackground(Void... params) {
-        return Node.encryptMsg(etData.getText().toString().getBytes(), TestDataFactory.eccPubKeys);
+        return Node.encryptMsg(etData.getText().toString().getBytes(), TestData.eccPubKeys);
       }
       @Override
       protected void onPostExecute(EncryptMsgResult encryptRes) {
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
     new AsyncTask<Void,Void,DecryptMsgResult>() {
       @Override
       protected DecryptMsgResult doInBackground(Void... params) {
-        return Node.decryptMsg(etData.getText().toString().getBytes(), TestDataFactory.eccPrvKeys, TestDataFactory.passphrases, null);
+        return Node.decryptMsg(etData.getText().toString().getBytes(), TestData.eccPrvKeyInfo, TestData.passphrases, null);
       }
       @Override
       protected void onPostExecute(DecryptMsgResult decryptFileRes) {
@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
     new AsyncTask<Void,Void,DecryptFileResult>() {
       @Override
       protected DecryptFileResult doInBackground(Void... params) {
-        return Node.decryptFile(etData.getText().toString().getBytes(), TestDataFactory.eccPrvKeys, TestDataFactory.passphrases, null);
+        return Node.decryptFile(etData.getText().toString().getBytes(), TestData.eccPrvKeyInfo, TestData.passphrases, null);
       }
       @Override
       protected void onPostExecute(DecryptFileResult decryptFileRes) {

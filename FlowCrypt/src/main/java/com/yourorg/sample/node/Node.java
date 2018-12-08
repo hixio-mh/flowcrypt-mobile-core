@@ -6,6 +6,7 @@ import com.yourorg.sample.node.results.DecryptFileResult;
 import com.yourorg.sample.node.results.DecryptMsgResult;
 import com.yourorg.sample.node.results.EncryptFileResult;
 import com.yourorg.sample.node.results.EncryptMsgResult;
+import com.yourorg.sample.node.results.PgpKeyInfo;
 import com.yourorg.sample.node.results.TestNodeResult;
 
 public class Node {
@@ -42,17 +43,17 @@ public class Node {
     return nativeNode.request("encryptFile", req, data).convertTo(EncryptFileResult.class);
   }
 
-  public static DecryptMsgResult decryptMsg(byte[] data, String[] prvKeys, String[] passphrases, String msgPwd) {
+  public static DecryptMsgResult decryptMsg(byte[] data, PgpKeyInfo[] prvKeys, String[] passphrases, String msgPwd) {
     Json req = new Json();
-    req.putStringArr("keys", prvKeys);
+    req.putPrvKeyInfoArr("keys", prvKeys);
     req.putStringArr("passphrases", passphrases);
     req.putString("msgPwd", msgPwd);
     return nativeNode.request("decryptMsg", req, data).convertTo(DecryptMsgResult.class);
   }
 
-  public static DecryptFileResult decryptFile(byte[] data, String[] prvKeys, String[] passphrases, String msgPwd) {
+  public static DecryptFileResult decryptFile(byte[] data, PgpKeyInfo[] prvKeys, String[] passphrases, String msgPwd) {
     Json req = new Json();
-    req.putStringArr("keys", prvKeys);
+    req.putPrvKeyInfoArr("keys", prvKeys);
     req.putStringArr("passphrases", passphrases);
     req.putString("msgPwd", msgPwd);
     return nativeNode.request("decryptFile", req, data).convertTo(DecryptFileResult.class);
