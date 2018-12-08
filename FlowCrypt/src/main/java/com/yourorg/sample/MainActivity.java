@@ -1,5 +1,6 @@
 package com.yourorg.sample;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 
 import com.yourorg.sample.node.Node;
 import com.yourorg.sample.node.NodeSecret;
+import com.yourorg.sample.node.NodeSecretCerts;
 import com.yourorg.sample.node.results.DecryptFileResult;
 import com.yourorg.sample.node.results.DecryptMsgResult;
 import com.yourorg.sample.node.results.EncryptMsgResult;
@@ -18,9 +20,17 @@ import com.yourorg.sample.node.results.MsgBlock;
 import com.yourorg.sample.node.results.MsgBlockMeta;
 import com.yourorg.sample.node.results.TestNodeResult;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 public class MainActivity extends AppCompatActivity {
 
+  private String nodeSecretsCacheFilename = "flowcrypt-node-secrets-cache";
   private String newTitle = "Node";
+
   Handler newTitleHandler = new Handler(new Handler.Callback() {
     @Override
     public boolean handleMessage(Message msg) {
@@ -112,17 +122,31 @@ public class MainActivity extends AppCompatActivity {
       @Override
       public void run() {
         try {
-          newTitle = "Generating node secrets..";
+          long start = System.currentTimeMillis();
+          newTitle = "Loading cache..";
           newTitleHandler.sendEmptyMessage(0);
+          NodeSecretCerts certsCache = nodeSecretCertsCacheLoad();
+          NodeSecret nodeSecret;
           long secretsStart = System.currentTimeMillis();
-          NodeSecret nodeSecret = new NodeSecret();
-          System.out.println("Generating secrets took " + (System.currentTimeMillis() - secretsStart) + "ms");
+          if(certsCache == null) {
+            newTitle = "Generating node secrets..";
+            newTitleHandler.sendEmptyMessage(0);
+            nodeSecret = new NodeSecret();
+            System.out.println("Generating secrets took " + (System.currentTimeMillis() - secretsStart) + "ms");
+            // remember to cache node secrets for faster startup time
+            nodeSecretCertsCacheSave(nodeSecret.getCache());
+          } else {
+            newTitle = "Loading node secrets..";
+            newTitleHandler.sendEmptyMessage(0);
+            nodeSecret = new NodeSecret(certsCache);
+            System.out.println("Loading secrets took " + (System.currentTimeMillis() - secretsStart) + "ms");
+          }
           newTitle = "Starting Node..";
           newTitleHandler.sendEmptyMessage(0);
           long nodeStart = System.currentTimeMillis();
           Node.start(getAssets(), nodeSecret);
           System.out.println("Starting node took additional " + (System.currentTimeMillis() - nodeStart) + "ms");
-          newTitle = "Node started";
+          newTitle = "Node up from " + (certsCache == null ? "scratch" : "cache") + " (" + (System.currentTimeMillis() - start) + "ms)";
           newTitleHandler.sendEmptyMessage(0);
         } catch(Exception e) {
           throw new RuntimeException("Could not initialize Node", e);
@@ -226,6 +250,36 @@ public class MainActivity extends AppCompatActivity {
         tvResult.setText(text);
       }
     }.execute();
+  }
+
+  /**
+   * this is just an example. Production app should use encrypted store
+   */
+  public void nodeSecretCertsCacheSave(NodeSecretCerts nodeSecretCerts) {
+    try {
+      FileOutputStream fos = getApplicationContext().openFileOutput(nodeSecretsCacheFilename, Context.MODE_PRIVATE);
+      ObjectOutputStream oos = new ObjectOutputStream(fos);
+      oos.writeObject(nodeSecretCerts);
+      oos.close();
+      fos.close();
+    } catch(Exception e) {
+      throw new RuntimeException("Could not save certs cache", e);
+    }
+  }
+
+  /**
+   * this is just an example. Production app should use encrypted store
+   */
+  public NodeSecretCerts nodeSecretCertsCacheLoad() {
+    try {
+      FileInputStream fis = getApplicationContext().openFileInput(nodeSecretsCacheFilename);
+      ObjectInputStream ois = new ObjectInputStream(fis);
+      return (NodeSecretCerts) ois.readObject();
+    } catch (FileNotFoundException e) {
+      return null;
+    } catch (Exception e) {
+      throw new RuntimeException("Could not load certs cache", e);
+    }
   }
 
 }

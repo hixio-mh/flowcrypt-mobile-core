@@ -83,6 +83,10 @@ public class NodeSecret {
     genAuthPwdAndHeader();
   }
 
+  public NodeSecretCerts getCache() {
+    return NodeSecretCerts.fromNodeSecret(this);
+  }
+
   private X509Certificate parseCert(String certString) throws CertificateException {
     certString = certString.replace(HEADER_CRT_BEGIN, "").replace(HEADER_CRT_END, "").replaceAll("\\n", "");
     ByteArrayInputStream is = new ByteArrayInputStream(DatatypeConverter.parseBase64Binary(certString));
