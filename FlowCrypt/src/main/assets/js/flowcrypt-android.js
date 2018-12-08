@@ -59099,6 +59099,7 @@ Pgp.internal = {
     }
   },
   cryptoMsgGetSortedKeys: async (kiWithPp, msg) => {
+    console.log('kiWithPp', kiWithPp);
     const keys = {
       verificationContacts: [],
       forVerification: [],
@@ -59109,8 +59110,9 @@ Pgp.internal = {
       prvForDecryptDecrypted: [],
       prvForDecryptWithoutPassphrases: []
     };
-    const encryptedFor = msg instanceof openpgp.message.Message ? msg.getEncryptionKeyIds() : [];
-    keys.encryptedFor = encryptedFor.map(id => Pgp.key.longid(id.bytes)).filter(Boolean);
+    const encryptedForKeyId = msg instanceof openpgp.message.Message ? msg.getEncryptionKeyIds() : [];
+    console.log('encryptedForKeyId', encryptedForKeyId);
+    keys.encryptedFor = encryptedForKeyId.map(id => Pgp.key.longid(id.bytes)).filter(Boolean);
     keys.signedBy = (msg.getSigningKeyIds ? msg.getSigningKeyIds() : []).filter(Boolean).map(id => Pgp.key.longid(id.bytes)).filter(Boolean);
     keys.prvMatching = kiWithPp.keys.filter(ki => common_js_1.Value.is(ki.longid).in(keys.encryptedFor));
 
@@ -59120,7 +59122,10 @@ Pgp.internal = {
       keys.prvForDecrypt = kiWithPp.keys;
     }
 
+    console.log('keys', keys);
+
     for (const prvForDecrypt of keys.prvForDecrypt) {
+      console.log('prvForDecrypt', prvForDecrypt);
       const key = openpgp.key.readArmored(prvForDecrypt.private).keys[0];
 
       if (key.isDecrypted() || kiWithPp.passphrases.length && (await Pgp.key.decrypt(key, kiWithPp.passphrases)) === true) {
@@ -60733,7 +60738,7 @@ Validate.encryptFile = (v, data) => {
 };
 
 Validate.decryptFile = (v, data) => {
-  if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'passphrases', 'string[]') && hasData(data)) {
+  if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasData(data)) {
     return v;
   }
 
@@ -60741,7 +60746,7 @@ Validate.decryptFile = (v, data) => {
 };
 
 Validate.decryptMsg = (v, data) => {
-  if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'passphrases', 'string[]') && hasData(data)) {
+  if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasData(data)) {
     return v;
   }
 
@@ -60759,24 +60764,26 @@ const hasProp = (v, name, type) => {
     return false;
   }
 
+  const value = v[name];
+
   if (type === 'number' || type === 'string') {
-    return typeof v[name] === type;
+    return typeof value === type;
   }
 
   if (type === 'string?') {
-    return typeof v[name] === 'string' || typeof v[name] === 'undefined';
+    return typeof value === 'string' || typeof value === 'undefined';
   }
 
   if (type === 'string[]') {
-    return Array.isArray(v[name]) && v[name].map(x => typeof x === 'string');
+    return Array.isArray(value) && value.filter(x => typeof x === 'string').length === value.length;
   }
 
   if (type === 'PrvKeyInfo[]') {
-    return Array.isArray(v[name]) && v[name].map(ki => hasProp(ki, 'private', 'string') && hasProp(ki, 'longid', 'string'));
+    return Array.isArray(value) && value.filter(ki => hasProp(ki, 'private', 'string') && hasProp(ki, 'longid', 'string')).length === value.length;
   }
 
   if (type === 'object') {
-    return isObj(v[name]);
+    return isObj(value);
   }
 
   return false;

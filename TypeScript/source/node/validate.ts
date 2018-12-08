@@ -6,10 +6,11 @@ type Obj = { [k: string]: any };
 
 export namespace NodeRequest {
 
+  type PrvKeyInfo = { private: string; longid: string };
   export type encryptMsg = { pubKeys: string[] };
   export type encryptFile = { pubKeys: string[], name: string };
-  export type decryptMsg = { keys: { private: string; longid: string }[], passphrases: string[], msgPwd?: string };
-  export type decryptFile = { keys: { private: string; longid: string }[], passphrases: string[], msgPwd?: string };
+  export type decryptMsg = { keys: PrvKeyInfo[], passphrases: string[], msgPwd?: string };
+  export type decryptFile = { keys: PrvKeyInfo[], passphrases: string[], msgPwd?: string };
 
 }
 
@@ -30,14 +31,14 @@ export class Validate {
   }
 
   public static decryptFile = (v: any, data: any): NodeRequest.decryptFile => {
-    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'passphrases', 'string[]') && hasData(data)) {
+    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasData(data)) {
       return v as NodeRequest.decryptFile;
     }
     throw new Error('Wrong request structure for NodeRequest.decryptFile');
   }
 
   public static decryptMsg = (v: any, data: any): NodeRequest.decryptMsg => {
-    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'passphrases', 'string[]') && hasData(data)) {
+    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasData(data)) {
       return v as NodeRequest.decryptFile;
     }
     throw new Error('Wrong request structure for NodeRequest.decryptFile');
@@ -49,24 +50,25 @@ const isObj = (v: any): v is Obj => {
   return v && typeof v === 'object';
 }
 
-const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 'number' | 'string?' | 'PrvKeyInfo[]') => {
+const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 'number' | 'string?' | 'PrvKeyInfo[]'): boolean => {
   if (!isObj(v)) {
     return false;
   }
+  const value = v[name];
   if (type === 'number' || type === 'string') {
-    return typeof v[name] === type;
+    return typeof value === type;
   }
   if (type === 'string?') {
-    return typeof v[name] === 'string' || typeof v[name] === 'undefined';
+    return typeof value === 'string' || typeof value === 'undefined';
   }
   if (type === 'string[]') {
-    return Array.isArray(v[name]) && v[name].map((x: any) => typeof x === 'string');
+    return Array.isArray(value) && value.filter((x: any) => typeof x === 'string').length === value.length;
   }
   if (type === 'PrvKeyInfo[]') {
-    return Array.isArray(v[name]) && v[name].map((ki: any) => hasProp(ki, 'private', 'string') && hasProp(ki, 'longid', 'string'));
+    return Array.isArray(value) && value.filter((ki: any) => hasProp(ki, 'private', 'string') && hasProp(ki, 'longid', 'string')).length === value.length;
   }
   if (type === 'object') {
-    return isObj(v[name]);
+    return isObj(value);
   }
   return false;
 }
