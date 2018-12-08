@@ -31,10 +31,10 @@ class NativeNode {
   }
 
   private boolean isRunning = false;
-  private NodeSecrets nodeSecrets;
+  private NodeSecret nodeSecret;
 
-  NativeNode(NodeSecrets nodeSecrets) {
-    this.nodeSecrets = nodeSecrets;
+  NativeNode(NodeSecret nodeSecret) {
+    this.nodeSecret = nodeSecret;
   }
 
   RawNodeResult request(String endpoint, JSONObject req, byte[] data) {
@@ -48,11 +48,11 @@ class NativeNode {
       URL url = new URL("https://localhost:3000/");
       HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
       conn.setRequestMethod("POST");
-      conn.setRequestProperty("Authorization", nodeSecrets.authHeader);
+      conn.setRequestProperty("Authorization", nodeSecret.authHeader);
       conn.setRequestProperty("Connection", "Keep-Alive");
       conn.setDoInput(true);
       conn.setDoOutput(true);
-      conn.setSSLSocketFactory(nodeSecrets.sslContext.getSocketFactory());
+      conn.setSSLSocketFactory(nodeSecret.sslContext.getSocketFactory());
       HttpEntity parts = builder.build();
       conn.addRequestProperty(parts.getContentType().getName(), parts.getContentType().getValue());
       OutputStream os = conn.getOutputStream();
@@ -97,10 +97,10 @@ class NativeNode {
 
   private String getJsSrc(AssetManager am) throws Exception {
     String src = "";
-    src += jsInitConst("NODE_SSL_CA", nodeSecrets.ca);
-    src += jsInitConst("NODE_SSL_CRT", nodeSecrets.crt);
-    src += jsInitConst("NODE_SSL_KEY", nodeSecrets.key);
-    src += jsInitConst("NODE_AUTH_HEADER", nodeSecrets.authHeader);
+    src += jsInitConst("NODE_SSL_CA", nodeSecret.ca);
+    src += jsInitConst("NODE_SSL_CRT", nodeSecret.crt);
+    src += jsInitConst("NODE_SSL_KEY", nodeSecret.key);
+    src += jsInitConst("NODE_AUTH_HEADER", nodeSecret.authHeader);
     src += IOUtils.toString(am.open("js/flowcrypt-android.js"), StandardCharsets.UTF_8);
     return src;
   }

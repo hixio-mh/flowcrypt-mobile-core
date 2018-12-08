@@ -17,9 +17,9 @@ public class Node {
 
   private static NativeNode nativeNode = null;
 
-  public static void start(AssetManager am, NodeSecrets nodeSecrets) {
+  public static void start(AssetManager am, NodeSecret nodeSecret) {
     if(nativeNode == null) {
-      nativeNode = new NativeNode(nodeSecrets);
+      nativeNode = new NativeNode(nodeSecret);
     }
     nativeNode.startIfNotRunning(am);
   }

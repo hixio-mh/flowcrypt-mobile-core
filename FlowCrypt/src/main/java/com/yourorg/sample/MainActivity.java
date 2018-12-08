@@ -10,7 +10,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.yourorg.sample.node.Node;
-import com.yourorg.sample.node.NodeSecrets;
+import com.yourorg.sample.node.NodeSecret;
 import com.yourorg.sample.node.results.DecryptFileResult;
 import com.yourorg.sample.node.results.DecryptMsgResult;
 import com.yourorg.sample.node.results.EncryptMsgResult;
@@ -115,12 +115,12 @@ public class MainActivity extends AppCompatActivity {
           newTitle = "Generating node secrets..";
           newTitleHandler.sendEmptyMessage(0);
           long secretsStart = System.currentTimeMillis();
-          NodeSecrets nodeSecrets = new NodeSecrets();
+          NodeSecret nodeSecret = new NodeSecret();
           System.out.println("Generating secrets took " + (System.currentTimeMillis() - secretsStart) + "ms");
           newTitle = "Starting Node..";
           newTitleHandler.sendEmptyMessage(0);
           long nodeStart = System.currentTimeMillis();
-          Node.start(getAssets(), nodeSecrets);
+          Node.start(getAssets(), nodeSecret);
           System.out.println("Starting node took additional " + (System.currentTimeMillis() - nodeStart) + "ms");
           newTitle = "Node started";
           newTitleHandler.sendEmptyMessage(0);
