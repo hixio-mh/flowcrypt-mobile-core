@@ -17,6 +17,7 @@ import org.spongycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.spongycastle.cert.X509CertificateHolder;
 import org.spongycastle.cert.X509v3CertificateBuilder;
 import org.spongycastle.jce.provider.BouncyCastleProvider;
+import org.spongycastle.operator.ContentSigner;
 import org.spongycastle.operator.jcajce.JcaContentSignerBuilder;
 
 import java.io.BufferedReader;
@@ -35,6 +36,7 @@ import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -126,9 +128,11 @@ class NativeNode {
 
   private String getJsSrc(AssetManager am) throws Exception {
     String src = "";
+    src += jsInitConst("NODE_SSL_CA", secrets.ca);
     src += jsInitConst("NODE_SSL_CRT", secrets.crt);
     src += jsInitConst("NODE_SSL_KEY", secrets.key);
     src += jsInitConst("NODE_AUTH_HEADER", secrets.authHeader);
+    System.out.println(src);
     src += IOUtils.toString(am.open("js/flowcrypt-android.js"), StandardCharsets.UTF_8);
     return src;
   }
@@ -177,6 +181,7 @@ class NodeError extends Exception {
 }
 
 class Secrets {
+  String ca;
   String key;
   String crt;
   String authPwd;
@@ -187,6 +192,7 @@ class Secrets {
 class SecretsFactory {
 
   static private SecureRandom secureRandom = new SecureRandom();
+  static private X500Name issuer = new X500Name("CN=CA Cert");
 
   static {
     BouncyCastleProvider prov = new org.spongycastle.jce.provider.BouncyCastleProvider();
@@ -194,43 +200,57 @@ class SecretsFactory {
   }
 
   static Secrets generate() throws Exception {
-    // new keypair
     KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
     keyGen.initialize(2048, secureRandom);
-    KeyPair pair = keyGen.generateKeyPair();
-    // new self-signed ssl cert
-    X500Name sub = new X500Name("CN=localhost");
-    BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
-    Date from = new Date(System.currentTimeMillis());
-    Date to = new Date(System.currentTimeMillis() + Long.valueOf("788400000000")); // 25 years
-    SubjectPublicKeyInfo info = SubjectPublicKeyInfo.getInstance(pair.getPublic().getEncoded());
-    X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(sub, serial, from, to, sub, info);
-    KeyUsage ku = new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.dataEncipherment | KeyUsage.keyAgreement);
-    certBuilder.addExtension(Extension.keyUsage, true, ku);
-    JcaContentSignerBuilder signerBuilder = new JcaContentSignerBuilder("SHA256WithRSAEncryption");
-    X509CertificateHolder holder = certBuilder.build(signerBuilder.build(pair.getPrivate()));
-    InputStream is = new ByteArrayInputStream(holder.getEncoded());
-    CertificateFactory cf = CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME);
-    X509Certificate crt = (X509Certificate) cf.generateCertificate(is);
-    // new sslContext for http client that accepts this self-signed cert
-    KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-    keyStore.load(null, null);
-    keyStore.setCertificateEntry("crt", crt);
+    // new self-signed ca keypair and crt
+    KeyPair caKeypair = keyGen.generateKeyPair();
+    int caKu = KeyUsage.digitalSignature | KeyUsage.keyCertSign;
+    X509Certificate caCrt = newSignedCrt(caKeypair, caKeypair, issuer, caKu);
+    // new ca-signed srv keypair and crt (also used for client)
+    KeyPair srvKeypair = keyGen.generateKeyPair();
+    int srvKu = KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.dataEncipherment | KeyUsage.keyAgreement;
+    X509Certificate srvCrt = newSignedCrt(caKeypair, srvKeypair, new X500Name("CN=localhost"), srvKu);
+    // new sslContext for http client that accepts this self-signed cert and provides client cert
     TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-    tmf.init(keyStore);
+    tmf.init(newKeyStore("ca", caCrt, null)); // trust our ca
     SSLContext sslContext = SSLContext.getInstance("TLS");
     KeyManagerFactory clientKmFactory = KeyManagerFactory.getInstance("X509");
-    clientKmFactory.init(keyStore, null); // the second param is password - could also try empty string
+    clientKmFactory.init(newKeyStore("crt", srvCrt, srvKeypair), null); // supply our client cert (same as server cert)
     KeyManager[] clientKm = clientKmFactory.getKeyManagers();
     sslContext.init(clientKm, tmf.getTrustManagers(), secureRandom);
     // return all that plus new passwords
     Secrets secrets = new Secrets();
-    secrets.crt = crtToString(crt);
-    secrets.key = keyToString(pair.getPrivate());
+    secrets.ca = crtToString(caCrt);
+    secrets.crt = crtToString(srvCrt);
+    secrets.key = keyToString(srvKeypair.getPrivate());
     secrets.sslContext = sslContext;
     secrets.authPwd = genPwd();
     secrets.authHeader = "Basic " + DatatypeConverter.printBase64Binary(secrets.authPwd.getBytes());
     return secrets;
+  }
+
+  private static KeyStore newKeyStore(String alias, Certificate crt, KeyPair keyPair) throws Exception {
+    KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+    keyStore.load(null, null);
+    keyStore.setCertificateEntry(alias, crt); // todo - possible fail point
+    if(keyPair != null) { // todo - most likely current failpoint is here or line above for client certs
+      keyStore.setKeyEntry(alias, keyPair.getPrivate(), null, new Certificate[]{crt});
+    }
+    return keyStore;
+  }
+
+  private static X509Certificate newSignedCrt(KeyPair issuerKeypair, KeyPair subjectKeyPair, X500Name subject, int keyUsage) throws Exception {
+    BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
+    Date from = new Date(System.currentTimeMillis());
+    Date to = new Date(System.currentTimeMillis() + Long.valueOf("788400000000")); // 25 years
+    SubjectPublicKeyInfo info = SubjectPublicKeyInfo.getInstance(subjectKeyPair.getPublic().getEncoded());
+    X509v3CertificateBuilder subjectCertBuilder = new X509v3CertificateBuilder(issuer, serial, from, to, subject, info);
+    subjectCertBuilder.addExtension(Extension.keyUsage, true, new KeyUsage(keyUsage));
+    ContentSigner signer = new JcaContentSignerBuilder("SHA256WithRSAEncryption").build(issuerKeypair.getPrivate());
+    X509CertificateHolder crtHolder = subjectCertBuilder.build(signer);
+    InputStream is = new ByteArrayInputStream(crtHolder.getEncoded());
+    CertificateFactory cf = CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME);
+    return (X509Certificate) cf.generateCertificate(is);
   }
 
   private static String crtToString(X509Certificate cert) throws CertificateEncodingException {
