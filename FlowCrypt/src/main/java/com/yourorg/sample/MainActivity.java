@@ -131,14 +131,14 @@ public class MainActivity extends AppCompatActivity {
           if(certsCache == null) {
             newTitle = "Generating node secrets..";
             newTitleHandler.sendEmptyMessage(0);
-            nodeSecret = new NodeSecret();
+            nodeSecret = new NodeSecret(getFilesDir().getAbsolutePath());
             System.out.println("Generating secrets took " + (System.currentTimeMillis() - secretsStart) + "ms");
             // remember to cache node secrets for faster startup time
             nodeSecretCertsCacheSave(nodeSecret.getCache());
           } else {
             newTitle = "Loading node secrets..";
             newTitleHandler.sendEmptyMessage(0);
-            nodeSecret = new NodeSecret(certsCache);
+            nodeSecret = new NodeSecret(getFilesDir().getAbsolutePath(), certsCache);
             System.out.println("Loading secrets took " + (System.currentTimeMillis() - secretsStart) + "ms");
           }
           newTitle = "Starting Node..";

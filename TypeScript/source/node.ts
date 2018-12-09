@@ -15,6 +15,7 @@ import { testEndpointHandler } from './node/tests';
 import { Endpoints } from './node/endpoints';
 
 declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, NODE_AUTH_HEADER: string, NODE_PORT: string;
+// , NODE_UNIX_SOCKET: string
 
 (global as any).atob = (b64str: string) => Buffer.from(b64str, 'base64').toString('binary');
 (global as any).btoa = (binary: string) => Buffer.from(binary, 'binary').toString('base64');

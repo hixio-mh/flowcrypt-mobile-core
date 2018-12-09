@@ -14,6 +14,7 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
@@ -53,7 +54,7 @@ class NativeNode {
       conn.setRequestProperty("Connection", "Keep-Alive");
       conn.setDoInput(true);
       conn.setDoOutput(true);
-      conn.setSSLSocketFactory(nodeSecret.sslContext.getSocketFactory());
+      conn.setSSLSocketFactory(nodeSecret.sslSocketFactory);
       HttpEntity parts = builder.build();
       conn.addRequestProperty(parts.getContentType().getName(), parts.getContentType().getValue());
       OutputStream os = conn.getOutputStream();
@@ -77,14 +78,14 @@ class NativeNode {
       new Thread(new Runnable() {
         @Override
         public void run() {
-          start(am);
+          startSync(am);
           isRunning = false; // if it ever stops running, set isRunning back to false
         }
       }).start();
     }
   }
 
-  private void start(AssetManager am) {
+  private void startSync(AssetManager am) {
     try {
       startNodeWithArguments(new String[]{"node", "-e", getJsSrc(am)});
     } catch (Exception e) {
@@ -101,6 +102,7 @@ class NativeNode {
     nodeSecret.port = ss.getLocalPort();
     ss.close();
     String src = "";
+    src += jsInitConst("NODE_UNIX_SOCKET", String.valueOf(nodeSecret.unixSocketFilePath)); // not used yet
     src += jsInitConst("NODE_PORT", String.valueOf(nodeSecret.port));
     src += jsInitConst("NODE_SSL_CA", nodeSecret.ca);
     src += jsInitConst("NODE_SSL_CRT", nodeSecret.crt);
@@ -128,7 +130,15 @@ class NodeError extends Exception {
     } catch (IOException e) {
       return new NodeError(0, e.getMessage(), null);
     }
-    String res = new BufferedReader(new InputStreamReader(conn.getErrorStream())).lines().collect(Collectors.joining("\n"));
+    return NodeError.fromErrCodeAndInputStream(errCode, conn.getErrorStream());
+  }
+
+//  static NodeError fromResponse(okhttp3.Response response) { // this is needed if we want to use unix sockets
+//    return NodeError.fromErrCodeAndInputStream(response.code(), response.body().byteStream());
+//  }
+
+  private static NodeError fromErrCodeAndInputStream(int errCode, InputStream is) {
+    String res = new BufferedReader(new InputStreamReader(is)).lines().collect(Collectors.joining("\n"));
     try {
       JSONObject obj = new JSONObject(res);
       JSONObject error = obj.getJSONObject("error");

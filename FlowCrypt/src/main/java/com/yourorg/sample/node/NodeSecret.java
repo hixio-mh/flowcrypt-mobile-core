@@ -33,6 +33,8 @@ import java.util.Date;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.xml.bind.DatatypeConverter;
 
@@ -60,13 +62,15 @@ public class NodeSecret {
   String crt;
   String authPwd;
   String authHeader;
-  SSLContext sslContext;
+  String unixSocketFilePath;
+  SSLSocketFactory sslSocketFactory;
 
-  public NodeSecret() throws Exception {
-    this(null);
+  public NodeSecret(String writablePath) throws Exception {
+    this(writablePath, null);
   }
 
-  public NodeSecret(NodeSecretCerts nodeSecretCertsCache) throws Exception {
+  public NodeSecret(String writablePath, NodeSecretCerts nodeSecretCertsCache) throws Exception {
+    unixSocketFilePath = writablePath + "/flowcrypt-node.sock"; // potentially usefull in the future
     if(nodeSecretCertsCache != null) {
       ca = nodeSecretCertsCache.ca;
       crt = nodeSecretCertsCache.crt;
@@ -80,7 +84,7 @@ public class NodeSecret {
       crt = crtToString(srvCrt);
       key = keyToString(srvKey);
     }
-    this.sslContext = newSslContext();
+    newSslContext();
     genAuthPwdAndHeader();
   }
 
@@ -101,7 +105,7 @@ public class NodeSecret {
     return kf.generatePrivate(new PKCS8EncodedKeySpec(keyBytes));
   }
 
-  private SSLContext newSslContext() throws Exception {
+  private void newSslContext() throws Exception {
     // create trust manager that trusts ca to verify server crt
     TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
     tmf.init(newKeyStore("ca", caCrt, null)); // trust our ca
@@ -110,8 +114,9 @@ public class NodeSecret {
     clientKmFactory.init(newKeyStore("crt", srvCrt, srvKey), null);
     // new sslContext for http client that trusts the ca and provides client cert
     SSLContext sslContext = SSLContext.getInstance("TLS");
-    sslContext.init(clientKmFactory.getKeyManagers(), tmf.getTrustManagers(), secureRandom);
-    return sslContext;
+    TrustManager[] tm = tmf.getTrustManagers();
+    sslContext.init(clientKmFactory.getKeyManagers(), tm, secureRandom);
+    sslSocketFactory = sslContext.getSocketFactory();
   }
 
   private void genCerts() throws Exception {
