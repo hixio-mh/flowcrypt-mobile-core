@@ -33,6 +33,7 @@ class NativeNode {
   }
 
   private boolean isRunning = false;
+  private static volatile boolean isReady = false;
   private NodeSecret nodeSecret;
 
   NativeNode(NodeSecret nodeSecret) {
@@ -85,6 +86,10 @@ class NativeNode {
     }
   }
 
+  Boolean isReady() {
+    return isReady;
+  }
+
   private void startSync(AssetManager am) {
     try {
       startNodeWithArguments(new String[]{"node", "-e", getJsSrc(am)});
@@ -128,7 +133,11 @@ class NativeNode {
    * Will be called by native code
    */
   public static void receiveNativeMessageFromNode(String msg) {
-    System.out.println(msg);
+    if(msg.startsWith("listening on ")) {
+      isReady = true;
+      System.out.println("NativeNode.isReady=true");
+    }
+    System.out.println("NODEJS-NATIVE-MSG[" + msg + "]");
   }
 }
 
@@ -177,5 +186,8 @@ class NodeError extends Exception {
 class NodeNotReady extends Exception {
   NodeNotReady(String message, Throwable cause) {
     super(message, cause);
+  }
+  NodeNotReady(String message) {
+    super(message);
   }
 }

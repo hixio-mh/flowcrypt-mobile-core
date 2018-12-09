@@ -24,6 +24,19 @@ public class Node {
     nativeNode.startIfNotRunning(am);
   }
 
+  public static void waitUntilReady() throws NodeNotReady {
+    if(nativeNode == null) {
+      throw new NodeNotReady("NativeNode not started. Call Node.start first");
+    }
+    while(!nativeNode.isReady()) {
+      try {
+        Thread.sleep(50);
+      } catch (InterruptedException e) {
+        throw new NodeNotReady("Was interrupted while waiting for node to become ready", e);
+      }
+    }
+  }
+
   private static <T> T request(String endpoint, JSONObject req, byte[] data, Class<T> cls) {
     if(nativeNode == null) {
       try {

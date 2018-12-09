@@ -123,36 +123,41 @@ public class MainActivity extends AppCompatActivity {
       public void run() {
         try {
           long start = System.currentTimeMillis();
-          newTitle = "Loading cache..";
-          newTitleHandler.sendEmptyMessage(0);
+          newTitleEvent("Loading cache..");
           NodeSecretCerts certsCache = nodeSecretCertsCacheLoad();
           NodeSecret nodeSecret;
           long secretsStart = System.currentTimeMillis();
           if(certsCache == null) {
-            newTitle = "Generating node secrets..";
-            newTitleHandler.sendEmptyMessage(0);
+            newTitleEvent("Generating node secrets..");
             nodeSecret = new NodeSecret(getFilesDir().getAbsolutePath());
             System.out.println("Generating secrets took " + (System.currentTimeMillis() - secretsStart) + "ms");
             // remember to cache node secrets for faster startup time
             nodeSecretCertsCacheSave(nodeSecret.getCache());
           } else {
-            newTitle = "Loading node secrets..";
-            newTitleHandler.sendEmptyMessage(0);
+            newTitleEvent("Loading node secrets..");
             nodeSecret = new NodeSecret(getFilesDir().getAbsolutePath(), certsCache);
             System.out.println("Loading secrets took " + (System.currentTimeMillis() - secretsStart) + "ms");
           }
-          newTitle = "Starting Node..";
-          newTitleHandler.sendEmptyMessage(0);
+          newTitleEvent("Starting Node..");
           long nodeStart = System.currentTimeMillis();
           Node.start(getAssets(), nodeSecret);
           System.out.println("Starting node took additional " + (System.currentTimeMillis() - nodeStart) + "ms");
-          newTitle = "Node up from " + (certsCache == null ? "scratch" : "cache") + " (" + (System.currentTimeMillis() - start) + "ms)";
-          newTitleHandler.sendEmptyMessage(0);
+          newTitleEvent("Waiting for Node to become ready..");
+          long readyStart = System.currentTimeMillis();
+          Node.waitUntilReady();
+          System.out.println("Waiting for node to be ready took took additional " + (System.currentTimeMillis() - readyStart) + "ms");
+          newTitleEvent("Node ready from " + (certsCache == null ? "scratch" : "cache") + " (" + (System.currentTimeMillis() - start) + "ms)");
         } catch(Exception e) {
           throw new RuntimeException("Could not initialize Node", e);
         }
       }
     }).start();
+  }
+
+  public void newTitleEvent(String title) {
+    System.out.println("newTitleEvent: " + title);
+    newTitle = title;
+    newTitleHandler.sendEmptyMessage(0);
   }
 
   public static void encryptMsgAndRender(final EditText etData, final TextView tvResult) {
