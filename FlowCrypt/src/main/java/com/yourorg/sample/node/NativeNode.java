@@ -55,7 +55,7 @@ class NativeNode {
       conn.setRequestProperty("Connection", "Keep-Alive");
       conn.setDoInput(true);
       conn.setDoOutput(true);
-      conn.setSSLSocketFactory(nodeSecret.sslSocketFactory);
+      conn.setSSLSocketFactory(nodeSecret.getSslSocketFactory());
       HttpEntity parts = builder.build();
       conn.addRequestProperty(parts.getContentType().getName(), parts.getContentType().getValue());
       OutputStream os = conn.getOutputStream();
