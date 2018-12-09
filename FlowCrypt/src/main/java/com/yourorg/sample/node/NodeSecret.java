@@ -54,6 +54,7 @@ public class NodeSecret {
   private X509Certificate srvCrt;
   private PrivateKey srvKey;
 
+  int port;
   String ca;
   String key;
   String crt;

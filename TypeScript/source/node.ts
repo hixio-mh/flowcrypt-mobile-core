@@ -14,7 +14,7 @@ import { fmtRes, fmtErr, indexHtml, HttpClientErr, HttpAuthErr } from './node/re
 import { testEndpointHandler } from './node/tests';
 import { Endpoints } from './node/endpoints';
 
-declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, NODE_AUTH_HEADER: string;
+declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, NODE_AUTH_HEADER: string, NODE_PORT: string;
 
 (global as any).atob = (b64str: string) => Buffer.from(b64str, 'base64').toString('binary');
 (global as any).btoa = (binary: string) => Buffer.from(binary, 'binary').toString('base64');
@@ -49,6 +49,7 @@ const handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<str
   }
   throw new HttpClientErr(`unknown path ${req.url}`);
 }
+
 const serverOptins: https.ServerOptions = {
   key: NODE_SSL_KEY,
   cert: NODE_SSL_CRT,
@@ -56,7 +57,13 @@ const serverOptins: https.ServerOptions = {
   requestCert: true,
   rejectUnauthorized: true,
 };
-https.createServer(serverOptins, (request, response) => {
+
+const LISTEN_PORT = Number(NODE_PORT);
+if (isNaN(LISTEN_PORT) || LISTEN_PORT < 1024) {
+  throw new Error('Wrong or no NODE_PORT supplied');
+}
+
+const server = https.createServer(serverOptins, (request, response) => {
   handleReq(request, response).then((r) => {
     response.end(r);
   }).catch((e) => {
@@ -71,4 +78,11 @@ https.createServer(serverOptins, (request, response) => {
     }
     response.end(fmtErr(e));
   });
-}).listen(3000, 'localhost');
+});
+
+server.listen(LISTEN_PORT, 'localhost');
+
+server.on('listening', () => {
+  const address = server.address();
+  console.log(`listening on ${typeof address === 'object' ? address.port : address}`);
+});

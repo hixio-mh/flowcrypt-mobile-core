@@ -16,6 +16,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.ServerSocket;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -45,7 +46,7 @@ class NativeNode {
       builder.addTextBody("endpoint", endpoint);
       builder.addTextBody("request", req != null ? req.toString() : "{}");
       builder.addBinaryBody("data", new ByteArrayInputStream(data != null ? data : new byte[0]));
-      URL url = new URL("https://localhost:3000/");
+      URL url = new URL("https://localhost:" + nodeSecret.port + "/");
       HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
       conn.setRequestMethod("POST");
       conn.setRequestProperty("Authorization", nodeSecret.authHeader);
@@ -96,7 +97,11 @@ class NativeNode {
   }
 
   private String getJsSrc(AssetManager am) throws Exception {
+    ServerSocket ss = new ServerSocket(0);
+    nodeSecret.port = ss.getLocalPort();
+    ss.close();
     String src = "";
+    src += jsInitConst("NODE_PORT", String.valueOf(nodeSecret.port));
     src += jsInitConst("NODE_SSL_CA", nodeSecret.ca);
     src += jsInitConst("NODE_SSL_CRT", nodeSecret.crt);
     src += jsInitConst("NODE_SSL_KEY", nodeSecret.key);

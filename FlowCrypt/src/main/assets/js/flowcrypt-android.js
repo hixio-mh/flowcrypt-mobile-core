@@ -57877,7 +57877,13 @@ const serverOptins = {
   requestCert: true,
   rejectUnauthorized: true
 };
-https.createServer(serverOptins, (request, response) => {
+const LISTEN_PORT = Number(NODE_PORT);
+
+if (isNaN(LISTEN_PORT) || LISTEN_PORT < 1024) {
+  throw new Error('Wrong or no NODE_PORT supplied');
+}
+
+const server = https.createServer(serverOptins, (request, response) => {
   handleReq(request, response).then(r => {
     response.end(r);
   }).catch(e => {
@@ -57893,7 +57899,12 @@ https.createServer(serverOptins, (request, response) => {
 
     response.end(responses_1.fmtErr(e));
   });
-}).listen(3000, 'localhost');
+});
+server.listen(LISTEN_PORT, 'localhost');
+server.on('listening', () => {
+  const address = server.address();
+  console.log(`listening on ${typeof address === 'object' ? address.port : address}`);
+});
 
 /***/ }),
 /* 1 */
