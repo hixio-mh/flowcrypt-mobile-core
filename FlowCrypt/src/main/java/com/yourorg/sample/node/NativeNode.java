@@ -81,6 +81,7 @@ class NativeNode {
         public void run() {
           startSync(am);
           isRunning = false; // if it ever stops running, set isRunning back to false
+          isReady = false;
         }
       }).start();
     }
@@ -135,7 +136,6 @@ class NativeNode {
   public static void receiveNativeMessageFromNode(String msg) {
     if(msg.startsWith("listening on ")) {
       isReady = true;
-      System.out.println("NativeNode.isReady=true");
     }
     System.out.println("NODEJS-NATIVE-MSG[" + msg + "]");
   }
