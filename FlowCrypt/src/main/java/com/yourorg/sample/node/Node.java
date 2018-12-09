@@ -19,7 +19,7 @@ public class Node {
 
   public static void start(AssetManager am, NodeSecret nodeSecret) {
     if(nativeNode == null) {
-      nativeNode = new NativeNode(nodeSecret);
+      nativeNode = new NativeNode(nodeSecret); // takes about 100ms due to static native loads
     }
     nativeNode.startIfNotRunning(am);
   }

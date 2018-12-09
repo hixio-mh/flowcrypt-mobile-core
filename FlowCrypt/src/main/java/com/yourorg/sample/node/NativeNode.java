@@ -29,7 +29,7 @@ class NativeNode {
 
   static { // Used to load the 'native-lib' library on application startup
     System.loadLibrary("native-lib");
-    System.loadLibrary("node");
+    System.loadLibrary("node"); // takes about 100ms
   }
 
   private boolean isRunning = false;
@@ -73,13 +73,13 @@ class NativeNode {
     }
   }
 
-  void startIfNotRunning(final AssetManager am) {
+  void startIfNotRunning(final AssetManager am) { // takes just a few ms
     if(!isRunning) {
       isRunning = true;
       new Thread(new Runnable() {
         @Override
         public void run() {
-          startSync(am);
+          startSynchronously(am);
           isRunning = false; // if it ever stops running, set isRunning back to false
           isReady = false;
         }
@@ -91,8 +91,11 @@ class NativeNode {
     return isReady;
   }
 
-  private void startSync(AssetManager am) {
+  private void startSynchronously(AssetManager am) {
     try {
+      // slow!
+      // takes 1750ms to start node with no scripts - using node-chakracore v8.6.0
+      // startNodeWithArguments(new String[]{"node", "-e", "console.log('NODE: ' + Date.now())"});
       startNodeWithArguments(new String[]{"node", "-e", getJsSrc(am)});
     } catch (Exception e) {
       e.printStackTrace(); // todo - add acra

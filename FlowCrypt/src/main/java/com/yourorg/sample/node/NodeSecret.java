@@ -1,5 +1,7 @@
 package com.yourorg.sample.node;
 
+import com.yourorg.sample.lib.Base64;
+
 import org.spongycastle.asn1.x500.X500Name;
 import org.spongycastle.asn1.x509.Extension;
 import org.spongycastle.asn1.x509.KeyUsage;
@@ -29,6 +31,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Arrays;
 import java.util.Date;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -40,18 +43,15 @@ import javax.xml.bind.DatatypeConverter;
 
 public class NodeSecret {
 
-  static {
-    BouncyCastleProvider prov = new BouncyCastleProvider();
-    Security.addProvider(prov);
-  }
+  private static boolean wasBouncyCastleProviderInitialized = false;
 
   private String HEADER_CRT_BEGIN = "-----BEGIN CERTIFICATE-----\n";
   private String HEADER_CRT_END = "\n-----END CERTIFICATE-----\n";
   private String HEADER_PRV_BEGIN = "-----BEGIN RSA PRIVATE KEY-----\n";
   private String HEADER_PRV_END = "\n-----END RSA PRIVATE KEY-----\n";
 
-  private SecureRandom secureRandom = new SecureRandom();
-  private X500Name issuer = new X500Name("CN=CA Cert");
+  private SecureRandom secureRandom;
+  private X500Name issuer;
   private X509Certificate caCrt;
   private X509Certificate srvCrt;
   private PrivateKey srvKey;
@@ -71,6 +71,7 @@ public class NodeSecret {
 
   public NodeSecret(String writablePath, NodeSecretCerts nodeSecretCertsCache) throws Exception {
     unixSocketFilePath = writablePath + "/flowcrypt-node.sock"; // potentially usefull in the future
+    secureRandom = new SecureRandom();
     if(nodeSecretCertsCache != null) {
       ca = nodeSecretCertsCache.ca;
       crt = nodeSecretCertsCache.crt;
@@ -93,33 +94,33 @@ public class NodeSecret {
   }
 
   private X509Certificate parseCert(String certString) throws CertificateException {
-    certString = certString.replace(HEADER_CRT_BEGIN, "").replace(HEADER_CRT_END, "").replaceAll("\\n", "");
-    ByteArrayInputStream is = new ByteArrayInputStream(DatatypeConverter.parseBase64Binary(certString));
-    return (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(is);
+    return (X509Certificate) CertificateFactory.getInstance("X.509")
+        .generateCertificate(new ByteArrayInputStream(certString.getBytes()));
   }
 
   private PrivateKey parseKey(String keyString) throws NoSuchAlgorithmException, InvalidKeySpecException {
     keyString = keyString.replace(HEADER_PRV_BEGIN, "").replace(HEADER_PRV_END, "").replaceAll("\\n", "");
-    byte[] keyBytes = DatatypeConverter.parseBase64Binary(keyString);
     KeyFactory kf = KeyFactory.getInstance("RSA");
-    return kf.generatePrivate(new PKCS8EncodedKeySpec(keyBytes));
+    return kf.generatePrivate(new PKCS8EncodedKeySpec(Base64.getDecoder().decode(keyString)));
   }
 
-  private void newSslContext() throws Exception {
+  private void newSslContext() throws Exception { // this takes about 300ms
     // create trust manager that trusts ca to verify server crt
     TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
     tmf.init(newKeyStore("ca", caCrt, null)); // trust our ca
     // create key manager to supply client key and crt (client and server use the same keypair)
     KeyManagerFactory clientKmFactory = KeyManagerFactory.getInstance("X509");
-    clientKmFactory.init(newKeyStore("crt", srvCrt, srvKey), null);
+    clientKmFactory.init(newKeyStore("crt", srvCrt, srvKey), null); // slow
     // new sslContext for http client that trusts the ca and provides client cert
     SSLContext sslContext = SSLContext.getInstance("TLS");
     TrustManager[] tm = tmf.getTrustManagers();
-    sslContext.init(clientKmFactory.getKeyManagers(), tm, secureRandom);
+    sslContext.init(clientKmFactory.getKeyManagers(), tm, secureRandom); // slow
     sslSocketFactory = sslContext.getSocketFactory();
   }
 
   private void genCerts() throws Exception {
+    issuer = new X500Name("CN=CA Cert");
+
     // new rsa key generator
     KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
     keyGen.initialize(2048, secureRandom);
@@ -138,7 +139,7 @@ public class NodeSecret {
 
   private void genAuthPwdAndHeader() {
     this.authPwd = genPwd();
-    this.authHeader = "Basic " + DatatypeConverter.printBase64Binary(this.authPwd.getBytes());
+    this.authHeader = "Basic " + Arrays.toString(Base64.getEncoder().encode(this.authPwd.getBytes()));
   }
 
   private KeyStore newKeyStore(String alias, Certificate crt, PrivateKey prv) throws Exception {
@@ -161,6 +162,10 @@ public class NodeSecret {
     ContentSigner signer = new JcaContentSignerBuilder("SHA256WithRSAEncryption").build(issuerKeypair.getPrivate());
     X509CertificateHolder crtHolder = subjectCertBuilder.build(signer);
     InputStream is = new ByteArrayInputStream(crtHolder.getEncoded());
+    if(!wasBouncyCastleProviderInitialized) { // do not auto-init statically
+      Security.addProvider(new BouncyCastleProvider()); // takes about 150ms and is not always needed
+      wasBouncyCastleProviderInitialized = true;
+    }
     CertificateFactory cf = CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME);
     return (X509Certificate) cf.generateCertificate(is);
   }
@@ -168,7 +173,7 @@ public class NodeSecret {
   private String crtToString(X509Certificate cert) throws CertificateEncodingException {
     StringWriter sw = new StringWriter();
     sw.write(HEADER_CRT_BEGIN);
-    sw.write(DatatypeConverter.printBase64Binary(cert.getEncoded()).replaceAll("(.{64})", "$1\n"));
+    sw.write(DatatypeConverter.printBase64Binary(cert.getEncoded()).replaceAll("(.{64})", "$1\n")); // todo - get rid of DatatypeConverter
     sw.write(HEADER_CRT_END);
     return sw.toString();
   }
@@ -176,7 +181,7 @@ public class NodeSecret {
   private String keyToString(PrivateKey prv) {
     StringWriter sw = new StringWriter();
     sw.write(HEADER_PRV_BEGIN);
-    sw.write(DatatypeConverter.printBase64Binary(prv.getEncoded()).replaceAll("(.{64})", "$1\n"));
+    sw.write(DatatypeConverter.printBase64Binary(prv.getEncoded()).replaceAll("(.{64})", "$1\n")); // todo - get rid of DatatypeConverter
     sw.write(HEADER_PRV_END);
     return sw.toString();
   }
@@ -184,7 +189,7 @@ public class NodeSecret {
   private String genPwd() {
     byte bytes[] = new byte[32];
     secureRandom.nextBytes(bytes);
-    return DatatypeConverter.printBase64Binary(bytes);
+    return Arrays.toString(Base64.getEncoder().encode(bytes));
   }
 
 }
