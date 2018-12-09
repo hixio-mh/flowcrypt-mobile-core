@@ -13,6 +13,7 @@ import { parseReq } from './node/parse';
 import { fmtRes, fmtErr, indexHtml, HttpClientErr, HttpAuthErr } from './node/responses';
 import { testEndpointHandler } from './node/tests';
 import { Endpoints } from './node/endpoints';
+import { sendNativeMessageToJava } from './node/native';
 
 declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, NODE_AUTH_HEADER: string, NODE_PORT: string;
 // , NODE_UNIX_SOCKET: string
@@ -85,5 +86,7 @@ server.listen(LISTEN_PORT, 'localhost');
 
 server.on('listening', () => {
   const address = server.address();
-  console.log(`listening on ${typeof address === 'object' ? address.port : address}`);
+  const msg = `listening on ${typeof address === 'object' ? address.port : address}`;
+  console.log(msg);
+  sendNativeMessageToJava(msg);
 });

@@ -88,12 +88,12 @@ const dereq_minimalistic_assert =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 35);
+/******/ 	return __webpack_require__(__webpack_require__.s = 37);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 35:
+/***/ 37:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -196,19 +196,19 @@ const dereq_bn =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 33);
+/******/ 	return __webpack_require__(__webpack_require__.s = 35);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 22:
+/***/ 24:
 /***/ (function(module, exports) {
 
 module.exports = require("buffer");
 
 /***/ }),
 
-/***/ 33:
+/***/ 35:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -266,7 +266,7 @@ module.exports = require("buffer");
   var Buffer;
 
   try {
-    Buffer = __webpack_require__(22).Buffer;
+    Buffer = __webpack_require__(24).Buffer;
   } catch (e) {}
 
   BN.isBN = function isBN(num) {
@@ -3662,11 +3662,11 @@ module.exports = require("buffer");
     return res._forceRed(this);
   };
 })( false || module, undefined);
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(34)(module)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(36)(module)))
 
 /***/ }),
 
-/***/ 34:
+/***/ 36:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3784,7 +3784,7 @@ const dereq_asn1 =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 14);
+/******/ 	return __webpack_require__(__webpack_require__.s = 16);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -3802,36 +3802,38 @@ const dereq_asn1 =
 /* 11 */,
 /* 12 */,
 /* 13 */,
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var asn1 = exports;
-asn1.bignum = __webpack_require__(15);
-asn1.define = __webpack_require__(16).define;
-asn1.base = __webpack_require__(19);
-asn1.constants = __webpack_require__(25);
-asn1.decoders = __webpack_require__(27);
-asn1.encoders = __webpack_require__(30);
-
-/***/ }),
-/* 15 */
-/***/ (function(module, exports) {
-
-module.exports = dereq_bn;
-
-/***/ }),
+/* 14 */,
+/* 15 */,
 /* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var asn1 = __webpack_require__(14);
+var asn1 = exports;
+asn1.bignum = __webpack_require__(17);
+asn1.define = __webpack_require__(18).define;
+asn1.base = __webpack_require__(21);
+asn1.constants = __webpack_require__(27);
+asn1.decoders = __webpack_require__(29);
+asn1.encoders = __webpack_require__(32);
 
-var inherits = __webpack_require__(17);
+/***/ }),
+/* 17 */
+/***/ (function(module, exports) {
+
+module.exports = dereq_bn;
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var asn1 = __webpack_require__(16);
+
+var inherits = __webpack_require__(19);
 
 var api = exports;
 
@@ -3852,7 +3854,7 @@ Entity.prototype._createNamed = function createNamed(base) {
   var named;
 
   try {
-    named = __webpack_require__(18).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
+    named = __webpack_require__(20).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
   } catch (e) {
     named = function (entity) {
       this._initNamed(entity);
@@ -3893,38 +3895,38 @@ reporter) {
 };
 
 /***/ }),
-/* 17 */
+/* 19 */
 /***/ (function(module, exports) {
 
 module.exports = require("util").inherits;
 
 /***/ }),
-/* 18 */
+/* 20 */
 /***/ (function(module, exports) {
 
 module.exports = require("vm");
 
 /***/ }),
-/* 19 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var base = exports;
-base.Reporter = __webpack_require__(20).Reporter;
-base.DecoderBuffer = __webpack_require__(21).DecoderBuffer;
-base.EncoderBuffer = __webpack_require__(21).EncoderBuffer;
-base.Node = __webpack_require__(23);
+base.Reporter = __webpack_require__(22).Reporter;
+base.DecoderBuffer = __webpack_require__(23).DecoderBuffer;
+base.EncoderBuffer = __webpack_require__(23).EncoderBuffer;
+base.Node = __webpack_require__(25);
 
 /***/ }),
-/* 20 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(17);
+var inherits = __webpack_require__(19);
 
 function Reporter(options) {
   this._reporterState = {
@@ -4040,17 +4042,17 @@ ReporterError.prototype.rethrow = function rethrow(msg) {
 };
 
 /***/ }),
-/* 21 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(17);
+var inherits = __webpack_require__(19);
 
-var Reporter = __webpack_require__(19).Reporter;
+var Reporter = __webpack_require__(21).Reporter;
 
-var Buffer = __webpack_require__(22).Buffer;
+var Buffer = __webpack_require__(24).Buffer;
 
 function DecoderBuffer(base, options) {
   Reporter.call(this, options);
@@ -4152,25 +4154,25 @@ EncoderBuffer.prototype.join = function join(out, offset) {
 };
 
 /***/ }),
-/* 22 */
+/* 24 */
 /***/ (function(module, exports) {
 
 module.exports = require("buffer");
 
 /***/ }),
-/* 23 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Reporter = __webpack_require__(19).Reporter;
+var Reporter = __webpack_require__(21).Reporter;
 
-var EncoderBuffer = __webpack_require__(19).EncoderBuffer;
+var EncoderBuffer = __webpack_require__(21).EncoderBuffer;
 
-var DecoderBuffer = __webpack_require__(19).DecoderBuffer;
+var DecoderBuffer = __webpack_require__(21).DecoderBuffer;
 
-var assert = __webpack_require__(24); // Supported tags
+var assert = __webpack_require__(26); // Supported tags
 
 
 var tags = ['seq', 'seqof', 'set', 'setof', 'objid', 'bool', 'gentime', 'utctime', 'null_', 'enum', 'int', 'objDesc', 'bitstr', 'bmpstr', 'charstr', 'genstr', 'graphstr', 'ia5str', 'iso646str', 'numstr', 'octstr', 'printstr', 't61str', 'unistr', 'utf8str', 'videostr']; // Public methods list
@@ -4641,13 +4643,13 @@ Node.prototype._isPrintstr = function isPrintstr(str) {
 };
 
 /***/ }),
-/* 24 */
+/* 26 */
 /***/ (function(module, exports) {
 
 module.exports = dereq_minimalistic_assert;
 
 /***/ }),
-/* 25 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4666,16 +4668,16 @@ constants._reverse = function reverse(map) {
   return res;
 };
 
-constants.der = __webpack_require__(26);
+constants.der = __webpack_require__(28);
 
 /***/ }),
-/* 26 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var constants = __webpack_require__(25);
+var constants = __webpack_require__(27);
 
 exports.tagClass = {
   0: 'universal',
@@ -4718,26 +4720,26 @@ exports.tag = {
 exports.tagByName = constants._reverse(exports.tag);
 
 /***/ }),
-/* 27 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var decoders = exports;
-decoders.der = __webpack_require__(28);
-decoders.pem = __webpack_require__(29);
+decoders.der = __webpack_require__(30);
+decoders.pem = __webpack_require__(31);
 
 /***/ }),
-/* 28 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(17);
+var inherits = __webpack_require__(19);
 
-var asn1 = __webpack_require__(14);
+var asn1 = __webpack_require__(16);
 
 var base = asn1.base;
 var bignum = asn1.bignum; // Import DER constants
@@ -5009,17 +5011,17 @@ function derDecodeLen(buf, primitive, fail) {
 }
 
 /***/ }),
-/* 29 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(17);
+var inherits = __webpack_require__(19);
 
-var Buffer = __webpack_require__(22).Buffer;
+var Buffer = __webpack_require__(24).Buffer;
 
-var DERDecoder = __webpack_require__(28);
+var DERDecoder = __webpack_require__(30);
 
 function PEMDecoder(entity) {
   DERDecoder.call(this, entity);
@@ -5061,28 +5063,28 @@ PEMDecoder.prototype.decode = function decode(data, options) {
 };
 
 /***/ }),
-/* 30 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var encoders = exports;
-encoders.der = __webpack_require__(31);
-encoders.pem = __webpack_require__(32);
+encoders.der = __webpack_require__(33);
+encoders.pem = __webpack_require__(34);
 
 /***/ }),
-/* 31 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(17);
+var inherits = __webpack_require__(19);
 
-var Buffer = __webpack_require__(22).Buffer;
+var Buffer = __webpack_require__(24).Buffer;
 
-var asn1 = __webpack_require__(14);
+var asn1 = __webpack_require__(16);
 
 var base = asn1.base; // Import DER constants
 
@@ -5321,15 +5323,15 @@ function encodeTag(tag, primitive, cls, reporter) {
 }
 
 /***/ }),
-/* 32 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(17);
+var inherits = __webpack_require__(19);
 
-var DEREncoder = __webpack_require__(31);
+var DEREncoder = __webpack_require__(33);
 
 function PEMEncoder(entity) {
   DEREncoder.call(this, entity);
@@ -57822,7 +57824,9 @@ const responses_1 = __webpack_require__(3);
 
 const tests_1 = __webpack_require__(11);
 
-const endpoints_1 = __webpack_require__(12); // , NODE_UNIX_SOCKET: string
+const endpoints_1 = __webpack_require__(12);
+
+const native_1 = __webpack_require__(14); // , NODE_UNIX_SOCKET: string
 
 
 global.atob = b64str => Buffer.from(b64str, 'base64').toString('binary');
@@ -57904,7 +57908,9 @@ const server = https.createServer(serverOptins, (request, response) => {
 server.listen(LISTEN_PORT, 'localhost');
 server.on('listening', () => {
   const address = server.address();
-  console.log(`listening on ${typeof address === 'object' ? address.port : address}`);
+  const msg = `listening on ${typeof address === 'object' ? address.port : address}`;
+  console.log(msg);
+  native_1.sendNativeMessageToJava(msg);
 });
 
 /***/ }),
@@ -60808,6 +60814,47 @@ const hasProp = (v, name, type) => {
 const hasData = data => {
   return typeof data === 'string';
 };
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+const EventEmitter = __webpack_require__(15);
+
+var mybridgeaddon = process.binding('rn_bridge');
+
+class MyEmitter extends EventEmitter {
+  constructor() {
+    super(...arguments);
+
+    this.send = function (msg) {
+      mybridgeaddon.sendMessage(msg);
+    };
+  }
+
+}
+
+const channel = new MyEmitter();
+/* var myListener =*/
+
+mybridgeaddon.registerListener(function (msg) {
+  channel.emit('message', msg);
+});
+exports.sendNativeMessageToJava = channel.send;
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports) {
+
+module.exports = require("events");
 
 /***/ })
 /******/ ]);

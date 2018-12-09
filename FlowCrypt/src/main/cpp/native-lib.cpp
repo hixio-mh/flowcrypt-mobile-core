@@ -5,14 +5,48 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <android/log.h>
+#include "rn-bridge.h"
 
+// cache the environment variable for the thread running node to call into java
+JNIEnv* cacheEnvPointer=NULL;
+
+// prepend log calls with this
+const char *ADBTAG = "NODEJS-MOBILE";
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_yourorg_sample_node_NativeNode_sendNativeMessageToNode(JNIEnv *env, jobject /* this */, jstring msg) {
+    const char* nativeMessage = env->GetStringUTFChars(msg, 0);
+    rn_bridge_notify(nativeMessage);
+    env->ReleaseStringUTFChars(msg,nativeMessage);
+}
+
+// may be useless - just use "return jint(node::Start(argument_count,argv));" at the bottom - evaluate later
+extern "C" int callintoNode(int argc, char *argv[]) {
+    const int exit_code = node::Start(argc,argv);
+    return exit_code;
+}
+
+#define APPNAME "RNBRIDGE"
+
+void rcv_message(char* msg) {
+    JNIEnv *env=cacheEnvPointer;
+    if(!env) return;
+    jclass cls2 = env->FindClass("com/yourorg/sample/node/NativeNode");  // try to find the class
+    if(cls2 != nullptr) {
+        jmethodID m_sendMessage = env->GetStaticMethodID(cls2, "receiveNativeMessageFromNode", "(Ljava/lang/String;)V");  // find method
+        if(m_sendMessage != nullptr) {
+            jstring java_msg=env->NewStringUTF(msg);
+            env->CallStaticVoidMethod(cls2, m_sendMessage,java_msg); // call method
+        }
+    }
+}
 
 // Start threads to redirect stdout and stderr to logcat.
 int pipe_stdout[2];
 int pipe_stderr[2];
 pthread_t thread_stdout;
 pthread_t thread_stderr;
-const char *ADBTAG = "NODEJS-MOBILE";
 
 void *thread_stderr_func(void*) {
     ssize_t redirect_size;
@@ -93,8 +127,7 @@ Java_com_yourorg_sample_node_NativeNode_startNodeWithArguments(JNIEnv *env, jobj
     char* current_args_position=args_buffer;
 
     //Populate the args_buffer and argv.
-    for (int i = 0; i < argument_count ; i++)
-    {
+    for (int i = 0; i < argument_count ; i++) {
         const char* current_argument = env->GetStringUTFChars((jstring)env->GetObjectArrayElement(arguments, i), 0);
 
         //Copy current argument to its expected position in args_buffer
@@ -112,6 +145,10 @@ Java_com_yourorg_sample_node_NativeNode_startNodeWithArguments(JNIEnv *env, jobj
         __android_log_write(ANDROID_LOG_ERROR, ADBTAG, "Couldn't start redirecting stdout and stderr to logcat.");
     }
 
+    rn_register_bridge_cb(&rcv_message);
+
+    cacheEnvPointer=env;
+
     //Start node, with argc and argv.
-    return jint(node::Start(argument_count,argv));
+    return jint(callintoNode(argument_count, argv));
 }

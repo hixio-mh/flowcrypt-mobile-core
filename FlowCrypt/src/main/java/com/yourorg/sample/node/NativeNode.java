@@ -113,12 +113,23 @@ class NativeNode {
   }
 
   /**
-   * A native method that is implemented by the 'native-lib' native library,
-   * which is packaged with this application.
+   * A native method that is implemented by the 'native-lib' native library
    */
   @SuppressWarnings("JniMissingFunction")
   public native Integer startNodeWithArguments(String[] arguments);
 
+  /**
+   * A native method that is implemented by the 'native-lib' native library
+   */
+  @SuppressWarnings("JniMissingFunction")
+  public native void sendNativeMessageToNode(String msg);
+
+  /**
+   * Will be called by native code
+   */
+  public static void receiveNativeMessageFromNode(String msg) {
+    System.out.println(msg);
+  }
 }
 
 class NodeError extends Exception {
