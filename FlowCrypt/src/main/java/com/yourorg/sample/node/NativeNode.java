@@ -12,7 +12,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -41,13 +40,16 @@ class NativeNode {
   }
 
   RawNodeResult request(String endpoint, JSONObject req, byte[] data) {
+    if(data == null) {
+      data = new byte[0];
+    }
     long startTime = System.currentTimeMillis();
     try {
       MultipartEntityBuilder builder = MultipartEntityBuilder.create();
       builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
       builder.addTextBody("endpoint", endpoint);
       builder.addTextBody("request", req != null ? req.toString() : "{}");
-      builder.addBinaryBody("data", new ByteArrayInputStream(data != null ? data : new byte[0]));
+      builder.addBinaryBody("data", data);
       URL url = new URL("https://localhost:" + nodeSecret.port + "/");
       HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
       conn.setRequestMethod("POST");

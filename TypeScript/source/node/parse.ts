@@ -5,7 +5,32 @@
 import { IncomingMessage } from 'http';
 import { HttpClientErr } from './fmt';
 
-export const parseReq = (r: IncomingMessage): Promise<{ endpoint: string, data?: string, request: {} }> => new Promise((resolve, reject) => {
+type DictOfArraysOfBuffers = { [partName: string]: Buffer[] };
+type ParseRes = { endpoint: string, data: Buffer, request: {} };
+
+const NEWLINE = Buffer.from("\r\n");
+const DOUBLEQUOTE = '"'.charCodeAt(0);
+const CONTENT_TYPE = Buffer.from('Content-Type: ');
+const CONTENT_DISPOSITION = Buffer.from('Content-Disposition: form-data; name="');
+
+const finish = (parts: DictOfArraysOfBuffers, resolve: (r: ParseRes) => void, reject: (e: Error) => void) => {
+  if (parts['endpoint'] && parts['request'] && parts['data']) {
+    try {
+      const request = JSON.parse(Buffer.concat(parts['request']).toString());
+      resolve({
+        endpoint: Buffer.concat(parts['endpoint']).toString(),
+        request,
+        data: Buffer.concat(parts['data']),
+      });
+    } catch (e) {
+      reject(new HttpClientErr('cannot parse request part as json'));
+    }
+  } else {
+    reject(new HttpClientErr('missing endpoint or request part'));
+  }
+}
+
+const getBoundaries = (r: IncomingMessage): { newPartBeginMarker: Buffer, streamEndMarker: Buffer } => {
   const contentType = r.headers['content-type'];
   if (!contentType) {
     throw new HttpClientErr('could not figure out content type');
@@ -14,68 +39,90 @@ export const parseReq = (r: IncomingMessage): Promise<{ endpoint: string, data?:
   if (!boundary || boundary.length < 5 || boundary.length > 72) {
     throw new HttpClientErr('could not figure out content type boundary');
   }
-  const startBoundary = `--${boundary}`;
-  const endBoundary = `--${boundary}--`;
+  return { newPartBeginMarker: Buffer.from(`--${boundary}${NEWLINE.toString()}`), streamEndMarker: Buffer.from(`--${boundary}--`) };
+}
+
+// todo - this converts back and forth between buffers and strings for parsing. We should just stick to buffer
+
+export const parseReq = (r: IncomingMessage): Promise<ParseRes> => new Promise((resolve, reject) => {
+
+  const { newPartBeginMarker, streamEndMarker } = getBoundaries(r);
   let currentlyParsingPartHeaders = false;
   let currentPartName = '';
-  let chunkLeftover = '';
-  let encounteredEndBoundary = false;
-  let parts: { [partName: string]: string } = {};
-  r.on('data', chunk => {
-    // console.log(`[chunk]${chunk.toString()}[/chunk]`);
-    for (const line of chunk.toString().split(/\r?\n/)) {
-      // console.log(`[for currentPartName=${currentPartName}, currentlyParsingPartHeaders=${currentlyParsingPartHeaders}, encounteredEndBoundary=${encounteredEndBoundary}]`);
-      // console.log(`[line]${line}[/line]`);
-      const realLine = chunkLeftover + line;
-      // console.log(`[realLine]${realLine}[/realLine]`);
-      if (realLine === startBoundary) {
-        currentlyParsingPartHeaders = true;
-        chunkLeftover = '';
-        continue;
-      }
-      if (realLine === endBoundary) {
-        encounteredEndBoundary = true;
-        if (parts['endpoint'] && parts['request']) {
-          try {
-            const request = JSON.parse(parts['request']);
-            resolve({ endpoint: parts['endpoint'], request, data: parts['data'] });
-          } catch (e) {
-            reject(new HttpClientErr('cannot parse request part as json'));
-          }
-        } else {
-          reject(new HttpClientErr('missing endpoint or request part'));
-        }
-        break;
-      }
+  let previousChunkLeftover = Buffer.from([]);
+  let encounteredEndMarker = false;
+  let parts: DictOfArraysOfBuffers = {};
+  let finished = false;
+
+  r.on('data', (chunk: Buffer) => {
+    if (finished) {
+      return;
+    }
+    chunk = Buffer.concat([previousChunkLeftover, chunk]);
+    while (true) {
+      // console.log(`currentPartName=${currentPartName},currentlyParsingPartHeaders=${currentlyParsingPartHeaders},encounteredEndBoundary=${encounteredEndMarker}`);
+      // console.log(`[loop.chunk]${chunk.toString().replace(/\r/g, '\\r').replace(/\n/g, '\\n')}[/loop.chunk]`);
       if (currentlyParsingPartHeaders) {
-        const contentDispositionMatch = realLine.match(/^Content-Disposition: form-data; name="([a-z]+)"/);
-        if (contentDispositionMatch) {
-          currentPartName = contentDispositionMatch[1];
-          parts[currentPartName] = ''; // initialize part
-          chunkLeftover = '';
-          continue;
+        const nextNewlineIndex = chunk.indexOf(NEWLINE);
+        if (nextNewlineIndex !== -1) { // whole line available
+          const headerLine = chunk.slice(0, nextNewlineIndex);
+          chunk = chunk.slice(nextNewlineIndex + NEWLINE.length); // remove line from chunk
+          if (headerLine.indexOf(CONTENT_TYPE) === 0) {
+            continue; // ignore content type header, everything is just bytes
+          }
+          if (headerLine.indexOf(CONTENT_DISPOSITION) === 0) {
+            const nameBegin = headerLine.slice(CONTENT_DISPOSITION.length);
+            const nameEndIndex = nameBegin.indexOf(DOUBLEQUOTE);
+            if (nameEndIndex === -1) {
+              reject(new HttpClientErr("Content-disposition name parameter not properly quoted"));
+              finished = true;
+              return;
+            }
+            currentPartName = nameBegin.slice(0, nameEndIndex).toString();
+            parts[currentPartName] = [];
+            continue;
+          }
+          if (headerLine.length === 0) {
+            currentlyParsingPartHeaders = false;
+            continue;
+          }
         }
-        if (realLine === 'Content-Type: application/octet-stream' || realLine === 'Content-Type: text/plain') {
-          chunkLeftover = '';
-          continue;
-        }
-        if (realLine === '') {
-          currentlyParsingPartHeaders = false;
-          continue;
-        }
-        chunkLeftover = realLine;
-        continue;
       }
-      // this is data content
-      if (!parts[currentPartName]) {
-        parts[currentPartName] = realLine;
-      } else {
-        parts[currentPartName] += '\n' + realLine; // add back the \n we stole when splitting buffer
+      const newPartBeginMarkerIndex = chunk.indexOf(newPartBeginMarker);
+      if (newPartBeginMarkerIndex !== -1) { // found next part begin marker
+        if (!currentPartName && newPartBeginMarkerIndex > 0) {
+          reject(new HttpClientErr("Unexpected data before begin marker"));
+          finished = true;
+          return;
+        }
+        if (currentPartName) {
+          parts[currentPartName].push(chunk.slice(0, newPartBeginMarkerIndex - NEWLINE.length));
+        }
+        chunk = chunk.slice(newPartBeginMarkerIndex + newPartBeginMarker.length);
+        currentlyParsingPartHeaders = true;
+        continue;
+      } else { // not found any new part marker
+        const streamEndMarkerIndex = chunk.indexOf(streamEndMarker);
+        if (streamEndMarkerIndex !== -1) { // found ending marker
+          encounteredEndMarker = true;
+          if (!currentPartName) {
+            reject(new HttpClientErr("Ending marker before begin marker"));
+            finished = true;
+            return;
+          }
+          parts[currentPartName].push(chunk.slice(0, streamEndMarkerIndex - NEWLINE.length));
+          finish(parts, resolve, reject);
+          finished = true;
+          return;
+        } else {  // not found ending marker
+          previousChunkLeftover = chunk; // this is just a chunk. Maybe we can find a marker in next chunk
+          return;
+        }
       }
     }
   });
   r.on('end', () => {
-    if (!encounteredEndBoundary) {
+    if (!encounteredEndMarker) {
       reject(new HttpClientErr('Got to end of stream without encountering ending boundary'));
     }
   });

@@ -16,28 +16,28 @@ export namespace NodeRequest {
 
 export class Validate {
 
-  public static encryptMsg = (v: any, data: any): NodeRequest.encryptMsg => {
-    if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasData(data)) {
+  public static encryptMsg = (v: any, data: Uint8Array): NodeRequest.encryptMsg => {
+    if (isObj(v) && hasProp(v, 'pubKeys', 'string[]')) {
       return v as NodeRequest.encryptMsg;
     }
     throw new Error('Wrong request structure for NodeRequest.encryptMsg');
   }
 
-  public static encryptFile = (v: any, data: any): NodeRequest.encryptFile => {
-    if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasProp(v, 'name', 'string') && hasData(data)) {
+  public static encryptFile = (v: any, data: Uint8Array): NodeRequest.encryptFile => {
+    if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasProp(v, 'name', 'string')) {
       return v as NodeRequest.encryptFile;
     }
     throw new Error('Wrong request structure for NodeRequest.encryptFile');
   }
 
-  public static decryptFile = (v: any, data: any): NodeRequest.decryptFile => {
+  public static decryptFile = (v: any, data: Uint8Array): NodeRequest.decryptFile => {
     if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasData(data)) {
       return v as NodeRequest.decryptFile;
     }
     throw new Error('Wrong request structure for NodeRequest.decryptFile');
   }
 
-  public static decryptMsg = (v: any, data: any): NodeRequest.decryptMsg => {
+  public static decryptMsg = (v: any, data: Uint8Array): NodeRequest.decryptMsg => {
     if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasData(data)) {
       return v as NodeRequest.decryptFile;
     }
@@ -73,6 +73,6 @@ const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 
   return false;
 }
 
-const hasData = (data: any): data is string => {
-  return typeof data === 'string';
+const hasData = (data: Uint8Array) => {
+  return data.length > 0;
 }

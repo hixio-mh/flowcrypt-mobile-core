@@ -4,8 +4,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 
 public class DecryptMsgResult extends DecryptResult {
@@ -36,20 +34,12 @@ public class DecryptMsgResult extends DecryptResult {
 
   public MsgBlock getNextBlock() {
     throwIfDecryptErrNotTested();
-    BufferedReader br = getDataTextBufferedReader();
+    String rawBlockJson = readOneLineFromInputStream();
+    JSONObject jsonBlock = parseJson(rawBlockJson);
     try {
-      String rawBlockJson = br.readLine();
-      if(rawBlockJson == null || rawBlockJson.isEmpty()) {
-        return null;
-      }
-      JSONObject jsonBlock = new JSONObject(rawBlockJson);
       return new MsgBlock(jsonBlock.getString("type"), jsonBlock.getString("content"));
-    } catch (JSONException | NullPointerException | IOException e) {
-      try {
-        br.close(); // is this needed?
-      } catch (IOException brCloseErr) {
-        brCloseErr.printStackTrace();
-      }
+    } catch (JSONException | NullPointerException e) {
+      closeInputStream();
       return null;
     }
   }

@@ -31,7 +31,6 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Arrays;
 import java.util.Date;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -141,7 +140,7 @@ public class NodeSecret {
 
   private void genAuthPwdAndHeader() {
     this.authPwd = genPwd();
-    this.authHeader = "Basic " + Arrays.toString(Base64.getEncoder().encode(this.authPwd.getBytes()));
+    this.authHeader = "Basic " + new String(Base64.getEncoder().encode(this.authPwd.getBytes()));
   }
 
   private KeyStore newKeyStore(String alias, Certificate crt, PrivateKey prv) throws Exception {
@@ -191,7 +190,7 @@ public class NodeSecret {
   private String genPwd() {
     byte bytes[] = new byte[32];
     secureRandom.nextBytes(bytes);
-    return Arrays.toString(Base64.getEncoder().encode(bytes));
+    return new String(Base64.getEncoder().encode(bytes));
   }
 
 }

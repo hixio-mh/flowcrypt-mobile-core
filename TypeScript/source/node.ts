@@ -23,18 +23,18 @@ declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, N
 
 const endpoints = new Endpoints();
 
-const delegateReqToEndpoint = async (endpointName: string, uncheckedReq: any, optionalData?: string): Promise<string> => {
+const delegateReqToEndpoint = async (endpointName: string, uncheckedReq: any, data: Buffer): Promise<Buffer> => {
   if (endpointName.indexOf('test') === 0) {
     return fmtRes(await testEndpointHandler(endpointName));
   }
   const endpointHandler = endpoints[endpointName];
   if (endpointHandler) {
-    return endpointHandler(uncheckedReq, optionalData);
+    return endpointHandler(uncheckedReq, data);
   }
   throw new HttpClientErr(`unknown endpoint: ${endpointName}`);
 }
 
-const handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<string> => {
+const handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<Buffer> => {
   if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT || !NODE_SSL_CA) {
     throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_CA, NODE_SSL_KEY or NODE_SSL_CRT');
   }
@@ -67,6 +67,9 @@ if (isNaN(LISTEN_PORT) || LISTEN_PORT < 1024) {
 
 const server = https.createServer(serverOptins, (request, response) => {
   handleReq(request, response).then((r) => {
+    // console.log(`----------------- BEGIN NODE RESPONSE --------------------`);
+    // console.log(r.toString())
+    // console.log(`----------------- END NODE RESPONSE --------------------`);
     response.end(r);
   }).catch((e) => {
     if (e instanceof HttpAuthErr) {
