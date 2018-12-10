@@ -2,7 +2,7 @@ package com.yourorg.sample.node.results;
 
 import org.json.JSONException;
 
-import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -15,14 +15,18 @@ public class DecryptFileResult extends DecryptResult {
     super(err, inputStream, startTime);
   }
 
-  public String getDecryptedDataString() {
+  public byte[] getDecryptedDataBytes() {
     throwIfDecryptErrNotTested();
-    return getDataString();
+    try {
+      return getDataBinaryBytes();
+    } catch (IOException e) {
+      return null;
+    }
   }
 
-  public BufferedReader getDecryptedDataBufferedReader() {
+  public InputStream getDecryptedByteStream() {
     throwIfDecryptErrNotTested();
-    return getDataBufferedReader();
+    return getInputStream();
   }
 
   public String getName() {

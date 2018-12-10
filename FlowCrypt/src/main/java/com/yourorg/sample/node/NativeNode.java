@@ -96,6 +96,7 @@ class NativeNode {
       // slow!
       // takes 1750ms to start node with no scripts - using node-chakracore v8.6.0
       // startNodeWithArguments(new String[]{"node", "-e", "console.log('NODE: ' + Date.now())"});
+      // about 3500ms with scripts
       startNodeWithArguments(new String[]{"node", "-e", getJsSrc(am)});
     } catch (Exception e) {
       e.printStackTrace(); // todo - add acra

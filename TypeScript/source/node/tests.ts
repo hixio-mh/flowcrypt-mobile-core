@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { HttpClientErr } from './responses';
+import { HttpClientErr } from './fmt';
 
 declare let openpgp: typeof OpenPGP;
 

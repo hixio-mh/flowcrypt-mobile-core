@@ -7,7 +7,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import com.yourorg.sample.node.Node;
@@ -15,9 +14,11 @@ import com.yourorg.sample.node.NodeSecret;
 import com.yourorg.sample.node.NodeSecretCerts;
 import com.yourorg.sample.node.results.DecryptFileResult;
 import com.yourorg.sample.node.results.DecryptMsgResult;
+import com.yourorg.sample.node.results.EncryptFileResult;
 import com.yourorg.sample.node.results.EncryptMsgResult;
 import com.yourorg.sample.node.results.MsgBlock;
-import com.yourorg.sample.node.results.MsgBlockMeta;
+import com.yourorg.sample.node.results.PgpKeyInfo;
+import com.yourorg.sample.node.results.RawNodeResult;
 import com.yourorg.sample.node.results.TestNodeResult;
 
 import java.io.FileInputStream;
@@ -25,16 +26,32 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
-  private String nodeSecretsCacheFilename = "flowcrypt-node-secrets-cache";
+  final private String nodeSecretsCacheFilename = "flowcrypt-node-secrets-cache";
+  final private static TestData testData = new TestData();
+  final private String testMsg = Arrays.toString(testData.payload(0));
+
   private String newTitle = "Node";
+  private String resultText = "";
+  private TextView tvResult;
+  private boolean hasTestFailure;
+
 
   Handler newTitleHandler = new Handler(new Handler.Callback() {
     @Override
     public boolean handleMessage(Message msg) {
       setTitle(newTitle);
+      return true;
+    }
+  });
+
+  Handler newResultTextHandler = new Handler(new Handler.Callback() {
+    @Override
+    public boolean handleMessage(Message msg) {
+      tvResult.setText(resultText);
       return true;
     }
   });
@@ -47,72 +64,16 @@ public class MainActivity extends AppCompatActivity {
 
     asyncGenSecretsAndStartNode();
 
-    final TextView tvResult = (TextView) findViewById(R.id.tvResult);
-    final EditText etData = (EditText) findViewById(R.id.etData);
+    tvResult = findViewById(R.id.tvResult);
 
-    findViewById(R.id.btnVersions).setOnClickListener(new View.OnClickListener() {
+    findViewById(R.id.btnVersion).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        testNodeAndRender("version", tvResult);
+        getVersionsAndRender(tvResult);
       }
     });
-    findViewById(R.id.btnTest25519).setOnClickListener(new View.OnClickListener() {
+    findViewById(R.id.btnAllTests).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        testNodeAndRender("test25519", tvResult);
-      }
-    });
-    findViewById(R.id.btnTest2048).setOnClickListener(new View.OnClickListener() {
-      public void onClick(View v) {
-        testNodeAndRender("test2048", tvResult);
-      }
-    });
-    findViewById(R.id.btnTest4096).setOnClickListener(new View.OnClickListener() {
-      public void onClick(View v) {
-        testNodeAndRender("test4096", tvResult);
-      }
-    });
-    findViewById(R.id.btnTest2048_1M).setOnClickListener(new View.OnClickListener() {
-      public void onClick(View v) {
-        testNodeAndRender("test2048-1M", tvResult);
-      }
-    });
-    findViewById(R.id.btnTest2048_3M).setOnClickListener(new View.OnClickListener() {
-      public void onClick(View v) {
-        testNodeAndRender("test2048-3M", tvResult);
-      }
-    });
-    findViewById(R.id.btnTest2048_5M).setOnClickListener(new View.OnClickListener() {
-      public void onClick(View v) {
-        testNodeAndRender("test2048-5M", tvResult);
-      }
-    });
-    findViewById(R.id.btnTest2048_10M).setOnClickListener(new View.OnClickListener() {
-      public void onClick(View v) {
-        testNodeAndRender("test2048-10M", tvResult);
-      }
-    });
-    findViewById(R.id.btnTest2048_25M).setOnClickListener(new View.OnClickListener() {
-      public void onClick(View v) {
-        testNodeAndRender("test2048-25M", tvResult);
-      }
-    });
-    findViewById(R.id.btnTest2048_50M).setOnClickListener(new View.OnClickListener() {
-      public void onClick(View v) {
-        testNodeAndRender("test2048-50M", tvResult);
-      }
-    });
-    findViewById(R.id.btnEncrypt).setOnClickListener(new View.OnClickListener() {
-      public void onClick(View v) {
-        encryptMsgAndRender(etData, tvResult);
-      }
-    });
-    findViewById(R.id.btnDecryptFile).setOnClickListener(new View.OnClickListener() {
-      public void onClick(View v) {
-        decryptFileAndRender(etData, tvResult);
-      }
-    });
-    findViewById(R.id.btnDecryptMsg).setOnClickListener(new View.OnClickListener() {
-      public void onClick(View v) {
-        decryptMsgAndRender(etData, tvResult);
+        runAllTestsAndRender();
       }
     });
   }
@@ -160,87 +121,100 @@ public class MainActivity extends AppCompatActivity {
     newTitleHandler.sendEmptyMessage(0);
   }
 
-  public static void encryptMsgAndRender(final EditText etData, final TextView tvResult) {
-    new AsyncTask<Void,Void,EncryptMsgResult>() {
-      @Override
-      protected EncryptMsgResult doInBackground(Void... params) {
-        return Node.encryptMsg(etData.getText().toString().getBytes(), TestData.eccPubKeys);
-      }
-      @Override
-      protected void onPostExecute(EncryptMsgResult encryptRes) {
-        String text;
-        if(encryptRes.getErr() != null) {
-          text = encryptRes.getErr().getMessage();
-          encryptRes.getErr().printStackTrace();
-        } else {
-          text = encryptRes.getEncryptedDataString();
-        }
-        System.out.println(text);
-        text += "\n\n" + encryptRes.ms + "ms";
-        tvResult.setText(text);
-      }
-    }.execute();
+  private void addResultLine(String actionName, long ms, String result, boolean isFinal) {
+    result = ("ok".equals(result)) ? result : "***FAIL*** " + result;
+    String line = (isFinal ? "-----------------\n" : "") + actionName + " [" + ms + "ms] " + result + "\n";
+    System.out.print(line);
+    resultText += line;
+    newResultTextHandler.sendEmptyMessage(0);
   }
 
-  public static void decryptMsgAndRender(final EditText etData, final TextView tvResult) {
-    new AsyncTask<Void,Void,DecryptMsgResult>() {
-      @Override
-      protected DecryptMsgResult doInBackground(Void... params) {
-        return Node.decryptMsg(etData.getText().toString().getBytes(), TestData.eccPrvKeyInfo, TestData.passphrases, null);
-      }
-      @Override
-      protected void onPostExecute(DecryptMsgResult decryptFileRes) {
-        String text;
-        if(decryptFileRes.getErr() != null) {
-          text = decryptFileRes.getErr().getMessage();
-          decryptFileRes.getErr().printStackTrace();
-        } else if(decryptFileRes.getDecryptErr() != null) {
-          text = decryptFileRes.getDecryptErr().type + ": " + decryptFileRes.getDecryptErr().error;
-        } else {
-          text = "msgBlockMeta.length: " + decryptFileRes.getAllBlockMetas().length + "\n";
-          for(MsgBlockMeta msgBlockMeta: decryptFileRes.getAllBlockMetas()) {
-            text += "blockMeta: " + msgBlockMeta.type + ", length: " + msgBlockMeta.length + "\n";
-          }
-          for (MsgBlock block = decryptFileRes.getNextBlock(); block != null; block = decryptFileRes.getNextBlock()) {
-            text += "----- block " + block.getType() + " ------\n" + block.getContent() + "\n\n";
-          }
-        }
-        System.out.println(text);
-        text += "\n\n" + decryptFileRes.ms + "ms";
-        tvResult.setText(text);
-      }
-    }.execute();
+  private void addResultLine(String actionName, RawNodeResult result) {
+    if(result.getErr() != null) {
+      hasTestFailure = true;
+      addResultLine(actionName, result.ms, result.getErr().getMessage(), false);
+      result.getErr().printStackTrace(); // todo - acra
+    } else {
+      addResultLine(actionName, result.ms, "ok", false);
+    }
   }
 
-  public static void decryptFileAndRender(final EditText etData, final TextView tvResult) {
-    new AsyncTask<Void,Void,DecryptFileResult>() {
-      @Override
-      protected DecryptFileResult doInBackground(Void... params) {
-        return Node.decryptFile(etData.getText().toString().getBytes(), TestData.eccPrvKeyInfo, TestData.passphrases, null);
-      }
-      @Override
-      protected void onPostExecute(DecryptFileResult decryptFileRes) {
-        String text;
-        if(decryptFileRes.getErr() != null) {
-          text = decryptFileRes.getErr().getMessage();
-          decryptFileRes.getErr().printStackTrace();
-        } else if(decryptFileRes.getDecryptErr() != null) {
-          text = decryptFileRes.getDecryptErr().type + ": " + decryptFileRes.getDecryptErr().error;
-        } else {
-          text = decryptFileRes.getDecryptedDataString();
-        }
-        System.out.println(text);
-        text += "\n\n" + decryptFileRes.ms + "ms";
-        tvResult.setText(text);
-      }
-    }.execute();
+  private String encryptMsgAndRender(String actionName, byte[] data) {
+    EncryptMsgResult r = Node.encryptMsg(data, testData.getMixedPubKeys());
+    addResultLine(actionName, r);
+    return r.getEncryptedString();
   }
 
-  public static void testNodeAndRender(final String endpoint, final TextView tvResult) {
+  private byte[] encryptFileAndRender(String actionName, byte[] data) {
+    EncryptFileResult r = Node.encryptFile(data, testData.getMixedPubKeys(), "file.txt");
+    addResultLine(actionName, r);
+    return r.getEncryptedDataBytes();
+  }
+
+  private void decryptFileAndRender(String actionName, byte[] data, PgpKeyInfo[] prvKeys) {
+    DecryptFileResult r = Node.decryptFile(data, prvKeys, testData.passphrases(), null);
+    if(r.getErr() != null) {
+      hasTestFailure = true;
+      addResultLine(actionName, r.ms, r.getErr().getMessage(), false);
+      r.getErr().printStackTrace();
+      // todo - acra
+    } else if (r.getDecryptErr() != null) {
+      hasTestFailure = true;
+      addResultLine(actionName, r.ms, r.getDecryptErr().type + ":" + r.getDecryptErr().error, false);
+      // todo - acra
+    } else if(!"file.txt".equals(r.getName())) {
+      hasTestFailure = true;
+      addResultLine(actionName, r.ms, "wrong filename", false);
+    } else if(!Arrays.toString(r.getDecryptedDataBytes()).equals(testMsg)) {
+      hasTestFailure = true;
+      addResultLine(actionName, r.ms, "decrypted file content mismatch", false);
+    } else {
+      addResultLine(actionName, r);
+    }
+  }
+
+  private void decryptMsgAndRender(String actionName, byte[] data, PgpKeyInfo[] prvKeys) {
+    DecryptMsgResult r = Node.decryptMsg(data, prvKeys, testData.passphrases(), null);
+    if(r.getErr() != null) {
+      hasTestFailure = true;
+      addResultLine(actionName, r.ms, r.getErr().getMessage(), false);
+      r.getErr().printStackTrace();
+      // todo - acra
+    } else if (r.getDecryptErr() != null) {
+      hasTestFailure = true;
+      addResultLine(actionName, r.ms, r.getDecryptErr().type + ":" + r.getDecryptErr().error, false);
+      // todo - acra
+    } else if(r.getAllBlockMetas().length != 1) {
+      hasTestFailure = true;
+      addResultLine(actionName, r.ms, "wrong amount of block metas: " + r.getAllBlockMetas().length, false);
+    } else if(r.getAllBlockMetas()[0].length != testMsg.length()) {
+      hasTestFailure = true;
+      addResultLine(actionName, r.ms, "wrong meta block length: " + r.getAllBlockMetas()[0].length, false);
+    } else if(!r.getAllBlockMetas()[0].type.equals(MsgBlock.TYPE_HTML)) {
+      hasTestFailure = true;
+      addResultLine(actionName, r.ms, "wrong meta block type: " + r.getAllBlockMetas()[0].type, false);
+    } else {
+      MsgBlock block = r.getNextBlock();
+      if(!block.getType().equals(MsgBlock.TYPE_HTML)) {
+        hasTestFailure = true;
+        addResultLine(actionName, r.ms, "wrong block type: " + r.getAllBlockMetas()[0].length, false);
+      } else if(!block.getContent().equals(testMsg)) {
+        hasTestFailure = true;
+        addResultLine(actionName, r.ms, "block content mismatch", false);
+      } else if (r.getNextBlock() != null) {
+        hasTestFailure = true;
+        addResultLine(actionName, r.ms, "unexpected second block", false);
+      } else {
+        addResultLine(actionName, r);
+      }
+    }
+  }
+
+  public static void getVersionsAndRender(final TextView tvResult) {
     new AsyncTask<Void,Void,TestNodeResult>() {
       @Override
       protected TestNodeResult doInBackground(Void... params) {
-        return Node.testRequest(endpoint);
+        return Node.testRequest("version");
       }
       @Override
       protected void onPostExecute(TestNodeResult nodeResult) {
@@ -255,6 +229,46 @@ public class MainActivity extends AppCompatActivity {
         tvResult.setText(text);
       }
     }.execute();
+  }
+
+  public void runAllTestsAndRender() {
+    resultText = "";
+    final long startTime = System.currentTimeMillis();
+    Thread t = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          hasTestFailure = false;
+          String encryptedMsg = encryptMsgAndRender("encrypt-msg", testMsg.getBytes());
+          decryptMsgAndRender("decrypt-msg-ecc", encryptedMsg.getBytes(), testData.eccPrvKeyInfo());
+          decryptMsgAndRender("decrypt-msg-rsa2048", encryptedMsg.getBytes(), testData.rsa2048PrvKeyInfo());
+          decryptMsgAndRender("decrypt-msg-rsa4096", encryptedMsg.getBytes(), testData.rsa4096PrvKeyInfo());
+          byte[] encryptedFileBytes = encryptFileAndRender("encrypt-file-10k", testData.payload(0));
+          decryptFileAndRender("decrypt-file-10k-ecc", encryptedFileBytes, testData.eccPrvKeyInfo());
+          decryptFileAndRender("decrypt-file-10k-rsa2048", encryptedFileBytes, testData.rsa2048PrvKeyInfo());
+          decryptFileAndRender("decrypt-file-10k-rsa4096", encryptedFileBytes, testData.rsa4096PrvKeyInfo());
+          for(int mb: new int[]{1, 3, 5}) {
+            byte[] bytes = encryptFileAndRender("encrypt-file-" + mb + "m" + "-rsa2048", testData.payload(mb));
+            decryptFileAndRender("decrypt-file-" + mb + "m" + "-rsa2048", bytes, testData.rsa2048PrvKeyInfo());
+          }
+          if(!hasTestFailure) {
+            addResultLine("all-tests", System.currentTimeMillis() - startTime, "success", true);
+          } else {
+            addResultLine("all-tests", System.currentTimeMillis() - startTime, "hasTestFailure", true);
+          }
+        } catch (Exception e) {
+          addResultLine("all-tests", System.currentTimeMillis() - startTime, e.getMessage(), true);
+          // todo acra
+        }
+      }
+    });
+    t.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+      public void uncaughtException(Thread th, Throwable e) {
+        addResultLine("all-tests", System.currentTimeMillis() - startTime, e.getMessage(), true);
+        // todo - acra
+      }
+    });
+    t.start();
   }
 
   /**

@@ -10,7 +10,7 @@
 import * as https from 'https';
 import { IncomingMessage, ServerResponse } from 'http';
 import { parseReq } from './node/parse';
-import { fmtRes, fmtErr, indexHtml, HttpClientErr, HttpAuthErr } from './node/responses';
+import { fmtRes, fmtErr, indexHtml, HttpClientErr, HttpAuthErr } from './node/fmt';
 import { testEndpointHandler } from './node/tests';
 import { Endpoints } from './node/endpoints';
 import { sendNativeMessageToJava } from './node/native';
@@ -87,6 +87,6 @@ server.listen(LISTEN_PORT, 'localhost');
 server.on('listening', () => {
   const address = server.address();
   const msg = `listening on ${typeof address === 'object' ? address.port : address}`;
-  console.log(msg);
+  console.info(msg);
   sendNativeMessageToJava(msg);
 });

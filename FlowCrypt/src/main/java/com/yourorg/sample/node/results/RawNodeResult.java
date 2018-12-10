@@ -3,7 +3,9 @@ package com.yourorg.sample.node.results;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -15,14 +17,15 @@ public class RawNodeResult {
    * stripAndParseJsonLine() will strip the first JSON line off the rest when accessing data (if not already stripped)
    */
 
-
+  private final int bufferSize = 1024; // buffer sizes: 1024*8 or 1024*16 or 1024*32
   private Exception err;
   private InputStream inputStream;
   private boolean errWasTested = false;
   protected boolean jsonResponseAlreadyStripped = false;
   protected String jsonResponseRaw;
   protected JSONObject jsonResponseParsed;
-  private BufferedReader br;
+  private BufferedReader textBufferedReader;
+  private BufferedInputStream binaryBufferedInputStream;
   public long ms;
 
   public RawNodeResult(Exception err, InputStream inputStream, long ms) {
@@ -52,27 +55,27 @@ public class RawNodeResult {
     }
   }
 
-  private InputStream getInputStream() {
+  protected InputStream getInputStream() {
     throwIfErrNotTested();
     return inputStream;
   }
 
-  private BufferedReader getInputStreamBufferedReader() {
+  protected BufferedReader getDataTextBufferedReader() {
     throwIfErrNotTested();
     if(inputStream == null) {
       return null;
     }
-    if(br == null) {
-      br = new BufferedReader(new InputStreamReader(getInputStream()));
+    if(textBufferedReader == null) {
+      textBufferedReader = new BufferedReader(new InputStreamReader(getInputStream()), bufferSize);
     }
-    return br;
+    return textBufferedReader;
   }
 
   private void stripAndParseJsonLine() {
     throwIfErrNotTested();
     if(!jsonResponseAlreadyStripped) {
       jsonResponseAlreadyStripped = true;
-      BufferedReader br = getInputStreamBufferedReader();
+      BufferedReader br = getDataTextBufferedReader();
       if(br != null) {
         try {
           jsonResponseRaw = br.readLine();
@@ -89,34 +92,27 @@ public class RawNodeResult {
     }
   }
 
-  protected String getDataString() {
+  protected byte[] getDataBinaryBytes() throws IOException {
     throwIfErrNotTested();
-    BufferedReader br = getInputStreamBufferedReader();
+    if(inputStream == null) {
+      return null;
+    }
+    ByteArrayOutputStream collector = new ByteArrayOutputStream();
+    byte[] buffer = new byte[bufferSize];
+    int bytesRead;
+    while ((bytesRead = inputStream.read(buffer, 0, buffer.length)) != -1) {
+      collector.write(buffer, 0, bytesRead);
+    }
+    return collector.toByteArray();
+  }
+
+  protected String getDataTextString() {
+    throwIfErrNotTested();
+    BufferedReader br = getDataTextBufferedReader();
     if(br == null) {
       return null;
     }
     return br.lines().collect(Collectors.joining("\n"));
-  }
-
-  protected BufferedReader getDataBufferedReader() {
-    throwIfErrNotTested();
-    return getInputStreamBufferedReader();
-  }
-
-}
-
-abstract class EncryptResult extends RawNodeResult {
-
-  EncryptResult(Exception err, InputStream inputStream, long startTime) {
-    super(err, inputStream, startTime);
-  }
-
-  public String getEncryptedDataString() {
-    return getDataString();
-  }
-
-  public BufferedReader getEncryptedDataBufferedReader() {
-    return getDataBufferedReader();
   }
 
 }

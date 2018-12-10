@@ -36,7 +36,7 @@ public class DecryptMsgResult extends DecryptResult {
 
   public MsgBlock getNextBlock() {
     throwIfDecryptErrNotTested();
-    BufferedReader br = getDataBufferedReader();
+    BufferedReader br = getDataTextBufferedReader();
     try {
       String rawBlockJson = br.readLine();
       if(rawBlockJson == null || rawBlockJson.isEmpty()) {

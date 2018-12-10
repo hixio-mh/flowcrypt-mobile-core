@@ -57820,7 +57820,7 @@ const https = __webpack_require__(1);
 
 const parse_1 = __webpack_require__(2);
 
-const responses_1 = __webpack_require__(3);
+const fmt_1 = __webpack_require__(3);
 
 const tests_1 = __webpack_require__(11);
 
@@ -57837,7 +57837,7 @@ const endpoints = new endpoints_1.Endpoints();
 
 const delegateReqToEndpoint = async (endpointName, uncheckedReq, optionalData) => {
   if (endpointName.indexOf('test') === 0) {
-    return responses_1.fmtRes((await tests_1.testEndpointHandler(endpointName)));
+    return fmt_1.fmtRes((await tests_1.testEndpointHandler(endpointName)));
   }
 
   const endpointHandler = endpoints[endpointName];
@@ -57846,7 +57846,7 @@ const delegateReqToEndpoint = async (endpointName, uncheckedReq, optionalData) =
     return endpointHandler(uncheckedReq, optionalData);
   }
 
-  throw new responses_1.HttpClientErr(`unknown endpoint: ${endpointName}`);
+  throw new fmt_1.HttpClientErr(`unknown endpoint: ${endpointName}`);
 };
 
 const handleReq = async (req, res) => {
@@ -57855,12 +57855,12 @@ const handleReq = async (req, res) => {
   }
 
   if (req.headers['authorization'] !== NODE_AUTH_HEADER) {
-    throw new responses_1.HttpAuthErr('Wrong Authorization');
+    throw new fmt_1.HttpAuthErr('Wrong Authorization');
   }
 
   if (req.url === '/' && req.method === 'GET') {
     res.setHeader('content-type', 'text/html');
-    return responses_1.indexHtml;
+    return fmt_1.indexHtml;
   }
 
   if (req.url === '/' && req.method === 'POST') {
@@ -57872,7 +57872,7 @@ const handleReq = async (req, res) => {
     return await delegateReqToEndpoint(endpoint, request, data);
   }
 
-  throw new responses_1.HttpClientErr(`unknown path ${req.url}`);
+  throw new fmt_1.HttpClientErr(`unknown path ${req.url}`);
 };
 
 const serverOptins = {
@@ -57892,24 +57892,24 @@ const server = https.createServer(serverOptins, (request, response) => {
   handleReq(request, response).then(r => {
     response.end(r);
   }).catch(e => {
-    if (e instanceof responses_1.HttpAuthErr) {
+    if (e instanceof fmt_1.HttpAuthErr) {
       response.statusCode = 401;
       response.setHeader('WWW-Authenticate', 'Basic realm="flowcrypt-android-node"');
-    } else if (e instanceof responses_1.HttpClientErr) {
+    } else if (e instanceof fmt_1.HttpClientErr) {
       response.statusCode = 400;
     } else {
       console.error(e);
       response.statusCode = 500;
     }
 
-    response.end(responses_1.fmtErr(e));
+    response.end(fmt_1.fmtErr(e));
   });
 });
 server.listen(LISTEN_PORT, 'localhost');
 server.on('listening', () => {
   const address = server.address();
   const msg = `listening on ${typeof address === 'object' ? address.port : address}`;
-  console.log(msg);
+  console.info(msg);
   native_1.sendNativeMessageToJava(msg);
 });
 
@@ -57931,19 +57931,19 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const responses_1 = __webpack_require__(3);
+const fmt_1 = __webpack_require__(3);
 
 exports.parseReq = r => new Promise((resolve, reject) => {
   const contentType = r.headers['content-type'];
 
   if (!contentType) {
-    throw new responses_1.HttpClientErr('could not figure out content type');
+    throw new fmt_1.HttpClientErr('could not figure out content type');
   }
 
   const boundary = (contentType.match(/^multipart\/form-data; boundary=(.+)$/) || [])[1];
 
   if (!boundary || boundary.length < 5 || boundary.length > 72) {
-    throw new responses_1.HttpClientErr('could not figure out content type boundary');
+    throw new fmt_1.HttpClientErr('could not figure out content type boundary');
   }
 
   const startBoundary = `--${boundary}`;
@@ -57978,10 +57978,10 @@ exports.parseReq = r => new Promise((resolve, reject) => {
               data: parts['data']
             });
           } catch (e) {
-            reject(new responses_1.HttpClientErr('cannot parse request part as json'));
+            reject(new fmt_1.HttpClientErr('cannot parse request part as json'));
           }
         } else {
-          reject(new responses_1.HttpClientErr('missing endpoint or request part'));
+          reject(new fmt_1.HttpClientErr('missing endpoint or request part'));
         }
 
         break;
@@ -58022,7 +58022,7 @@ exports.parseReq = r => new Promise((resolve, reject) => {
   });
   r.on('end', () => {
     if (!encounteredEndBoundary) {
-      reject(new responses_1.HttpClientErr('Got to end of stream without encountering ending boundary'));
+      reject(new fmt_1.HttpClientErr('Got to end of stream without encountering ending boundary'));
     }
   });
 });
@@ -59121,7 +59121,6 @@ Pgp.internal = {
     }
   },
   cryptoMsgGetSortedKeys: async (kiWithPp, msg) => {
-    console.log('kiWithPp', kiWithPp);
     const keys = {
       verificationContacts: [],
       forVerification: [],
@@ -59133,7 +59132,6 @@ Pgp.internal = {
       prvForDecryptWithoutPassphrases: []
     };
     const encryptedForKeyId = msg instanceof openpgp.message.Message ? msg.getEncryptionKeyIds() : [];
-    console.log('encryptedForKeyId', encryptedForKeyId);
     keys.encryptedFor = encryptedForKeyId.map(id => Pgp.key.longid(id.bytes)).filter(Boolean);
     keys.signedBy = (msg.getSigningKeyIds ? msg.getSigningKeyIds() : []).filter(Boolean).map(id => Pgp.key.longid(id.bytes)).filter(Boolean);
     keys.prvMatching = kiWithPp.keys.filter(ki => common_js_1.Value.is(ki.longid).in(keys.encryptedFor));
@@ -59144,10 +59142,7 @@ Pgp.internal = {
       keys.prvForDecrypt = kiWithPp.keys;
     }
 
-    console.log('keys', keys);
-
     for (const prvForDecrypt of keys.prvForDecrypt) {
-      console.log('prvForDecrypt', prvForDecrypt);
       const key = openpgp.key.readArmored(prvForDecrypt.private).keys[0];
 
       if (key.isDecrypted() || kiWithPp.passphrases.length && (await Pgp.key.decrypt(key, kiWithPp.passphrases)) === true) {
@@ -60393,7 +60388,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const responses_1 = __webpack_require__(3);
+const fmt_1 = __webpack_require__(3);
 
 const KEY_2048 = `-----BEGIN PGP PRIVATE KEY BLOCK-----
 Version: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption
@@ -60632,7 +60627,7 @@ exports.testEndpointHandler = async endpoint => {
     return await testEncryptDecrypt(KEY_2048, newBigString(50));
   }
 
-  throw new responses_1.HttpClientErr(`unknown test endpoint: ${endpoint}`);
+  throw new fmt_1.HttpClientErr(`unknown test endpoint: ${endpoint}`);
 };
 
 /***/ }),
@@ -60652,24 +60647,24 @@ const pgp_1 = __webpack_require__(5);
 
 const validate_1 = __webpack_require__(13);
 
-const responses_1 = __webpack_require__(3);
+const fmt_1 = __webpack_require__(3);
 
 class Endpoints {
   constructor() {
     this.version = async (uncheckedReq, data) => {
-      return responses_1.fmtRes(process.versions);
+      return fmt_1.fmtRes(process.versions);
     };
 
     this.encryptMsg = async (uncheckedReq, data) => {
       const req = validate_1.Validate.encryptMsg(uncheckedReq, data);
       const encrypted = await pgp_1.PgpMsg.encrypt(req.pubKeys, undefined, undefined, data, undefined, true);
-      return responses_1.fmtRes({}, encrypted.data);
+      return fmt_1.fmtRes({}, encrypted.data);
     };
 
     this.encryptFile = async (uncheckedReq, data) => {
       const req = validate_1.Validate.encryptFile(uncheckedReq, data);
       const encrypted = await pgp_1.PgpMsg.encrypt(req.pubKeys, undefined, undefined, data, req.name, false);
-      return responses_1.fmtRes({}, encrypted.message.packets.write());
+      return fmt_1.fmtRes({}, encrypted.message.packets.write());
     };
 
     this.decryptMsg = async (uncheckedReq, data) => {
@@ -60685,7 +60680,7 @@ class Endpoints {
 
       if (!decrypted.success) {
         decrypted.message = undefined;
-        return responses_1.fmtRes(decrypted);
+        return fmt_1.fmtRes(decrypted);
       }
 
       const blocks = await pgp_1.PgpMsg.fmtDecrypted(decrypted.content.text);
@@ -60694,7 +60689,7 @@ class Endpoints {
         length: b.content.length
       })); // first line is a blockMetas JSON. Data below represent one JSON-stringified block per line. This is so that it can be read as a stream
 
-      return responses_1.fmtRes({
+      return fmt_1.fmtRes({
         success: true,
         blockMetas
       }, blocks.map(b => JSON.stringify(b)).join('\n'));
@@ -60713,12 +60708,12 @@ class Endpoints {
 
       if (!decryptedMeta.success) {
         decryptedMeta.message = undefined;
-        return responses_1.fmtRes(decryptedMeta);
+        return fmt_1.fmtRes(decryptedMeta);
       }
 
       const decryptedData = decryptedMeta.content.uint8;
       decryptedMeta.content.uint8 = undefined;
-      return responses_1.fmtRes({
+      return fmt_1.fmtRes({
         success: true,
         name: decryptedMeta.content.filename || ''
       }, decryptedData);
@@ -60752,7 +60747,7 @@ Validate.encryptMsg = (v, data) => {
 };
 
 Validate.encryptFile = (v, data) => {
-  if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasProp(v, 'filename', 'string') && hasData(data)) {
+  if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasProp(v, 'name', 'string') && hasData(data)) {
     return v;
   }
 

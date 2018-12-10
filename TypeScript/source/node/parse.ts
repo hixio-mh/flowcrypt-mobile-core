@@ -3,7 +3,7 @@
 'use strict';
 
 import { IncomingMessage } from 'http';
-import { HttpClientErr } from './responses';
+import { HttpClientErr } from './fmt';
 
 export const parseReq = (r: IncomingMessage): Promise<{ endpoint: string, data?: string, request: {} }> => new Promise((resolve, reject) => {
   const contentType = r.headers['content-type'];

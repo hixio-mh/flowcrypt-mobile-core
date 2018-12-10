@@ -24,7 +24,7 @@ export class Validate {
   }
 
   public static encryptFile = (v: any, data: any): NodeRequest.encryptFile => {
-    if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasProp(v, 'filename', 'string') && hasData(data)) {
+    if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasProp(v, 'name', 'string') && hasData(data)) {
       return v as NodeRequest.encryptFile;
     }
     throw new Error('Wrong request structure for NodeRequest.encryptFile');

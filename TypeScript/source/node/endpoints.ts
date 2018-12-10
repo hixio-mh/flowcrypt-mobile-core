@@ -6,7 +6,7 @@
 
 import { PgpMsg } from '../core/pgp';
 import { Validate } from './validate';
-import { fmtRes } from './responses';
+import { fmtRes } from './fmt';
 
 export class Endpoints {
 

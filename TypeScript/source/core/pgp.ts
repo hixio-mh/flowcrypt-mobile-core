@@ -487,7 +487,6 @@ export class Pgp {
       }
     },
     cryptoMsgGetSortedKeys: async (kiWithPp: KeyInfosWithPassphrases, msg: OpenpgpMsgOrCleartext): Promise<SortedKeysForDecrypt> => {
-      console.log('kiWithPp', kiWithPp);
       const keys: SortedKeysForDecrypt = {
         verificationContacts: [],
         forVerification: [],
@@ -499,7 +498,6 @@ export class Pgp {
         prvForDecryptWithoutPassphrases: [],
       };
       const encryptedForKeyId = msg instanceof openpgp.message.Message ? (msg as OpenPGP.message.Message).getEncryptionKeyIds() : [];
-      console.log('encryptedForKeyId', encryptedForKeyId);
       keys.encryptedFor = encryptedForKeyId.map(id => Pgp.key.longid(id.bytes)).filter(Boolean) as string[];
       keys.signedBy = (msg.getSigningKeyIds ? msg.getSigningKeyIds() : []).filter(Boolean).map(id => Pgp.key.longid(id.bytes)).filter(Boolean) as string[];
       keys.prvMatching = kiWithPp.keys.filter(ki => Value.is(ki.longid).in(keys.encryptedFor));
@@ -508,9 +506,7 @@ export class Pgp {
       } else {
         keys.prvForDecrypt = kiWithPp.keys;
       }
-      console.log('keys', keys);
       for (const prvForDecrypt of keys.prvForDecrypt) {
-        console.log('prvForDecrypt', prvForDecrypt);
         const key = openpgp.key.readArmored(prvForDecrypt.private).keys[0];
         if (key.isDecrypted() || (kiWithPp.passphrases.length && await Pgp.key.decrypt(key, kiWithPp.passphrases) === true)) {
           prvForDecrypt.decrypted = key;
