@@ -1,5 +1,6 @@
 package com.yourorg.sample.node.results;
 
+import org.apache.commons.io.Charsets;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -13,7 +14,7 @@ import java.util.stream.Collectors;
 public class RawNodeResult {
   /**
    * Responses from Node.js come formatted as a JSON before the first \n mark, and optional binary data afterwards
-   * stripAndParseJsonResponseLineIfNotStrippedYet() will strip the first JSON line off the rest when accessing data (if not already stripped)
+   * stripAndParseJsonResponseLineIfNotStrippedYet() will strip the first JSON line off the rest when accessing data
    */
 
   private final int bufferSize = 1024; // buffer sizes: 1024*8 or 1024*16 or 1024*32
@@ -68,25 +69,27 @@ public class RawNodeResult {
     }
   }
 
-  protected String readOneLineFromInputStream() {
+  private String markAndInterpretUtfBytesFromInputStream(ByteArrayOutputStream bytes, InputStream inputStream) {
+    inputStream.mark(0); // do not re-read the same bytes next time
+    return new String(bytes.toByteArray(), Charsets.UTF_8);
+  }
+
+  protected String readOneUtfLineFromInputStream() {
     throwIfErrNotTested();
     if(inputStream == null) {
       return null;
     }
-    StringBuilder line = new StringBuilder();
+    // do not use StringBuilder, it cannot do utf one byte at a time
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     int c;
     try {
       while((c = inputStream.read()) != -1) {
         if (c == '\n') {
-          inputStream.mark(0); // do not re-read the same bytes next time
-          System.out.println("readOneLineFromInputStream:" + line.toString());
-          return line.toString();
+          return markAndInterpretUtfBytesFromInputStream(bytes, inputStream);
         }
-        line.append((char) c);
+        bytes.write((byte) c);
       }
-      inputStream.mark(0); // do not re-read the same bytes next time
-      System.out.println("readOneLineFromInputStream:" + line.toString());
-      return line.toString();
+      return markAndInterpretUtfBytesFromInputStream(bytes, inputStream);
     } catch (IOException e) {
       return null;
     }
@@ -97,7 +100,7 @@ public class RawNodeResult {
       return null;
     }
     try {
-      return new JSONObject(jsonResponseRaw);
+      return new JSONObject(line);
     } catch (JSONException e) {
       return null;
     }
@@ -107,7 +110,7 @@ public class RawNodeResult {
     throwIfErrNotTested();
     if(!jsonResponseLineAlreadyStripped) {
       jsonResponseLineAlreadyStripped = true;
-      jsonResponseRaw = readOneLineFromInputStream();
+      jsonResponseRaw = readOneUtfLineFromInputStream();
       jsonResponseParsed = parseJson(jsonResponseRaw);
     }
   }

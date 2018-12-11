@@ -27,13 +27,15 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
   final private String nodeSecretsCacheFilename = "flowcrypt-node-secrets-cache";
   final private static TestData testData = new TestData();
   final private String testMsg = "this is ~\na test for\n\ndecrypting\nunicode:\u03A3\nthat's all";
+  final private String testMsgHtml = "this is ~<br>a test for<br><br>decrypting<br>unicode:\u03A3<br>that&#39;s all";
+//  final private String testMsgShort = "abc\n\u03A3";
 
   private String newTitle = "Node";
   private String resultText;
@@ -158,15 +160,15 @@ public class MainActivity extends AppCompatActivity {
     return r.getEncryptedDataBytes();
   }
 
-  private void decryptFileAndRender(String actionName, byte[] data, PgpKeyInfo[] prvKeys) throws UnsupportedEncodingException {
-    DecryptFileResult r = Node.decryptFile(data, prvKeys, testData.passphrases(), null);
+  private void decryptFileAndRender(String actionName, byte[] encryptedData, PgpKeyInfo[] prvKeys, byte[] originalData) throws UnsupportedEncodingException {
+    DecryptFileResult r = Node.decryptFile(encryptedData, prvKeys, testData.passphrases(), null);
     if(r.getErr() != null) {
       addResultLine(actionName, r.ms, r.getErr(), false);
     } else if (r.getDecryptErr() != null) {
       addResultLine(actionName, r.ms, r.getDecryptErr().type + ":" + r.getDecryptErr().error, false);
     } else if(!"file.txt".equals(r.getName())) {
       addResultLine(actionName, r.ms, "wrong filename", false);
-    } else if(!testMsg.equals(new String(r.getDecryptedDataBytes(), StandardCharsets.UTF_8.name()))) {
+    } else if(!Arrays.equals(r.getDecryptedDataBytes(), originalData)) {
       addResultLine(actionName, r.ms, "decrypted file content mismatch", false);
     } else {
       addResultLine(actionName, r);
@@ -181,8 +183,8 @@ public class MainActivity extends AppCompatActivity {
       addResultLine(actionName, r.ms, r.getDecryptErr().type + ":" + r.getDecryptErr().error, false);
     } else if(r.getAllBlockMetas().length != 1) {
       addResultLine(actionName, r.ms, "wrong amount of block metas: " + r.getAllBlockMetas().length, false);
-//    } else if(r.getAllBlockMetas()[0].length != testMsg.getBytes().length) {
-//      addResultLine(actionName, r.ms, "wrong meta block length: " + r.getAllBlockMetas()[0].length + "(expected: " + testMsg.getBytes().length + ")", false); // todo - \n replaced with <br>
+    } else if(r.getAllBlockMetas()[0].length != testMsgHtml.length()) {
+      addResultLine(actionName, r.ms, "wrong meta block len " + r.getAllBlockMetas()[0].length + "!=" + testMsgHtml.length(), false);
     } else if(!r.getAllBlockMetas()[0].type.equals(MsgBlock.TYPE_HTML)) {
       addResultLine(actionName, r.ms, "wrong meta block type: " + r.getAllBlockMetas()[0].type, false);
     } else {
@@ -191,8 +193,8 @@ public class MainActivity extends AppCompatActivity {
         addResultLine(actionName, r.ms, "getNextBlock unexpectedly null", false);
       } else if(!block.getType().equals(MsgBlock.TYPE_HTML)) {
         addResultLine(actionName, r.ms, "wrong block type: " + r.getAllBlockMetas()[0].length, false);
-//      } else if(!block.getContent().equals(testMsg)) { // todo - \n replaced with <br>
-//        addResultLine(actionName, r.ms, "block content mismatch", false);
+      } else if(!block.getContent().equals(testMsgHtml)) {
+        addResultLine(actionName, r.ms, "block content mismatch", false);
       } else if (r.getNextBlock() != null) {
         addResultLine(actionName, r.ms, "unexpected second block", false);
       } else {
@@ -230,17 +232,19 @@ public class MainActivity extends AppCompatActivity {
       public void run() {
         try {
           hasTestFailure = false;
-          String encryptedMsg = encryptMsgAndRender("encrypt-msg", testMsg.getBytes());
+          byte[] testMsgBytes = testMsg.getBytes();
+          String encryptedMsg = encryptMsgAndRender("encrypt-msg", testMsgBytes);
           decryptMsgAndRender("decrypt-msg-ecc", encryptedMsg.getBytes(), testData.eccPrvKeyInfo());
           decryptMsgAndRender("decrypt-msg-rsa2048", encryptedMsg.getBytes(), testData.rsa2048PrvKeyInfo());
           decryptMsgAndRender("decrypt-msg-rsa4096", encryptedMsg.getBytes(), testData.rsa4096PrvKeyInfo());
-          byte[] encryptedFileBytes = encryptFileAndRender("encrypt-file", testMsg.getBytes());
-          decryptFileAndRender("decrypt-file-ecc", encryptedFileBytes, testData.eccPrvKeyInfo());
-          decryptFileAndRender("decrypt-file-rsa2048", encryptedFileBytes, testData.rsa2048PrvKeyInfo());
-          decryptFileAndRender("decrypt-file-rsa4096", encryptedFileBytes, testData.rsa4096PrvKeyInfo());
+          byte[] encryptedFileBytes = encryptFileAndRender("encrypt-file", testMsgBytes);
+          decryptFileAndRender("decrypt-file-ecc", encryptedFileBytes, testData.eccPrvKeyInfo(), testMsgBytes);
+          decryptFileAndRender("decrypt-file-rsa2048", encryptedFileBytes, testData.rsa2048PrvKeyInfo(), testMsgBytes);
+          decryptFileAndRender("decrypt-file-rsa4096", encryptedFileBytes, testData.rsa4096PrvKeyInfo(), testMsgBytes);
           for(int mb: new int[]{1, 3, 5}) {
-            byte[] bytes = encryptFileAndRender("encrypt-file-" + mb + "m" + "-rsa2048", testData.payload(mb));
-            decryptFileAndRender("decrypt-file-" + mb + "m" + "-rsa2048", bytes, testData.rsa2048PrvKeyInfo());
+            byte[] payload = testData.payload(mb);
+            byte[] bytes = encryptFileAndRender("encrypt-file-" + mb + "m" + "-rsa2048", payload);
+            decryptFileAndRender("decrypt-file-" + mb + "m" + "-rsa2048", bytes, testData.rsa2048PrvKeyInfo(), payload);
           }
           if(!hasTestFailure) {
             addResultLine("all-tests", System.currentTimeMillis() - startTime, "success", true);

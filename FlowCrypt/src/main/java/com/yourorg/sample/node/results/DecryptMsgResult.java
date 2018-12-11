@@ -34,11 +34,16 @@ public class DecryptMsgResult extends DecryptResult {
 
   public MsgBlock getNextBlock() {
     throwIfDecryptErrNotTested();
-    String rawBlockJson = readOneLineFromInputStream();
+    String rawBlockJson = readOneUtfLineFromInputStream();
     JSONObject jsonBlock = parseJson(rawBlockJson);
+    if(jsonBlock == null) {
+      closeInputStream();
+      return null;
+    }
     try {
       return new MsgBlock(jsonBlock.getString("type"), jsonBlock.getString("content"));
-    } catch (JSONException | NullPointerException e) {
+    } catch (JSONException e) {
+      e.printStackTrace();
       closeInputStream();
       return null;
     }
