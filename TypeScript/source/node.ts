@@ -10,23 +10,18 @@
 import * as https from 'https';
 import { IncomingMessage, ServerResponse } from 'http';
 import { parseReq } from './node/parse';
-import { fmtRes, fmtErr, indexHtml, HttpClientErr, HttpAuthErr } from './node/fmt';
-import { testEndpointHandler } from './node/tests';
+import { fmtErr, indexHtml, HttpClientErr, HttpAuthErr } from './node/fmt';
 import { Endpoints } from './node/endpoints';
 import { sendNativeMessageToJava } from './node/native';
+import { setGlobals } from './platform/util';
+
+setGlobals();
 
 declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, NODE_AUTH_HEADER: string, NODE_PORT: string;
-// , NODE_UNIX_SOCKET: string
-
-(global as any).atob = (b64str: string) => Buffer.from(b64str, 'base64').toString('binary');
-(global as any).btoa = (binary: string) => Buffer.from(binary, 'binary').toString('base64');
 
 const endpoints = new Endpoints();
 
 const delegateReqToEndpoint = async (endpointName: string, uncheckedReq: any, data: Buffer): Promise<Buffer> => {
-  if (endpointName.indexOf('test') === 0) {
-    return fmtRes(await testEndpointHandler(endpointName));
-  }
   const endpointHandler = endpoints[endpointName];
   if (endpointHandler) {
     return endpointHandler(uncheckedReq, data);

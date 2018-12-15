@@ -37,6 +37,9 @@ export class Endpoints {
     return fmtRes({}, Buffer.from(encryptedData));
   }
 
+  /**
+   * Todo - this will fail when it receives a Mime message, because emailjs mime libraries are not loaded, see platform/require.ts
+   */
   public decryptMsg = async (uncheckedReq: any, data: Buffer): Promise<Buffer> => {
     const { keys, passphrases, msgPwd } = Validate.decryptMsg(uncheckedReq, data);
     const decrypted = await PgpMsg.decrypt({ keys, passphrases }, data, msgPwd, false);

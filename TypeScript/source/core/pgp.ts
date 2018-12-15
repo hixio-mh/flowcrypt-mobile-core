@@ -8,10 +8,12 @@ import { ReplaceableMsgBlockType, MsgBlock, MsgBlockType, Mime } from './mime.js
 import { Catch } from '../platform/catch.js';
 import { AttMeta } from './att.js';
 import { mnemonic } from './mnemonic.js';
+import { requireOpenpgp } from '../platform/require.js';
+import { secureRandomBytes, base64encode } from '../platform/util.js';
 
-declare const openpgp: typeof OpenPGP;
+const openpgp = requireOpenpgp();
 
-if (typeof openpgp !== 'undefined') {
+if (typeof openpgp !== 'undefined') { // in certain environments, eg browser content scripts, openpgp may be undefined while loading
   openpgp.config.versionstring = `FlowCrypt ${Catch.version()} Gmail Encryption`;
   openpgp.config.commentstring = 'Seamlessly send and receive encrypted email';
   // openpgp.config.require_uid_self_cert = false;
@@ -109,68 +111,7 @@ export class Pgp {
   ];
 
   public static armor = {
-    strip: (pgpBlockText: string) => {
-      if (!pgpBlockText) {
-        return pgpBlockText;
-      }
-      const debug = false;
-      if (debug) {
-        console.info('pgp_block_1');
-        console.info(pgpBlockText);
-      }
-      const newlines = [/<div><br><\/div>/g, /<\/div><div>/g, /<[bB][rR]( [a-zA-Z]+="[^"]*")* ?\/? ?>/g, /<div ?\/?>/g];
-      const spaces = [/&nbsp;/g];
-      const removes = [/<wbr ?\/?>/g, /<\/?div>/g];
-      for (const newline of newlines) {
-        pgpBlockText = pgpBlockText.replace(newline, '\n');
-      }
-      if (debug) {
-        console.info('pgp_block_2');
-        console.info(pgpBlockText);
-      }
-      for (const remove of removes) {
-        pgpBlockText = pgpBlockText.replace(remove, '');
-      }
-      if (debug) {
-        console.info('pgp_block_3');
-        console.info(pgpBlockText);
-      }
-      for (const space of spaces) {
-        pgpBlockText = pgpBlockText.replace(space, ' ');
-      }
-      if (debug) {
-        console.info('pgp_block_4');
-        console.info(pgpBlockText);
-      }
-      pgpBlockText = pgpBlockText.replace(/\r\n/g, '\n');
-      if (debug) {
-        console.info('pgp_block_5');
-        console.info(pgpBlockText);
-      }
-      pgpBlockText = $('<div>' + pgpBlockText + '</div>').text();
-      if (debug) {
-        console.info('pgp_block_6');
-        console.info(pgpBlockText);
-      }
-      const doubleNl = pgpBlockText.match(/\n\n/g);
-      if (doubleNl && doubleNl.length > 2) { // a lot of newlines are doubled
-        pgpBlockText = pgpBlockText.replace(/\n\n/g, '\n');
-        if (debug) {
-          console.info('pgp_block_removed_doubles');
-        }
-      }
-      if (debug) {
-        console.info('pgp_block_7');
-        console.info(pgpBlockText);
-      }
-      pgpBlockText = pgpBlockText.replace(/^ +/gm, '');
-      if (debug) {
-        console.info('pgp_block_final');
-        console.info(pgpBlockText);
-      }
-      return pgpBlockText;
-    },
-    clip: (text: string) => {
+    clip: (text: string): string | undefined => {
       if (text && Value.is(Pgp.ARMOR_HEADER_DICT.null.begin).in(text) && Value.is(String(Pgp.ARMOR_HEADER_DICT.null.end)).in(text)) {
         const match = text.match(/(-----BEGIN PGP (MESSAGE|SIGNED MESSAGE|SIGNATURE|PUBLIC KEY BLOCK)-----[^]+-----END PGP (MESSAGE|SIGNATURE|PUBLIC KEY BLOCK)-----)/gm);
         return (match && match.length) ? match[0] : undefined;
@@ -397,9 +338,7 @@ export class Pgp {
       'setpassword', 'set password', 'set pass word', 'setpassphrase', 'set pass phrase', 'set passphrase'
     ],
     random: () => { // eg TDW6-DU5M-TANI-LJXY
-      const secureRandomArray = new Uint8Array(128);
-      window.crypto.getRandomValues(secureRandomArray);
-      return btoa(Str.fromUint8(secureRandomArray)).toUpperCase().replace(/[^A-Z0-9]|0|O|1/g, '').replace(/(.{4})/g, '$1-').substr(0, 19);
+      return base64encode(Str.fromUint8(secureRandomBytes(128))).toUpperCase().replace(/[^A-Z0-9]|0|O|1/g, '').replace(/(.{4})/g, '$1-').substr(0, 19);
     },
   };
 
@@ -711,7 +650,6 @@ export class PgpMsg {
       usedChallenge = true;
     }
     if (!pubkeys && !usedChallenge) {
-      alert('Internal error: don\'t know how to encryt message. Please refresh the page and try again, or contact me at human@flowcrypt.com if this happens repeatedly.');
       throw new Error('no-pubkeys-no-challenge');
     }
     if (signingPrv && typeof signingPrv.isPrivate !== 'undefined' && signingPrv.isPrivate()) {
@@ -747,10 +685,8 @@ export class PgpMsg {
   static fmtDecrypted = async (decryptedContent: string): Promise<MsgBlock[]> => {
     const blocks: MsgBlock[] = [];
     if (!Mime.resemblesMsg(decryptedContent)) {
-      if (typeof $ === 'function') { // skip on Node.js
-        decryptedContent = Str.extractFcAtts(decryptedContent, blocks);
-        decryptedContent = Str.stripFcTeplyToken(decryptedContent);
-      }
+      decryptedContent = Str.extractFcAtts(decryptedContent, blocks);
+      decryptedContent = Str.stripFcTeplyToken(decryptedContent);
       const armoredPubKeys: string[] = [];
       decryptedContent = Str.stripPublicKeys(decryptedContent, armoredPubKeys);
       blocks.push(Pgp.internal.msgBlockObj('html', Str.asEscapedHtml(decryptedContent)));

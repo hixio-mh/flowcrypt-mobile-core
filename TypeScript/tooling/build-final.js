@@ -17,20 +17,11 @@ const fixedImportsSrc = wipSrc
 
 const finalSrc = `
 try {
-
 /* final flowcrypt-android bundle starts here */
 ${fixedImportsSrc}
 /* final flowcrypt-android bundle ends here */
-
 } catch(e) {
-  var http = require('http');
-  var versions_server = http.createServer((request, response) => {
-    response.end(JSON.stringify({error: {
-      message: "startup error: " + String(e),
-      stack:  e && typeof e === 'object' ? e.stack || '' : ''
-    }}));
-  });
-  versions_server.listen(3000, 'localhost');
+  console.error(e);
 }
 `;
 

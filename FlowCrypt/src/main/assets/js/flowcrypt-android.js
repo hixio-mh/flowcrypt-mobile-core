@@ -1,6 +1,5 @@
 
 try {
-
 /* final flowcrypt-android bundle starts here */
 (function(){
 
@@ -88,12 +87,12 @@ const dereq_minimalistic_assert =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 37);
+/******/ 	return __webpack_require__(__webpack_require__.s = 39);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 37:
+/***/ 39:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -196,19 +195,19 @@ const dereq_bn =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 35);
+/******/ 	return __webpack_require__(__webpack_require__.s = 37);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 24:
+/***/ 26:
 /***/ (function(module, exports) {
 
 module.exports = require("buffer");
 
 /***/ }),
 
-/***/ 35:
+/***/ 37:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -266,7 +265,7 @@ module.exports = require("buffer");
   var Buffer;
 
   try {
-    Buffer = __webpack_require__(24).Buffer;
+    Buffer = __webpack_require__(26).Buffer;
   } catch (e) {}
 
   BN.isBN = function isBN(num) {
@@ -3662,11 +3661,11 @@ module.exports = require("buffer");
     return res._forceRed(this);
   };
 })( false || module, undefined);
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(36)(module)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(38)(module)))
 
 /***/ }),
 
-/***/ 36:
+/***/ 38:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3784,56 +3783,40 @@ const dereq_asn1 =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 16);
+/******/ 	return __webpack_require__(__webpack_require__.s = 18);
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */,
-/* 1 */,
-/* 2 */,
-/* 3 */,
-/* 4 */,
-/* 5 */,
-/* 6 */,
-/* 7 */,
-/* 8 */,
-/* 9 */,
-/* 10 */,
-/* 11 */,
-/* 12 */,
-/* 13 */,
-/* 14 */,
-/* 15 */,
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var asn1 = exports;
-asn1.bignum = __webpack_require__(17);
-asn1.define = __webpack_require__(18).define;
-asn1.base = __webpack_require__(21);
-asn1.constants = __webpack_require__(27);
-asn1.decoders = __webpack_require__(29);
-asn1.encoders = __webpack_require__(32);
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports) {
-
-module.exports = dereq_bn;
-
-/***/ }),
+/******/ (Array(18).concat([
 /* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var asn1 = __webpack_require__(16);
+var asn1 = exports;
+asn1.bignum = __webpack_require__(19);
+asn1.define = __webpack_require__(20).define;
+asn1.base = __webpack_require__(23);
+asn1.constants = __webpack_require__(29);
+asn1.decoders = __webpack_require__(31);
+asn1.encoders = __webpack_require__(34);
 
-var inherits = __webpack_require__(19);
+/***/ }),
+/* 19 */
+/***/ (function(module, exports) {
+
+module.exports = dereq_bn;
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var asn1 = __webpack_require__(18);
+
+var inherits = __webpack_require__(21);
 
 var api = exports;
 
@@ -3854,7 +3837,7 @@ Entity.prototype._createNamed = function createNamed(base) {
   var named;
 
   try {
-    named = __webpack_require__(20).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
+    named = __webpack_require__(22).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
   } catch (e) {
     named = function (entity) {
       this._initNamed(entity);
@@ -3895,38 +3878,38 @@ reporter) {
 };
 
 /***/ }),
-/* 19 */
+/* 21 */
 /***/ (function(module, exports) {
 
 module.exports = require("util").inherits;
 
 /***/ }),
-/* 20 */
+/* 22 */
 /***/ (function(module, exports) {
 
 module.exports = require("vm");
 
 /***/ }),
-/* 21 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var base = exports;
-base.Reporter = __webpack_require__(22).Reporter;
-base.DecoderBuffer = __webpack_require__(23).DecoderBuffer;
-base.EncoderBuffer = __webpack_require__(23).EncoderBuffer;
-base.Node = __webpack_require__(25);
+base.Reporter = __webpack_require__(24).Reporter;
+base.DecoderBuffer = __webpack_require__(25).DecoderBuffer;
+base.EncoderBuffer = __webpack_require__(25).EncoderBuffer;
+base.Node = __webpack_require__(27);
 
 /***/ }),
-/* 22 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(19);
+var inherits = __webpack_require__(21);
 
 function Reporter(options) {
   this._reporterState = {
@@ -4042,17 +4025,17 @@ ReporterError.prototype.rethrow = function rethrow(msg) {
 };
 
 /***/ }),
-/* 23 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(19);
+var inherits = __webpack_require__(21);
 
-var Reporter = __webpack_require__(21).Reporter;
+var Reporter = __webpack_require__(23).Reporter;
 
-var Buffer = __webpack_require__(24).Buffer;
+var Buffer = __webpack_require__(26).Buffer;
 
 function DecoderBuffer(base, options) {
   Reporter.call(this, options);
@@ -4154,25 +4137,25 @@ EncoderBuffer.prototype.join = function join(out, offset) {
 };
 
 /***/ }),
-/* 24 */
+/* 26 */
 /***/ (function(module, exports) {
 
 module.exports = require("buffer");
 
 /***/ }),
-/* 25 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Reporter = __webpack_require__(21).Reporter;
+var Reporter = __webpack_require__(23).Reporter;
 
-var EncoderBuffer = __webpack_require__(21).EncoderBuffer;
+var EncoderBuffer = __webpack_require__(23).EncoderBuffer;
 
-var DecoderBuffer = __webpack_require__(21).DecoderBuffer;
+var DecoderBuffer = __webpack_require__(23).DecoderBuffer;
 
-var assert = __webpack_require__(26); // Supported tags
+var assert = __webpack_require__(28); // Supported tags
 
 
 var tags = ['seq', 'seqof', 'set', 'setof', 'objid', 'bool', 'gentime', 'utctime', 'null_', 'enum', 'int', 'objDesc', 'bitstr', 'bmpstr', 'charstr', 'genstr', 'graphstr', 'ia5str', 'iso646str', 'numstr', 'octstr', 'printstr', 't61str', 'unistr', 'utf8str', 'videostr']; // Public methods list
@@ -4643,13 +4626,13 @@ Node.prototype._isPrintstr = function isPrintstr(str) {
 };
 
 /***/ }),
-/* 26 */
+/* 28 */
 /***/ (function(module, exports) {
 
 module.exports = dereq_minimalistic_assert;
 
 /***/ }),
-/* 27 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4668,16 +4651,16 @@ constants._reverse = function reverse(map) {
   return res;
 };
 
-constants.der = __webpack_require__(28);
+constants.der = __webpack_require__(30);
 
 /***/ }),
-/* 28 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var constants = __webpack_require__(27);
+var constants = __webpack_require__(29);
 
 exports.tagClass = {
   0: 'universal',
@@ -4720,26 +4703,26 @@ exports.tag = {
 exports.tagByName = constants._reverse(exports.tag);
 
 /***/ }),
-/* 29 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var decoders = exports;
-decoders.der = __webpack_require__(30);
-decoders.pem = __webpack_require__(31);
+decoders.der = __webpack_require__(32);
+decoders.pem = __webpack_require__(33);
 
 /***/ }),
-/* 30 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(19);
+var inherits = __webpack_require__(21);
 
-var asn1 = __webpack_require__(16);
+var asn1 = __webpack_require__(18);
 
 var base = asn1.base;
 var bignum = asn1.bignum; // Import DER constants
@@ -5011,17 +4994,17 @@ function derDecodeLen(buf, primitive, fail) {
 }
 
 /***/ }),
-/* 31 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(19);
+var inherits = __webpack_require__(21);
 
-var Buffer = __webpack_require__(24).Buffer;
+var Buffer = __webpack_require__(26).Buffer;
 
-var DERDecoder = __webpack_require__(30);
+var DERDecoder = __webpack_require__(32);
 
 function PEMDecoder(entity) {
   DERDecoder.call(this, entity);
@@ -5063,28 +5046,28 @@ PEMDecoder.prototype.decode = function decode(data, options) {
 };
 
 /***/ }),
-/* 32 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var encoders = exports;
-encoders.der = __webpack_require__(33);
-encoders.pem = __webpack_require__(34);
+encoders.der = __webpack_require__(35);
+encoders.pem = __webpack_require__(36);
 
 /***/ }),
-/* 33 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(19);
+var inherits = __webpack_require__(21);
 
-var Buffer = __webpack_require__(24).Buffer;
+var Buffer = __webpack_require__(26).Buffer;
 
-var asn1 = __webpack_require__(16);
+var asn1 = __webpack_require__(18);
 
 var base = asn1.base; // Import DER constants
 
@@ -5323,15 +5306,15 @@ function encodeTag(tag, primitive, cls, reporter) {
 }
 
 /***/ }),
-/* 34 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(19);
+var inherits = __webpack_require__(21);
 
-var DEREncoder = __webpack_require__(33);
+var DEREncoder = __webpack_require__(35);
 
 function PEMEncoder(entity) {
   DEREncoder.call(this, entity);
@@ -5354,7 +5337,7 @@ PEMEncoder.prototype.encode = function encode(data, options) {
 };
 
 /***/ })
-/******/ ]);
+/******/ ]));
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.openpgp = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(_dereq_,module,exports){
 'use strict';
 
@@ -57815,31 +57798,37 @@ module.exports =
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+console.log(1);
 
 const https = __webpack_require__(1);
 
+console.log(11);
+console.log(12);
+
 const parse_1 = __webpack_require__(2);
+
+console.log(13);
 
 const fmt_1 = __webpack_require__(3);
 
-const tests_1 = __webpack_require__(4);
+console.log(14);
 
-const endpoints_1 = __webpack_require__(5);
+const endpoints_1 = __webpack_require__(4);
 
-const native_1 = __webpack_require__(14); // , NODE_UNIX_SOCKET: string
+console.log(15);
 
+const native_1 = __webpack_require__(16);
 
-global.atob = b64str => Buffer.from(b64str, 'base64').toString('binary');
+console.log(16);
 
-global.btoa = binary => Buffer.from(binary, 'binary').toString('base64');
+const util_1 = __webpack_require__(8);
 
+console.log(2);
+util_1.setGlobals();
+console.log(3);
 const endpoints = new endpoints_1.Endpoints();
 
 const delegateReqToEndpoint = async (endpointName, uncheckedReq, data) => {
-  if (endpointName.indexOf('test') === 0) {
-    return fmt_1.fmtRes((await tests_1.testEndpointHandler(endpointName)));
-  }
-
   const endpointHandler = endpoints[endpointName];
 
   if (endpointHandler) {
@@ -57888,6 +57877,7 @@ if (isNaN(LISTEN_PORT) || LISTEN_PORT < 1024) {
   throw new Error('Wrong or no NODE_PORT supplied');
 }
 
+console.log(5);
 const server = https.createServer(serverOptins, (request, response) => {
   handleReq(request, response).then(r => {
     // console.log(`----------------- BEGIN NODE RESPONSE --------------------`);
@@ -57908,13 +57898,16 @@ const server = https.createServer(serverOptins, (request, response) => {
     response.end(fmt_1.fmtErr(e));
   });
 });
+console.log(6);
 server.listen(LISTEN_PORT, 'localhost');
 server.on('listening', () => {
+  console.log(9);
   const address = server.address();
   const msg = `listening on ${typeof address === 'object' ? address.port : address}`;
   console.info(msg);
   native_1.sendNativeMessageToJava(msg);
 });
+console.log(7);
 
 /***/ }),
 /* 1 */
@@ -58146,272 +58139,23 @@ exports.indexHtml = Buffer.from(`
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+console.log(21);
+
+const pgp_1 = __webpack_require__(5);
+
+console.log(22);
+
+const validate_1 = __webpack_require__(15);
+
+console.log(23);
 
 const fmt_1 = __webpack_require__(3);
 
-const KEY_2048 = `-----BEGIN PGP PRIVATE KEY BLOCK-----
-Version: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption
-Comment: Seamlessly send and receive encrypted email
-
-xcMGBFwBWOEBB/9uIqBYIPDQbBqHMvGXhgnm+b2i5rNLXrrGoalrp7wYQ654
-Zln/+ffxzttRLRiwRQAOG0z78aMDXAHRfI9d3GaRKTkhTqVY+C02E8NxgB3+
-mbSsF0Ui+oh1//LT1ic6ZnISCA7Q2h2U/DSAPNxDZUMu9kjh9TjkKlR81fiA
-lxuD05ivRxCnmZnzqZtHoUvvCqsENgRjO9a5oWpMwtdItjdRFF7UFKYpfeA+
-ct0uUNMRVdPK7MXBEr2FdWiKN1K21dQ1pWiAwj/5cTA8hu5Jue2RcF8FcPfs
-niRihQkNqtLDsfY5no1B3xeSnyO2SES1bAHw8ObXZn/C/6jxFztkn4NbABEB
-AAH+CQMIOXj58ei52QtgxArMeSOTfW3TXaT8V9bVH6G0wK1mVtHIZl5OXVkd
-DWiOdwHiCPmphMkIeWurg5j8aL0vPTJx2pGFrfr/+Nj4LKfL3LC3UrEsYVQg
-FyT5pSFYCONnMb3+uBg6mdBaCG9U7WyzSvAMH0bWhX4X1rEdReJO5CVwl84A
-UN00olSMKW2KZ7BtwADm0qf/vfmfMH6BYrdZVhK1KXsXWLvvVhu7Y60a/V3c
-U7okca2Fe8OzJpk3yJDkiT7IhDqePE5UCRBV6CYFAJeAbA/R38mysVGFGM9J
-CRHmhiqsRt/USkQ2Il+Cc4BpiS7wMv8uhIWACg66jN7EsqmHXcdKkq3N6DgB
-ABQzxfEXdUaqJbNEbkJamhgSWfwmL3Va59vADp4BgaogMCaPT0p4GS7vwtt3
-vIOUB0CKgPTofyh1G5pW6DGLX5UthxLs6+Nt4woaD90zTYwld1cG6HjmYBmy
-wVEpxkFSnYtHimEP+nq1pll/3I2wKwVbZFELXaRNTWiYVkjhLR9Vbx1E7Mkg
-gjc72zxAxYso7oCtAODhjy5WA0vKV830500cHUaiDtHmCSOqnJHJ5kcIWtC2
-y1qt25jv8wOHCpLT77z1OkIS/keabRwvaivWH7TXp3qKvyCYyhO4EpoJk29n
-LACVZBVZFmLy6/oyVWrRXXFWeURtb/dUZG1k9AZlecMrTIaEAJKqDBshjat/
-eF0KhJ+C2AdIe2PCnX4LWS4Y6shM4VZoRcSBzpx8QbhOUUzAM5WYm9JH7kTE
-F9p0qqKVHbXHFup7p2ptjwyL3Axu3Oi8/8pqRe2Kl+YVfR0JWT7/UZTDQomq
-s72AFZddJy6RbgfeJxX376UhUqDVgZN07Ih2PcCcex8Bf10IccMNC74dxmAy
-Ytf6LQP7Uws0pyqiusBZJoNsdgsJ9MbTzRBUZXN0IDx0QGVzdC5jb20+wsB1
-BBABCAApBQJcAVjhBgsJBwgDAgkQOjD0zAqajxAEFQgKAgMWAgECGQECGwMC
-HgEAANaTB/0faBFR2k3RM7P427HyZOsZtqEPxuynsLUqmsAAup6LtPhir4CA
-sb5DSvgYrzC8pbrfjCaodoB7hMXc8RxTbSh+vQc5Su4QwY8sqy7hyMXOGGWs
-RxnuZ8t8BeEJBIHyPguXIR+wYvo1eveC+NMxHhTtjoSIn/E4vW0W9j5OlFeT
-K7HTNCuidIE0Hk2kXnEEoNO7ztxPPxsHz9g56uMhyAhf3mqKfvUFo/FLLRBO
-pxLO0kk64yAMcAHmc6ZI5Fz10y48+hHEv/RFOwfub9asF5NWHltanqyiZ+kH
-eoaieYJFc6t7Mt3jg8qxMKTUKAEeCfHt1UJCjp/aIgJRU4JRXgYXx8MGBFwB
-WOEBB/9nclmx98vfoSpPUccBczvuZxmqk+jY6Id+vBhBFoEhtdTSpaw/JNst
-f0dTXN8RCFjB0lHta51llTjSobqcFwAU54/HKDOW3qMVbvadaGILpuCMCxdM
-gLWlpZdYY7BApv1N9zpN+iQ2tIrvnUQ312xKOXF/W83NUJ1nTObQYNpsUZLL
-G2N3kz11HuBS3E9FgEOYYy1tLT53hs5btqvQ5Jp4Iw5cBoBoTAmv+dPMDKYB
-roBPwuFeNRIokwLTrVcxrXajxlXaGXmmGS3PZ00HXq2g7vKIqWliMLLIWFl+
-LlVb6O8bMeXOT1l0XSO9GlLOSMDEc7pY26vkmAjbWv7iUWHNABEBAAH+CQMI
-PqtEWmogeSBgMbGVnYVID1zzpRIum4ifUnA7HOgJ/AbrWrD6OvUjQsHsQtSo
-jANPVtL85PICEKGDLm/wFKzENgB1ZsFvSi6IwdOIdq4rckCgJRw+R0xNxtiX
-FoqoFM5MkwQRfrXJgWO0YjdG2AGMsPufWRV9N2aFBoiWQqbxvkmOdO4/qAdS
-FOGr1+eu3P693yuuZlD9cdO44Md28PtldoXenNhLuEqxhw8/Yb1/U8u66WAl
-z9JUYLwI4U/juhqekU+zNWs9H0Bh1yd4dcN9NT0nyc1GrdCKypcWth2DVMmP
-zFluwz4NnIW2VokE5rKofKUXbEYstua0ZY5Vz9mdNEmX9LZmBwCLwwC0j71d
-KYiJWVgxL28jCrF85eBqnmXEIkoE6hGeptaBZ8nTkSMpEdZZCif6+Vxn9JAd
-G9KYV/EeP2Hf07aYI6YRMmgNSHIso5m5rrfX9E8P2mhmqAhiV6xBPDJM4SdQ
-1y93zUm/rpWflBw3PkC6CHtZ2pem9aLdigBcIgGYtmbblY234vT/EdlA8OPy
-qUXZ8HPIby911qzDmWEXdhuG8OdIhvp4GVgyJ6sUvgzrcDM4Uond7jG8m5O3
-lQmbYBx3L4ZLYoUW5pIjxXVWSPrbBhjnShwwNukhj2GfXOS8+gZS0Mrw/EVT
-BUIe4sgiv0M7XaVXX+CYMJ+1dsWzgPwMqN3MrxCgf2D7ujsfSTHunE5sCei1
-O0H2SAL3Lr2V2b2PnfRy/UMPaFdAfxXGJKrOdpuM27LZvAa+QeLKA0emlZuT
-4nKsl1QGzTV/3EI2gdCYLyjwOq05qdCy0B/0tfJ2tXS1AOPPaKcDyCkrenzA
-w6rZipO7t7oQYsDXOzZEE1Y370M8DFBTcVbC5OjRy1M/REXD5QIP9Fl4DYUW
-gk8zqqjQfuyQkd0r3kS0NHL1wsBfBBgBCAATBQJcAVjhCRA6MPTMCpqPEAIb
-DAAAjTcH/1pYXyXW/rpBrDg7w/dXJCfT8+RVYlhW3kqMxbid7EB8zgGVTDr3
-us/ki99hc2HjsKbxUqrGBxeh3Mmui7ODCI8XFeYl7lSDbgU6mZ5J4iXzdR8L
-NqIib4Horlx/Y24dOuvikSUNpDtFAYfabZwxyKa/ihZT1rS1GO3V7tdAB9BJ
-agJqVRssF5g5GBUAX3sxQ2p62HoUxPlJOOr4AaCc1na92xScBJL8dtBBRQ5p
-UZWOjb2UHp9L5QdPaBX8T9ZAieOiTlStQxoUfCk7RU0/TnsM3KqFnDFoCzkG
-xKAmU4LmGtP48qV+v2Jzvl+qcmqYuKtwH6FWd+EZH07MfdEIiTI=
-=15Xc
------END PGP PRIVATE KEY BLOCK-----`;
-const KEY_4096 = `-----BEGIN PGP PRIVATE KEY BLOCK-----
-Version: FlowCrypt  Email Encryption - flowcrypt.com
-Comment: Seamlessly send, receive and search encrypted email
-
-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
-Dn6h
-=5aR+
------END PGP PRIVATE KEY BLOCK-----`;
-const KEY_25519 = `-----BEGIN PGP PRIVATE KEY BLOCK-----\r\nVersion: FlowCrypt 6.3.5 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\n\r\nxYYEXAZt6RYJKwYBBAHaRw8BAQdAHk2PLEMfkVLjxI6Vdg+dnJ5ElKcAX78x\nP+GVCYDZyfL+CQMI1riV1EDicFNg4/f/0U/ZJZ9udC0F7GvtFKagL3EIqz6f\nm+bm2E5qdDdyM2Z/7U2YOOVPc/HBxTg9SHrCTAYmfLtXEwU21uRzKIW9Y6N0\nLs0RdXNyIDx1c3JAdXNyLmNvbT7CdwQQFgoAKQUCXAZt6QYLCQcIAwIJEAY2\nNbPjPrFMBBUICgIDFgIBAhkBAhsDAh4BAADkfQD/cn4xmKOznw6jXw7m9jfe\nzABESbvxpAsBSL0lYyTF1g4BAPYKXnzBAMOjLHZ+CZL01A5I435MJoZ8ho+V\n233bcqoPx4sEXAZt6RIKKwYBBAGXVQEFAQEHQGqQsqsYFqSb8xU2Jy+m0ofh\nztR2KR1ukc+V+Daytv91AwEIB/4JAwhPqxwBR+9JFWD07K5gQ/ahdz6fd7jf\npiGAGZfJc3qN/W9MTqZcsl0qIiM4IaMeAuqlqm5xVHSHA3r7SnyfGtzDURM+\nc9pzQRYLwp33TgHXwmEEGBYIABMFAlwGbekJEAY2NbPjPrFMAhsMAACUKwD+\nMQFdjWEZwfAnJZQWLx3jpFxNyuKjUER5hRfphIXGeqUA/0wqTCpbBWQlcwml\n8jqIREq1Q/lDO3/9QPULKioe2ZoM\r\n=8qZ6\r\n-----END PGP PRIVATE KEY BLOCK-----\r\n", publicKeyArmored: "-----BEGIN PGP PUBLIC KEY BLOCK-----\r\nVersion: FlowCrypt 6.3.5 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\n\r\nxjMEXAZt6RYJKwYBBAHaRw8BAQdAHk2PLEMfkVLjxI6Vdg+dnJ5ElKcAX78x\nP+GVCYDZyfLNEXVzciA8dXNyQHVzci5jb20+wncEEBYKACkFAlwGbekGCwkH\nCAMCCRAGNjWz4z6xTAQVCAoCAxYCAQIZAQIbAwIeAQAA5H0A/3J+MZijs58O\no18O5vY33swAREm78aQLAUi9JWMkxdYOAQD2Cl58wQDDoyx2fgmS9NQOSON+\nTCaGfIaPldt923KqD844BFwGbekSCisGAQQBl1UBBQEBB0BqkLKrGBakm/MV\nNicvptKH4c7UdikdbpHPlfg2srb/dQMBCAfCYQQYFggAEwUCXAZt6QkQBjY1\ns+M+sUwCGwwAAJQrAP4xAV2NYRnB8CcllBYvHeOkXE3K4qNQRHmFF+mEhcZ6\npQD/TCpMKlsFZCVzCaXyOohESrVD+UM7f/1A9QsqKh7Zmgw=\r\n=WZgv\r\n-----END PGP PUBLIC KEY BLOCK-----\r\n\r\n", revocationCertificate: "-----BEGIN PGP PUBLIC KEY BLOCK-----\r\nVersion: FlowCrypt 6.3.5 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\nComment: This is a revocation certificate\r\n\r\nwmEEIBYKABMFAlwGbekJEAY2NbPjPrFMAh0AAACUaQD/c9eod5CrHQ0b79gF\nTVLvdGmInmhFoDOMsO69uHpAyToBAPEEApEycDN9rktUU1k/qSjV1zkWAjQ2\ndfQw8KTe8zYE\r\n=Ogjo\r\n-----END PGP PUBLIC KEY BLOCK-----\r\n\r\n`;
-
-const newBigString = mb => {
-  return new Array(mb * 1024 * 1024 / 2).join('x'); // in js, each character is a 16-bit value
-};
-
-const testEncryptDecrypt = async (privateKeyArmored, data) => {
-  let msg = '';
-  let checkpoint = Date.now();
-
-  const measure = name => {
-    const now = Date.now();
-    msg += `${name}: ${now - checkpoint}ms, \n`;
-    checkpoint = now;
-  };
-
-  const passphrase = 'some long pp';
-  const prv = openpgp.key.readArmored(privateKeyArmored).keys[0];
-  const pub = prv.toPublic();
-  measure('key parsed');
-  const encrypted = await openpgp.encrypt({
-    data,
-    publicKeys: [pub]
-  });
-  measure('message encrypted');
-  prv.decrypt(passphrase);
-  measure('prv decrypted');
-  await openpgp.decrypt({
-    message: openpgp.message.readArmored(encrypted.data),
-    privateKeys: [prv]
-  });
-  measure('message decrypted');
-  msg += `${JSON.stringify(pub.primaryKey.getAlgorithmInfo())} (data:${Math.round(data.length / 512)}K),\n`;
-  return {
-    msg
-  };
-};
-
-exports.testEndpointHandler = async endpoint => {
-  if (endpoint === 'test25519') {
-    return await testEncryptDecrypt(KEY_25519, 'encrypt this string');
-  } else if (endpoint === 'test2048') {
-    return await testEncryptDecrypt(KEY_2048, 'encrypt this string');
-  } else if (endpoint === 'test4096') {
-    return await testEncryptDecrypt(KEY_4096, 'encrypt this string');
-  } else if (endpoint === 'test2048-1M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(1));
-  } else if (endpoint === 'test2048-3M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(3));
-  } else if (endpoint === 'test2048-5M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(5));
-  } else if (endpoint === 'test2048-10M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(10));
-  } else if (endpoint === 'test2048-25M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(25));
-  } else if (endpoint === 'test2048-50M') {
-    return await testEncryptDecrypt(KEY_2048, newBigString(50));
-  }
-
-  throw new fmt_1.HttpClientErr(`unknown test endpoint: ${endpoint}`);
-};
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
-/// <reference path="../types/openpgp.d.ts" />
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-const pgp_1 = __webpack_require__(6);
-
-const validate_1 = __webpack_require__(13);
-
-const fmt_1 = __webpack_require__(3); // class Debug {
+console.log(24); // class Debug {
 //   public static printChunk = (name: string, data: Buffer | Uint8Array) => {
 //     console.log(`Debug.printChunk[${name}]: js[${Uint8Array.from(data).subarray(0, 20).join(', ')}]`);
 //   }
 // }
-
 
 class Endpoints {
   constructor() {
@@ -58433,6 +58177,10 @@ class Endpoints {
 
       return fmt_1.fmtRes({}, Buffer.from(encryptedData));
     };
+    /**
+     * Todo - this will fail when it receives a Mime message, because emailjs mime libraries are not loaded, see platform/require.ts
+     */
+
 
     this.decryptMsg = async (uncheckedReq, data) => {
       const {
@@ -58494,7 +58242,7 @@ class Endpoints {
 exports.Endpoints = Endpoints;
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -58505,17 +58253,24 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const store_js_1 = __webpack_require__(7);
+const store_js_1 = __webpack_require__(6);
 
-const common_js_1 = __webpack_require__(8);
+const common_js_1 = __webpack_require__(7);
 
-const mime_js_1 = __webpack_require__(10);
+const mime_js_1 = __webpack_require__(11);
 
-const catch_js_1 = __webpack_require__(12);
+const catch_js_1 = __webpack_require__(13);
 
-const mnemonic_js_1 = __webpack_require__(9);
+const mnemonic_js_1 = __webpack_require__(10);
+
+const require_js_1 = __webpack_require__(14);
+
+const util_js_1 = __webpack_require__(8);
+
+const openpgp = require_js_1.requireOpenpgp();
 
 if (typeof openpgp !== 'undefined') {
+  // in certain environments, eg browser content scripts, openpgp may be undefined while loading
   openpgp.config.versionstring = `FlowCrypt ${catch_js_1.Catch.version()} Gmail Encryption`;
   openpgp.config.commentstring = 'Seamlessly send and receive encrypted email'; // openpgp.config.require_uid_self_cert = false;
 }
@@ -58633,88 +58388,6 @@ Pgp.PASSWORD_CRACK_TIME_WORDS = [{
   pass: false
 }];
 Pgp.armor = {
-  strip: pgpBlockText => {
-    if (!pgpBlockText) {
-      return pgpBlockText;
-    }
-
-    const debug = false;
-
-    if (debug) {
-      console.info('pgp_block_1');
-      console.info(pgpBlockText);
-    }
-
-    const newlines = [/<div><br><\/div>/g, /<\/div><div>/g, /<[bB][rR]( [a-zA-Z]+="[^"]*")* ?\/? ?>/g, /<div ?\/?>/g];
-    const spaces = [/&nbsp;/g];
-    const removes = [/<wbr ?\/?>/g, /<\/?div>/g];
-
-    for (const newline of newlines) {
-      pgpBlockText = pgpBlockText.replace(newline, '\n');
-    }
-
-    if (debug) {
-      console.info('pgp_block_2');
-      console.info(pgpBlockText);
-    }
-
-    for (const remove of removes) {
-      pgpBlockText = pgpBlockText.replace(remove, '');
-    }
-
-    if (debug) {
-      console.info('pgp_block_3');
-      console.info(pgpBlockText);
-    }
-
-    for (const space of spaces) {
-      pgpBlockText = pgpBlockText.replace(space, ' ');
-    }
-
-    if (debug) {
-      console.info('pgp_block_4');
-      console.info(pgpBlockText);
-    }
-
-    pgpBlockText = pgpBlockText.replace(/\r\n/g, '\n');
-
-    if (debug) {
-      console.info('pgp_block_5');
-      console.info(pgpBlockText);
-    }
-
-    pgpBlockText = $('<div>' + pgpBlockText + '</div>').text();
-
-    if (debug) {
-      console.info('pgp_block_6');
-      console.info(pgpBlockText);
-    }
-
-    const doubleNl = pgpBlockText.match(/\n\n/g);
-
-    if (doubleNl && doubleNl.length > 2) {
-      // a lot of newlines are doubled
-      pgpBlockText = pgpBlockText.replace(/\n\n/g, '\n');
-
-      if (debug) {
-        console.info('pgp_block_removed_doubles');
-      }
-    }
-
-    if (debug) {
-      console.info('pgp_block_7');
-      console.info(pgpBlockText);
-    }
-
-    pgpBlockText = pgpBlockText.replace(/^ +/gm, '');
-
-    if (debug) {
-      console.info('pgp_block_final');
-      console.info(pgpBlockText);
-    }
-
-    return pgpBlockText;
-  },
   clip: text => {
     if (text && common_js_1.Value.is(Pgp.ARMOR_HEADER_DICT.null.begin).in(text) && common_js_1.Value.is(String(Pgp.ARMOR_HEADER_DICT.null.end)).in(text)) {
       const match = text.match(/(-----BEGIN PGP (MESSAGE|SIGNED MESSAGE|SIGNATURE|PUBLIC KEY BLOCK)-----[^]+-----END PGP (MESSAGE|SIGNATURE|PUBLIC KEY BLOCK)-----)/gm);
@@ -59004,9 +58677,7 @@ Pgp.password = {
   },
   weakWords: () => ['crypt', 'up', 'cryptup', 'flow', 'flowcrypt', 'encryption', 'pgp', 'email', 'set', 'backup', 'passphrase', 'best', 'pass', 'phrases', 'are', 'long', 'and', 'have', 'several', 'words', 'in', 'them', 'Best pass phrases are long', 'have several words', 'in them', 'bestpassphrasesarelong', 'haveseveralwords', 'inthem', 'Loss of this pass phrase', 'cannot be recovered', 'Note it down', 'on a paper', 'lossofthispassphrase', 'cannotberecovered', 'noteitdown', 'onapaper', 'setpassword', 'set password', 'set pass word', 'setpassphrase', 'set pass phrase', 'set passphrase'],
   random: () => {
-    const secureRandomArray = new Uint8Array(128);
-    window.crypto.getRandomValues(secureRandomArray);
-    return btoa(common_js_1.Str.fromUint8(secureRandomArray)).toUpperCase().replace(/[^A-Z0-9]|0|O|1/g, '').replace(/(.{4})/g, '$1-').substr(0, 19);
+    return util_js_1.base64encode(common_js_1.Str.fromUint8(util_js_1.secureRandomBytes(128))).toUpperCase().replace(/[^A-Z0-9]|0|O|1/g, '').replace(/(.{4})/g, '$1-').substr(0, 19);
   }
 };
 Pgp.internal = {
@@ -59509,7 +59180,6 @@ PgpMsg.encrypt = async (pubkeys, signingPrv, pwd, data, filename, armor, date) =
   }
 
   if (!pubkeys && !usedChallenge) {
-    alert('Internal error: don\'t know how to encryt message. Please refresh the page and try again, or contact me at human@flowcrypt.com if this happens repeatedly.');
     throw new Error('no-pubkeys-no-challenge');
   }
 
@@ -59556,12 +59226,8 @@ PgpMsg.fmtDecrypted = async decryptedContent => {
   const blocks = [];
 
   if (!mime_js_1.Mime.resemblesMsg(decryptedContent)) {
-    if (typeof $ === 'function') {
-      // skip on Node.js
-      decryptedContent = common_js_1.Str.extractFcAtts(decryptedContent, blocks);
-      decryptedContent = common_js_1.Str.stripFcTeplyToken(decryptedContent);
-    }
-
+    decryptedContent = common_js_1.Str.extractFcAtts(decryptedContent, blocks);
+    decryptedContent = common_js_1.Str.stripFcTeplyToken(decryptedContent);
     const armoredPubKeys = [];
     decryptedContent = common_js_1.Str.stripPublicKeys(decryptedContent, armoredPubKeys);
     blocks.push(Pgp.internal.msgBlockObj('html', common_js_1.Str.asEscapedHtml(decryptedContent)));
@@ -59602,7 +59268,7 @@ PgpMsg.pushArmoredPubkeysToBlocks = (armoredPubkeys, blocks) => {
 exports.PgpMsg = PgpMsg;
 
 /***/ }),
-/* 7 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -59613,11 +59279,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const common_js_1 = __webpack_require__(8);
+const common_js_1 = __webpack_require__(7);
 
-const mnemonic_js_1 = __webpack_require__(9);
+const mnemonic_js_1 = __webpack_require__(10);
 
-const pgp_js_1 = __webpack_require__(6);
+const pgp_js_1 = __webpack_require__(5);
 
 class Store {
   static async passphraseGet(acctEmail, longid, ignoreSession = false) {
@@ -59676,7 +59342,7 @@ Store.dbContactSearch = async (db, query) => {
 exports.Store = Store;
 
 /***/ }),
-/* 8 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -59687,7 +59353,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const pgp_js_1 = __webpack_require__(6);
+const pgp_js_1 = __webpack_require__(5);
+
+const util_js_1 = __webpack_require__(8);
 
 class Str {}
 
@@ -59753,20 +59421,25 @@ Str.asEscapedHtml = text => {
 
 Str.htmlAttrEncode = values => Str.base64urlUtfEncode(JSON.stringify(values));
 
-Str.htmlAttrDecode = encoded => JSON.parse(Str.base64urlUtfDecode(encoded)); // tslint:disable-line:no-unsafe-any
-
+Str.htmlAttrDecode = encoded => {
+  try {
+    return JSON.parse(Str.base64urlUtfDecode(encoded)); // tslint:disable-line:no-unsafe-any
+  } catch (e) {
+    return undefined;
+  }
+};
 /**
  * used for 3rd party API calls - do not change w/o testing Gmail api attachments
  */
 
 
-Str.base64urlEncode = str => typeof str === 'undefined' ? str : btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+Str.base64urlEncode = str => typeof str === 'undefined' ? str : util_js_1.base64encode(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 /**
  * // used for 3rd party API calls - do not change w/o testing Gmail api attachments
  */
 
 
-Str.base64urlDecode = str => typeof str === 'undefined' ? str : atob(str.replace(/-/g, '+').replace(/_/g, '/'));
+Str.base64urlDecode = str => typeof str === 'undefined' ? str : util_js_1.base64decode(str.replace(/-/g, '+').replace(/_/g, '/'));
 
 Str.fromUint8 = u8a => {
   if (typeof u8a === 'string') {
@@ -59899,22 +59572,20 @@ Str.isFcAttLinkData = o => {
 };
 
 Str.extractFcAtts = (decryptedContent, blocks) => {
-  if (Value.is('cryptup_file').in(decryptedContent)) {
-    decryptedContent = decryptedContent.replace(/<a[^>]+class="cryptup_file"[^>]+>[^<]+<\/a>\n?/gm, foundLink => {
-      const el = $(foundLink);
-      const fcData = el.attr('cryptup-data');
+  // these tags were created by FlowCrypt exclusively, so the structure is fairly rigid
+  // `<a href="${att.url}" class="cryptup_file" cryptup-data="${fcData}">${linkText}</a>\n`
+  // thus we use RegEx so that it works on both browser and node
+  if (Value.is('class="cryptup_file"').in(decryptedContent)) {
+    decryptedContent = decryptedContent.replace(/<a\s+href="([^"]+)"\s+class="cryptup_file"\s+cryptup-data="([^"]+)"\s*>[^<]+<\/a>\n?/gm, (_, url, fcData) => {
+      const a = Str.htmlAttrDecode(String(fcData));
 
-      if (fcData) {
-        const a = Str.htmlAttrDecode(fcData);
-
-        if (Str.isFcAttLinkData(a)) {
-          blocks.push(pgp_js_1.Pgp.internal.msgBlockAttObj('attachment', '', {
-            type: a.type,
-            name: a.name,
-            length: a.size,
-            url: el.attr('href')
-          }));
-        }
+      if (Str.isFcAttLinkData(a)) {
+        blocks.push(pgp_js_1.Pgp.internal.msgBlockAttObj('attachment', '', {
+          type: a.type,
+          name: a.name,
+          length: a.size,
+          url: String(url)
+        }));
       }
 
       return '';
@@ -59922,19 +59593,16 @@ Str.extractFcAtts = (decryptedContent, blocks) => {
   }
 
   return decryptedContent;
-};
+}; // public static extractFcReplyToken = (decryptedContent: string) => { // todo - used exclusively on the web - move to a web package
+//   const fcTokenElement = $(`<div>${decryptedContent}</div>`).find('.cryptup_reply');
+//   if (fcTokenElement.length) {
+//     const fcData = fcTokenElement.attr('cryptup-data');
+//     if (fcData) {
+//       return Str.htmlAttrDecode(fcData);
+//     }
+//   }
+// }
 
-Str.extractFcReplyToken = decryptedContent => {
-  const fcTokenElement = $(`<div>${decryptedContent}</div>`).find('.cryptup_reply');
-
-  if (fcTokenElement.length) {
-    const fcData = fcTokenElement.attr('cryptup-data');
-
-    if (fcData) {
-      return Str.htmlAttrDecode(fcData);
-    }
-  }
-};
 
 Str.stripFcTeplyToken = decryptedContent => decryptedContent.replace(/<div[^>]+class="cryptup_reply"[^>]+><\/div>/, '');
 
@@ -59990,7 +59658,7 @@ Str.base64urlUtfEncode = str => {
     return str;
   }
 
-  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode(parseInt(String(p1), 16)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return util_js_1.base64encode(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode(parseInt(String(p1), 16)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 };
 
 Str.base64urlUtfDecode = str => {
@@ -60000,7 +59668,9 @@ Str.base64urlUtfDecode = str => {
   } // tslint:disable-next-line:no-unsafe-any
 
 
-  return decodeURIComponent(Array.prototype.map.call(atob(str.replace(/-/g, '+').replace(/_/g, '/')), c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+  return decodeURIComponent(Array.prototype.map.call(util_js_1.base64decode(str.replace(/-/g, '+').replace(/_/g, '/')), c => {
+    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+  }).join(''));
 };
 
 exports.Str = Str;
@@ -60018,16 +59688,6 @@ Value.arr = {
     }
 
     return unique;
-  },
-  fromDomNodeList: obj => {
-    const array = [];
-
-    for (let i = obj.length >>> 0; i--;) {
-      // iterate backwards ensuring that length is an UInt32
-      array[i] = obj[i];
-    }
-
-    return array;
   },
   withoutKey: (array, i) => array.splice(0, i).concat(array.splice(i + 1, array.length)),
   withoutVal: (array, withoutVal) => {
@@ -60073,7 +59733,44 @@ Value.is = v => ({
 exports.Value = Value;
 
 /***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+const crypto_1 = __webpack_require__(9);
+
+exports.secureRandomBytes = length => {
+  return crypto_1.randomBytes(length);
+};
+
+exports.base64encode = binary => {
+  return Buffer.from(binary, 'binary').toString('base64');
+};
+
+exports.base64decode = b64tr => {
+  return Buffer.from(b64tr, 'base64').toString('binary');
+};
+
+exports.setGlobals = () => {
+  global.btoa = exports.base64encode;
+  global.atob = exports.base64decode;
+};
+
+/***/ }),
 /* 9 */
+/***/ (function(module, exports) {
+
+module.exports = require("crypto");
+
+/***/ }),
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -60114,7 +59811,7 @@ exports.mnemonic = hex => {
 };
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -60125,13 +59822,21 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const common_js_1 = __webpack_require__(8);
+const common_js_1 = __webpack_require__(7);
 
-const pgp_js_1 = __webpack_require__(6);
+const pgp_js_1 = __webpack_require__(5);
 
-const att_js_1 = __webpack_require__(11);
+const att_js_1 = __webpack_require__(12);
 
-const catch_js_1 = __webpack_require__(12);
+const catch_js_1 = __webpack_require__(13);
+
+const require_js_1 = __webpack_require__(14);
+
+const MimeParser = require_js_1.requireMimeParser(); // tslint:disable-line:variable-name
+
+const MimeBuilder = require_js_1.requireMimeBuilder(); // tslint:disable-line:variable-name
+
+const Iso88592 = require_js_1.requireIso88592(); // tslint:disable-line:variable-name
 
 class Mime {}
 
@@ -60242,7 +59947,7 @@ Mime.decode = mimeMsg => {
     };
 
     try {
-      const parser = new window['emailjs-mime-parser'](); // tslint:disable-line:no-unsafe-any
+      const parser = new MimeParser(); // tslint:disable-line:no-unsafe-any
 
       const parsed = {};
 
@@ -60303,8 +60008,6 @@ Mime.decode = mimeMsg => {
 };
 
 Mime.encode = async (body, headers, atts = []) => {
-  const MimeBuilder = window['emailjs-mime-builder']; // tslint:disable-line:variable-name
-
   const rootNode = new MimeBuilder('multipart/mixed'); // tslint:disable-line:no-unsafe-any
 
   for (const key of Object.keys(headers)) {
@@ -60466,7 +60169,7 @@ Mime.getNodeContentAsText = node => {
 
   if (node.charset === 'iso-8859-2') {
     // todo - use iso88592.labels for detection
-    return window.iso88592.decode(node.rawContent); // tslint:disable-line:no-unsafe-any
+    return Iso88592.decode(node.rawContent); // tslint:disable-line:no-unsafe-any
   }
 
   return node.rawContent;
@@ -60487,7 +60190,7 @@ Mime.newContentNode = (MimeBuilder, type, content) => {
 exports.Mime = Mime;
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -60498,7 +60201,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const common_js_1 = __webpack_require__(8);
+const common_js_1 = __webpack_require__(7);
 
 class Att {
   constructor({
@@ -60649,7 +60352,7 @@ Att.fromMsgBlock = attBlock => {
 exports.Att = Att;
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -60796,7 +60499,41 @@ Catch.version = (format = 'original') => {
 exports.Catch = Catch;
 
 /***/ }),
-/* 13 */
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+exports.requireOpenpgp = () => {
+  return openpgp;
+};
+
+exports.requireMimeParser = () => {
+  // global['emailjs-mime-parser'] ?
+  // dereq_emailjs_mime_parser ?
+  return undefined; // todo
+};
+
+exports.requireMimeBuilder = () => {
+  // global['emailjs-mime-builder'] ?
+  // dereq_emailjs_mime_builder ?
+  return undefined; // todo
+};
+
+exports.requireIso88592 = () => {
+  // global.iso88592 ?
+  // dereq_iso88592 ?
+  return undefined; // todo
+};
+
+/***/ }),
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -60882,42 +60619,54 @@ const hasData = data => {
 };
 
 /***/ }),
-/* 14 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
 /* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const EventEmitter = __webpack_require__(15);
+const EventEmitter = __webpack_require__(17);
 
-var mybridgeaddon = process.binding('rn_bridge');
+let send = msg => {
+  console.error(`Java rn_bridge nor present for message:\n--------------------\n${msg}\n--------------------`);
+};
 
-class MyEmitter extends EventEmitter {
-  constructor() {
-    super(...arguments);
+try {
+  const mybridgeaddon = process.binding('rn_bridge');
 
-    this.send = function (msg) {
-      mybridgeaddon.sendMessage(msg);
-    };
+  class MyEmitter extends EventEmitter {
+    constructor() {
+      super(...arguments);
+
+      this.send = function (msg) {
+        mybridgeaddon.sendMessage(msg);
+      };
+    }
+
   }
 
+  const channel = new MyEmitter();
+  /* var myListener =*/
+
+  mybridgeaddon.registerListener(function (msg) {
+    channel.emit('message', msg);
+  });
+  send = channel.send;
+} catch (e) {
+  if (!(e instanceof Error) || e.message !== 'No such module: rn_bridge') {
+    throw e;
+  }
 }
 
-const channel = new MyEmitter();
-/* var myListener =*/
-
-mybridgeaddon.registerListener(function (msg) {
-  channel.emit('message', msg);
-});
-exports.sendNativeMessageToJava = channel.send;
+exports.sendNativeMessageToJava = send;
 
 /***/ }),
-/* 15 */
+/* 17 */
 /***/ (function(module, exports) {
 
 module.exports = require("events");
@@ -60925,14 +60674,6 @@ module.exports = require("events");
 /***/ })
 /******/ ]);
 /* final flowcrypt-android bundle ends here */
-
 } catch(e) {
-  var http = require('http');
-  var versions_server = http.createServer((request, response) => {
-    response.end(JSON.stringify({error: {
-      message: "startup error: " + String(e),
-      stack:  e && typeof e === 'object' ? e.stack || '' : ''
-    }}));
-  });
-  versions_server.listen(3000, 'localhost');
+  console.error(e);
 }

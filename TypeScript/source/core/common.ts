@@ -5,6 +5,7 @@
 import { Pgp } from './pgp.js';
 import { FcAttLinkData } from './att.js';
 import { MsgBlock } from './mime.js';
+import { base64encode, base64decode } from '../platform/util.js';
 
 export type Dict<T> = { [key: string]: T; };
 export type EmailProvider = 'gmail';
@@ -68,17 +69,23 @@ export class Str {
 
   public static htmlAttrEncode = (values: Dict<any>): string => Str.base64urlUtfEncode(JSON.stringify(values));
 
-  public static htmlAttrDecode = (encoded: string): any => JSON.parse(Str.base64urlUtfDecode(encoded)); // tslint:disable-line:no-unsafe-any
+  public static htmlAttrDecode = (encoded: string): any => {
+    try {
+      return JSON.parse(Str.base64urlUtfDecode(encoded)); // tslint:disable-line:no-unsafe-any
+    } catch (e) {
+      return undefined;
+    }
+  }
 
   /**
    * used for 3rd party API calls - do not change w/o testing Gmail api attachments
    */
-  public static base64urlEncode = (str: string) => (typeof str === 'undefined') ? str : btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  public static base64urlEncode = (str: string) => (typeof str === 'undefined') ? str : base64encode(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
   /**
    * // used for 3rd party API calls - do not change w/o testing Gmail api attachments
    */
-  public static base64urlDecode = (str: string) => (typeof str === 'undefined') ? str : atob(str.replace(/-/g, '+').replace(/_/g, '/'));
+  public static base64urlDecode = (str: string) => (typeof str === 'undefined') ? str : base64decode(str.replace(/-/g, '+').replace(/_/g, '/'));
 
   public static fromUint8 = (u8a: Uint8Array | string): string => {
     if (typeof u8a === 'string') {
@@ -187,15 +194,14 @@ export class Str {
   }
 
   public static extractFcAtts = (decryptedContent: string, blocks: MsgBlock[]) => {
-    if (Value.is('cryptup_file').in(decryptedContent)) {
-      decryptedContent = decryptedContent.replace(/<a[^>]+class="cryptup_file"[^>]+>[^<]+<\/a>\n?/gm, foundLink => {
-        const el = $(foundLink);
-        const fcData = el.attr('cryptup-data');
-        if (fcData) {
-          const a = Str.htmlAttrDecode(fcData);
-          if (Str.isFcAttLinkData(a)) {
-            blocks.push(Pgp.internal.msgBlockAttObj('attachment', '', { type: a.type, name: a.name, length: a.size, url: el.attr('href') }));
-          }
+    // these tags were created by FlowCrypt exclusively, so the structure is fairly rigid
+    // `<a href="${att.url}" class="cryptup_file" cryptup-data="${fcData}">${linkText}</a>\n`
+    // thus we use RegEx so that it works on both browser and node
+    if (Value.is('class="cryptup_file"').in(decryptedContent)) {
+      decryptedContent = decryptedContent.replace(/<a\s+href="([^"]+)"\s+class="cryptup_file"\s+cryptup-data="([^"]+)"\s*>[^<]+<\/a>\n?/gm, (_, url, fcData) => {
+        const a = Str.htmlAttrDecode(String(fcData));
+        if (Str.isFcAttLinkData(a)) {
+          blocks.push(Pgp.internal.msgBlockAttObj('attachment', '', { type: a.type, name: a.name, length: a.size, url: String(url) }));
         }
         return '';
       });
@@ -203,15 +209,15 @@ export class Str {
     return decryptedContent;
   }
 
-  public static extractFcReplyToken = (decryptedContent: string) => { // todo - used exclusively on the web - move to a web package
-    const fcTokenElement = $(`<div>${decryptedContent}</div>`).find('.cryptup_reply');
-    if (fcTokenElement.length) {
-      const fcData = fcTokenElement.attr('cryptup-data');
-      if (fcData) {
-        return Str.htmlAttrDecode(fcData);
-      }
-    }
-  }
+  // public static extractFcReplyToken = (decryptedContent: string) => { // todo - used exclusively on the web - move to a web package
+  //   const fcTokenElement = $(`<div>${decryptedContent}</div>`).find('.cryptup_reply');
+  //   if (fcTokenElement.length) {
+  //     const fcData = fcTokenElement.attr('cryptup-data');
+  //     if (fcData) {
+  //       return Str.htmlAttrDecode(fcData);
+  //     }
+  //   }
+  // }
 
   public static stripFcTeplyToken = (decryptedContent: string) => decryptedContent.replace(/<div[^>]+class="cryptup_reply"[^>]+><\/div>/, '');
 
@@ -253,7 +259,8 @@ export class Str {
     if (typeof str === 'undefined') {
       return str;
     }
-    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode(parseInt(String(p1), 16)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return base64encode(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode(parseInt(String(p1), 16))))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
 
   private static base64urlUtfDecode = (str: string) => {
@@ -262,7 +269,9 @@ export class Str {
       return str;
     }
     // tslint:disable-next-line:no-unsafe-any
-    return decodeURIComponent(Array.prototype.map.call(atob(str.replace(/-/g, '+').replace(/_/g, '/')), (c: string) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    return decodeURIComponent(Array.prototype.map.call(base64decode(str.replace(/-/g, '+').replace(/_/g, '/')), (c: string) => {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
   }
 
 }
@@ -278,13 +287,6 @@ export class Value {
         }
       }
       return unique;
-    },
-    fromDomNodeList: (obj: NodeList | JQuery<HTMLElement>): Node[] => { // http://stackoverflow.com/questions/2735067/how-to-convert-a-dom-node-list-to-an-array-in-javascript
-      const array = [];
-      for (let i = obj.length >>> 0; i--;) { // iterate backwards ensuring that length is an UInt32
-        array[i] = obj[i];
-      }
-      return array;
     },
     withoutKey: <T>(array: T[], i: number) => array.splice(0, i).concat(array.splice(i + 1, array.length)),
     withoutVal: <T>(array: T[], withoutVal: T) => {
