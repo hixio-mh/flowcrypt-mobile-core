@@ -32,6 +32,11 @@ android {
         }
     }
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
     // If you want Gradle to package prebuilt native libraries
     // with your APK, modify the default source set configuration
     // to include the directory of your prebuilt .so files as follows.
