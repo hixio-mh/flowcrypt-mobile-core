@@ -57798,34 +57798,20 @@ module.exports =
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-console.log(1);
 
 const https = __webpack_require__(1);
 
-console.log(11);
-console.log(12);
-
 const parse_1 = __webpack_require__(2);
-
-console.log(13);
 
 const fmt_1 = __webpack_require__(3);
 
-console.log(14);
-
 const endpoints_1 = __webpack_require__(4);
-
-console.log(15);
 
 const native_1 = __webpack_require__(16);
 
-console.log(16);
-
 const util_1 = __webpack_require__(8);
 
-console.log(2);
 util_1.setGlobals();
-console.log(3);
 const endpoints = new endpoints_1.Endpoints();
 
 const delegateReqToEndpoint = async (endpointName, uncheckedReq, data) => {
@@ -57877,7 +57863,6 @@ if (isNaN(LISTEN_PORT) || LISTEN_PORT < 1024) {
   throw new Error('Wrong or no NODE_PORT supplied');
 }
 
-console.log(5);
 const server = https.createServer(serverOptins, (request, response) => {
   handleReq(request, response).then(r => {
     // console.log(`----------------- BEGIN NODE RESPONSE --------------------`);
@@ -57898,16 +57883,13 @@ const server = https.createServer(serverOptins, (request, response) => {
     response.end(fmt_1.fmtErr(e));
   });
 });
-console.log(6);
 server.listen(LISTEN_PORT, 'localhost');
 server.on('listening', () => {
-  console.log(9);
   const address = server.address();
   const msg = `listening on ${typeof address === 'object' ? address.port : address}`;
   console.info(msg);
   native_1.sendNativeMessageToJava(msg);
 });
-console.log(7);
 
 /***/ }),
 /* 1 */
@@ -58139,23 +58121,17 @@ exports.indexHtml = Buffer.from(`
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-console.log(21);
 
 const pgp_1 = __webpack_require__(5);
 
-console.log(22);
-
 const validate_1 = __webpack_require__(15);
 
-console.log(23);
-
-const fmt_1 = __webpack_require__(3);
-
-console.log(24); // class Debug {
+const fmt_1 = __webpack_require__(3); // class Debug {
 //   public static printChunk = (name: string, data: Buffer | Uint8Array) => {
 //     console.log(`Debug.printChunk[${name}]: js[${Uint8Array.from(data).subarray(0, 20).join(', ')}]`);
 //   }
 // }
+
 
 class Endpoints {
   constructor() {
@@ -58504,9 +58480,8 @@ Pgp.key = {
     }
   },
   normalize: armored => {
-    let keys = [];
-
     try {
+      let keys = [];
       armored = Pgp.armor.normalize(armored, 'key');
 
       if (RegExp(Pgp.armor.headers('publicKey', 're').begin).test(armored)) {
@@ -58517,6 +58492,12 @@ Pgp.key = {
         keys = [new openpgp.key.Key(openpgp.message.readArmored(armored).packets)];
       }
 
+      for (const k of keys) {
+        for (const u of k.users) {
+          u.otherCertifications = []; // prevent key bloat
+        }
+      }
+
       return {
         normalized: keys.map(k => k.armor()).join('\n'),
         keys
@@ -58525,7 +58506,7 @@ Pgp.key = {
       catch_js_1.Catch.handleErr(error);
       return {
         normalized: '',
-        keys
+        keys: []
       };
     }
   },
@@ -58634,6 +58615,14 @@ Pgp.key = {
       keyPackets.push(keyPacket);
     }
 
+    const algoInfo = k.primaryKey.getAlgorithmInfo();
+    const algo = {
+      algorithm: algoInfo.algorithm,
+      bits: algoInfo.bits,
+      curve: algoInfo.curve,
+      algorithmId: openpgp.enums.publicKey[algoInfo.algorithm]
+    };
+    const created = k.primaryKey.created.getTime() / 1000;
     return {
       private: k.isPrivate() ? k.armor() : undefined,
       public: k.toPublic().armor(),
@@ -58643,16 +58632,20 @@ Pgp.key = {
           const longid = Pgp.key.longid(fingerprint);
 
           if (longid) {
+            const shortid = longid.substr(-8);
             return {
               fingerprint,
               longid,
+              shortid,
               keywords: mnemonic_js_1.mnemonic(longid)
             };
           }
         }
 
         return undefined;
-      }).filter(Boolean)
+      }).filter(Boolean),
+      algo,
+      created
     };
   }
 };
@@ -60633,7 +60626,7 @@ Object.defineProperty(exports, "__esModule", {
 const EventEmitter = __webpack_require__(17);
 
 let send = msg => {
-  console.error(`Java rn_bridge nor present for message:\n--------------------\n${msg}\n--------------------`);
+  console.error(`-------------------- native bridge nor present for message --------------------\n${msg}\n--------------------`);
 };
 
 try {
