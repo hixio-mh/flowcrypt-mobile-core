@@ -1,7 +1,6 @@
 package com.yourorg.sample;
 
 import android.content.Context;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -203,25 +202,35 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  public static void getVersionsAndRender(final TextView tvResult) {
-    new AsyncTask<Void,Void,TestNodeResult>() {
+  public void getVersionsAndRender(final TextView tvResult) {
+    final long startTime = System.currentTimeMillis();
+    resultText = "";
+    Thread t = new Thread(new Runnable() {
       @Override
-      protected TestNodeResult doInBackground(Void... params) {
-        return Node.testRequest("version");
-      }
-      @Override
-      protected void onPostExecute(TestNodeResult nodeResult) {
-        String text;
-        if(nodeResult.getErr() != null) {
-          text = nodeResult.getErr().getMessage();
-          nodeResult.getErr().printStackTrace();
-        } else {
-          text = nodeResult.getRawJsonResponse();
+      public void run() {
+        try {
+          TestNodeResult nodeResult = Node.testRequest("version");
+          String text;
+          if(nodeResult.getErr() != null) {
+            text = nodeResult.getErr().getMessage();
+            nodeResult.getErr().printStackTrace();
+          } else {
+            text = nodeResult.getRawJsonResponse();
+          }
+          text += "\n\n" + nodeResult.ms + "ms";
+          resultText = text;
+          newResultTextHandler.sendEmptyMessage(0);
+        } catch (Exception e) {
+          addResultLine("version", System.currentTimeMillis() - startTime, e, true);
         }
-        text += "\n\n" + nodeResult.ms + "ms";
-        tvResult.setText(text);
       }
-    }.execute();
+    });
+    t.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+      public void uncaughtException(Thread th, Throwable e) {
+        addResultLine("version", System.currentTimeMillis() - startTime, e, true);
+      }
+    });
+    t.start();
   }
 
   public void runAllTestsAndRender() {
