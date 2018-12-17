@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
 
     findViewById(R.id.btnVersion).setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        getVersionsAndRender(tvResult);
+        getVersionsAndRender();
       }
     });
     findViewById(R.id.btnAllTests).setOnClickListener(new View.OnClickListener() {
@@ -202,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  public void getVersionsAndRender(final TextView tvResult) {
+  public void getVersionsAndRender() {
     final long startTime = System.currentTimeMillis();
     resultText = "";
     Thread t = new Thread(new Runnable() {
