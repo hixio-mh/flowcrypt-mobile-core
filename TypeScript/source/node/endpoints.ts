@@ -8,11 +8,11 @@ import { PgpMsg } from '../core/pgp';
 import { Validate } from './validate';
 import { fmtRes } from './fmt';
 
-// class Debug {
-//   public static printChunk = (name: string, data: Buffer | Uint8Array) => {
-//     console.log(`Debug.printChunk[${name}]: js[${Uint8Array.from(data).subarray(0, 20).join(', ')}]`);
-//   }
-// }
+export class Debug {
+  public static printChunk = (name: string, data: Buffer | Uint8Array) => {
+    console.log(`Debug.printChunk[${name}]: js[${Uint8Array.from(data).subarray(0, 20).join(', ')}]`);
+  }
+}
 
 export class Endpoints {
 
