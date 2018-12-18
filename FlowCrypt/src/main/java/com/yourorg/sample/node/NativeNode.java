@@ -5,9 +5,6 @@ import android.content.res.AssetManager;
 import com.yourorg.sample.node.results.RawNodeResult;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.entity.mime.HttpMultipartMode;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -40,16 +37,8 @@ class NativeNode {
   }
 
   RawNodeResult request(String endpoint, JSONObject req, byte[] data) {
-    if(data == null) {
-      data = new byte[0];
-    }
     long startTime = System.currentTimeMillis();
     try {
-      MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-      builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-      builder.addTextBody("endpoint", endpoint);
-      builder.addTextBody("request", req != null ? req.toString() : "{}");
-      builder.addBinaryBody("data", data);
       URL url = new URL("https://localhost:" + nodeSecret.port + "/");
       HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
       conn.setRequestMethod("POST");
@@ -58,11 +47,16 @@ class NativeNode {
       conn.setDoInput(true);
       conn.setDoOutput(true);
       conn.setSSLSocketFactory(nodeSecret.getSslSocketFactory());
-      HttpEntity parts = builder.build();
-      conn.addRequestProperty(parts.getContentType().getName(), parts.getContentType().getValue());
-      OutputStream os = conn.getOutputStream();
-      parts.writeTo(os);
       conn.connect();
+      OutputStream output = conn.getOutputStream();
+      output.write(endpoint.getBytes(StandardCharsets.UTF_8));
+      output.write('\n');
+      output.write((req != null ? req.toString() : "{}").getBytes(StandardCharsets.UTF_8));
+      output.write('\n');
+      if(data != null) {
+        output.write(data);
+      }
+      output.close();
       if (conn.getResponseCode() == 200) {
         return new RawNodeResult(null, conn.getInputStream(), System.currentTimeMillis() - startTime);
       } else {
