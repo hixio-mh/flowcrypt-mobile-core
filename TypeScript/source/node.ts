@@ -10,7 +10,7 @@
 import * as https from 'https';
 import { IncomingMessage, ServerResponse } from 'http';
 import { parseReq } from './node/parse';
-import { fmtErr, indexHtml, HttpClientErr, HttpAuthErr } from './node/fmt';
+import { fmtErr, indexHtml, HttpClientErr, HttpAuthErr, Buffers } from './node/fmt';
 import { Endpoints } from './node/endpoints';
 import { sendNativeMessageToJava } from './node/native';
 import { setGlobals } from './platform/util';
@@ -21,7 +21,7 @@ declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, N
 
 const endpoints = new Endpoints();
 
-const delegateReqToEndpoint = async (endpointName: string, uncheckedReq: any, data: Buffer): Promise<Buffer> => {
+const delegateReqToEndpoint = async (endpointName: string, uncheckedReq: any, data: Buffers): Promise<Buffers> => {
   const endpointHandler = endpoints[endpointName];
   if (endpointHandler) {
     return endpointHandler(uncheckedReq, data);
@@ -29,7 +29,7 @@ const delegateReqToEndpoint = async (endpointName: string, uncheckedReq: any, da
   throw new HttpClientErr(`unknown endpoint: ${endpointName}`);
 }
 
-const handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<Buffer> => {
+const handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<Buffers> => {
   if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT || !NODE_SSL_CA) {
     throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_CA, NODE_SSL_KEY or NODE_SSL_CRT');
   }
@@ -38,7 +38,7 @@ const handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<Buf
   }
   if (req.url === '/' && req.method === 'GET') {
     res.setHeader('content-type', 'text/html');
-    return indexHtml;
+    return [indexHtml];
   }
   if (req.url === '/' && req.method === 'POST') {
     const { endpoint, request, data } = await parseReq(req);
@@ -60,23 +60,22 @@ if (isNaN(LISTEN_PORT) || LISTEN_PORT < 1024) {
   throw new Error('Wrong or no NODE_PORT supplied');
 }
 
-const server = https.createServer(serverOptins, (request, response) => {
-  handleReq(request, response).then((r) => {
-    // console.log(`----------------- BEGIN NODE RESPONSE --------------------`);
-    // console.log(r.toString())
-    // console.log(`----------------- END NODE RESPONSE --------------------`);
-    response.end(r);
-  }).catch((e) => {
+const sendRes = (res: ServerResponse, buffers: Buffers) => {
+  res.end(Buffer.concat(buffers));
+}
+
+const server = https.createServer(serverOptins, (request, res) => {
+  handleReq(request, res).then(buffers => sendRes(res, buffers)).catch((e) => {
     if (e instanceof HttpAuthErr) {
-      response.statusCode = 401;
-      response.setHeader('WWW-Authenticate', 'Basic realm="flowcrypt-android-node"');
+      res.statusCode = 401;
+      res.setHeader('WWW-Authenticate', 'Basic realm="flowcrypt-android-node"');
     } else if (e instanceof HttpClientErr) {
-      response.statusCode = 400;
+      res.statusCode = 400;
     } else {
       console.error(e);
-      response.statusCode = 500;
+      res.statusCode = 500;
     }
-    response.end(fmtErr(e));
+    res.end(fmtErr(e));
   });
 });
 

@@ -5,14 +5,16 @@
 export class HttpAuthErr extends Error { }
 export class HttpClientErr extends Error { }
 
-export const fmtRes = (response: {}, data?: Buffer): Buffer => {
-  const buffers: Buffer[] = [];
+export type Buffers = (Buffer | Uint8Array)[];
+
+export const fmtRes = (response: {}, data?: Buffer | Uint8Array): Buffers => {
+  const buffers: (Buffer | Uint8Array)[] = [];
   buffers.push(Buffer.from(JSON.stringify(response)));
   buffers.push(Buffer.from('\n'));
   if (data) {
     buffers.push(data);
   }
-  return Buffer.concat(buffers);
+  return buffers;
 }
 
 export const fmtErr = (e: any): string => {

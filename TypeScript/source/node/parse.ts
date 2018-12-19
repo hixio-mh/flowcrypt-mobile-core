@@ -3,38 +3,38 @@
 'use strict';
 
 import { IncomingMessage } from 'http';
-import { HttpClientErr } from './fmt';
+import { HttpClientErr, Buffers } from './fmt';
 
-type ParseRes = { endpoint: string, data: Buffer, request: {} };
+type ParseRes = { endpoint: string, data: Buffers, request: {} };
 const NEWLINE = Buffer.from('\n');
 
 export const parseReq = (r: IncomingMessage): Promise<ParseRes> => new Promise((resolve, reject) => {
-  const initChunks: Buffer[] = [];
-  const dataChunks: Buffer[] = [];
+  const initBuffers: Buffers = [];
+  const data: Buffers = [];
   let newlinesEncountered = 0;
   r.on('data', (chunk: Buffer) => {
     let byteOffset = 0;
     while (newlinesEncountered < 2) {
       const nextNewlineIndex = chunk.indexOf(NEWLINE, byteOffset);
       if (nextNewlineIndex === -1) {
-        initChunks.push(chunk);
+        initBuffers.push(chunk);
         return;
       }
       const endOfLine = nextNewlineIndex + NEWLINE.length;
-      initChunks.push(chunk.slice(byteOffset, endOfLine));
+      initBuffers.push(chunk.slice(byteOffset, endOfLine));
       byteOffset = endOfLine;
       newlinesEncountered++;
     }
-    dataChunks.push(chunk.slice(byteOffset));
+    data.push(chunk.slice(byteOffset));
   });
   r.on('end', () => {
-    if (initChunks.length && dataChunks.length) {
+    if (initBuffers.length && data.length) {
       try {
-        const [endpointLine, requestLine] = Buffer.concat(initChunks).toString().split(Buffer.from(NEWLINE).toString());
+        const [endpointLine, requestLine] = Buffer.concat(initBuffers).toString().split(Buffer.from(NEWLINE).toString());
         resolve({
           endpoint: endpointLine.trim(),
           request: JSON.parse(requestLine.trim()),
-          data: Buffer.concat(dataChunks),
+          data,
         });
       } catch (e) {
         reject(new HttpClientErr('cannot parse request part as json'));

@@ -6,7 +6,7 @@
 
 import { PgpMsg } from '../core/pgp';
 import { Validate } from './validate';
-import { fmtRes } from './fmt';
+import { fmtRes, Buffers } from './fmt';
 
 export class Debug {
   public static printChunk = (name: string, data: Buffer | Uint8Array) => {
@@ -16,33 +16,30 @@ export class Debug {
 
 export class Endpoints {
 
-  [endpoint: string]: ((uncheckedReq: any, data: Buffer) => Promise<Buffer>) | undefined;
+  [endpoint: string]: ((uncheckedReq: any, data: Buffers) => Promise<Buffers>) | undefined;
 
-  public version = async (uncheckedReq: any, data: Buffer): Promise<Buffer> => {
+  public version = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
     return fmtRes(process.versions);
   }
 
-  public encryptMsg = async (uncheckedReq: any, data: Buffer): Promise<Buffer> => {
-    const req = Validate.encryptMsg(uncheckedReq, data);
-    const encrypted = await PgpMsg.encrypt(req.pubKeys, undefined, undefined, data, undefined, true) as OpenPGP.EncryptArmorResult;
+  public encryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
+    const req = Validate.encryptMsg(uncheckedReq);
+    const encrypted = await PgpMsg.encrypt(req.pubKeys, undefined, undefined, Buffer.concat(data), undefined, true) as OpenPGP.EncryptArmorResult;
     return fmtRes({}, Buffer.from(encrypted.data));
   }
 
-  public encryptFile = async (uncheckedReq: any, data: Buffer): Promise<Buffer> => {
-    const req = Validate.encryptFile(uncheckedReq, data);
-    // Debug.printChunk("encryptFile.data", data);
-    const encrypted = await PgpMsg.encrypt(req.pubKeys, undefined, undefined, data, req.name, false) as OpenPGP.EncryptBinaryResult;
-    const encryptedData = encrypted.message.packets.write();
-    // Debug.printChunk("encryptFile.encryptedData", encryptedData);
-    return fmtRes({}, Buffer.from(encryptedData));
+  public encryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
+    const req = Validate.encryptFile(uncheckedReq);
+    const encrypted = await PgpMsg.encrypt(req.pubKeys, undefined, undefined, Buffer.concat(data), req.name, false) as OpenPGP.EncryptBinaryResult;
+    return fmtRes({}, encrypted.message.packets.write());
   }
 
   /**
    * Todo - this will fail when it receives a Mime message, because emailjs mime libraries are not loaded, see platform/require.ts
    */
-  public decryptMsg = async (uncheckedReq: any, data: Buffer): Promise<Buffer> => {
-    const { keys, passphrases, msgPwd } = Validate.decryptMsg(uncheckedReq, data);
-    const decrypted = await PgpMsg.decrypt({ keys, passphrases }, data, msgPwd, false);
+  public decryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
+    const { keys, passphrases, msgPwd } = Validate.decryptMsg(uncheckedReq);
+    const decrypted = await PgpMsg.decrypt({ keys, passphrases }, Buffer.concat(data), msgPwd, false);
     if (!decrypted.success) {
       decrypted.message = undefined;
       return fmtRes(decrypted);
@@ -53,10 +50,10 @@ export class Endpoints {
     return fmtRes({ success: true, blockMetas }, Buffer.from(blocks.map(b => JSON.stringify(b)).join('\n')));
   }
 
-  public decryptFile = async (uncheckedReq: any, data: Buffer): Promise<Buffer> => {
-    const { keys, passphrases, msgPwd } = Validate.decryptFile(uncheckedReq, data);
+  public decryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
+    const { keys, passphrases, msgPwd } = Validate.decryptFile(uncheckedReq);
     // Debug.printChunk("decryptFile.data", data);
-    const decryptedMeta = await PgpMsg.decrypt({ keys, passphrases }, data, msgPwd, true);
+    const decryptedMeta = await PgpMsg.decrypt({ keys, passphrases }, Buffer.concat(data), msgPwd, true);
     if (!decryptedMeta.success) {
       decryptedMeta.message = undefined;
       return fmtRes(decryptedMeta);

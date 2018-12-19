@@ -16,29 +16,29 @@ export namespace NodeRequest {
 
 export class Validate {
 
-  public static encryptMsg = (v: any, data: Uint8Array): NodeRequest.encryptMsg => {
+  public static encryptMsg = (v: any): NodeRequest.encryptMsg => {
     if (isObj(v) && hasProp(v, 'pubKeys', 'string[]')) {
       return v as NodeRequest.encryptMsg;
     }
     throw new Error('Wrong request structure for NodeRequest.encryptMsg');
   }
 
-  public static encryptFile = (v: any, data: Uint8Array): NodeRequest.encryptFile => {
+  public static encryptFile = (v: any): NodeRequest.encryptFile => {
     if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasProp(v, 'name', 'string')) {
       return v as NodeRequest.encryptFile;
     }
     throw new Error('Wrong request structure for NodeRequest.encryptFile');
   }
 
-  public static decryptFile = (v: any, data: Uint8Array): NodeRequest.decryptFile => {
-    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasData(data)) {
+  public static decryptFile = (v: any): NodeRequest.decryptFile => {
+    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?')) {
       return v as NodeRequest.decryptFile;
     }
     throw new Error('Wrong request structure for NodeRequest.decryptFile');
   }
 
-  public static decryptMsg = (v: any, data: Uint8Array): NodeRequest.decryptMsg => {
-    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasData(data)) {
+  public static decryptMsg = (v: any): NodeRequest.decryptMsg => {
+    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?')) {
       return v as NodeRequest.decryptFile;
     }
     throw new Error('Wrong request structure for NodeRequest.decryptFile');
@@ -71,8 +71,4 @@ const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 
     return isObj(value);
   }
   return false;
-}
-
-const hasData = (data: Uint8Array) => {
-  return data.length > 0;
 }

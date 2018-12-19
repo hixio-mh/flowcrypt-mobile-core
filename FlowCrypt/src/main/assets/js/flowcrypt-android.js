@@ -57835,7 +57835,7 @@ const handleReq = async (req, res) => {
 
   if (req.url === '/' && req.method === 'GET') {
     res.setHeader('content-type', 'text/html');
-    return fmt_1.indexHtml;
+    return [fmt_1.indexHtml];
   }
 
   if (req.url === '/' && req.method === 'POST') {
@@ -57863,24 +57863,23 @@ if (isNaN(LISTEN_PORT) || LISTEN_PORT < 1024) {
   throw new Error('Wrong or no NODE_PORT supplied');
 }
 
-const server = https.createServer(serverOptins, (request, response) => {
-  handleReq(request, response).then(r => {
-    // console.log(`----------------- BEGIN NODE RESPONSE --------------------`);
-    // console.log(r.toString())
-    // console.log(`----------------- END NODE RESPONSE --------------------`);
-    response.end(r);
-  }).catch(e => {
+const sendRes = (res, buffers) => {
+  res.end(Buffer.concat(buffers));
+};
+
+const server = https.createServer(serverOptins, (request, res) => {
+  handleReq(request, res).then(buffers => sendRes(res, buffers)).catch(e => {
     if (e instanceof fmt_1.HttpAuthErr) {
-      response.statusCode = 401;
-      response.setHeader('WWW-Authenticate', 'Basic realm="flowcrypt-android-node"');
+      res.statusCode = 401;
+      res.setHeader('WWW-Authenticate', 'Basic realm="flowcrypt-android-node"');
     } else if (e instanceof fmt_1.HttpClientErr) {
-      response.statusCode = 400;
+      res.statusCode = 400;
     } else {
       console.error(e);
-      response.statusCode = 500;
+      res.statusCode = 500;
     }
 
-    response.end(fmt_1.fmtErr(e));
+    res.end(fmt_1.fmtErr(e));
   });
 });
 server.listen(LISTEN_PORT, 'localhost');
@@ -57914,8 +57913,8 @@ const fmt_1 = __webpack_require__(3);
 const NEWLINE = Buffer.from('\n');
 
 exports.parseReq = r => new Promise((resolve, reject) => {
-  const initChunks = [];
-  const dataChunks = [];
+  const initBuffers = [];
+  const data = [];
   let newlinesEncountered = 0;
   r.on('data', chunk => {
     let byteOffset = 0;
@@ -57924,26 +57923,26 @@ exports.parseReq = r => new Promise((resolve, reject) => {
       const nextNewlineIndex = chunk.indexOf(NEWLINE, byteOffset);
 
       if (nextNewlineIndex === -1) {
-        initChunks.push(chunk);
+        initBuffers.push(chunk);
         return;
       }
 
       const endOfLine = nextNewlineIndex + NEWLINE.length;
-      initChunks.push(chunk.slice(byteOffset, endOfLine));
+      initBuffers.push(chunk.slice(byteOffset, endOfLine));
       byteOffset = endOfLine;
       newlinesEncountered++;
     }
 
-    dataChunks.push(chunk.slice(byteOffset));
+    data.push(chunk.slice(byteOffset));
   });
   r.on('end', () => {
-    if (initChunks.length && dataChunks.length) {
+    if (initBuffers.length && data.length) {
       try {
-        const [endpointLine, requestLine] = Buffer.concat(initChunks).toString().split(Buffer.from(NEWLINE).toString());
+        const [endpointLine, requestLine] = Buffer.concat(initBuffers).toString().split(Buffer.from(NEWLINE).toString());
         resolve({
           endpoint: endpointLine.trim(),
           request: JSON.parse(requestLine.trim()),
-          data: Buffer.concat(dataChunks)
+          data
         });
       } catch (e) {
         reject(new fmt_1.HttpClientErr('cannot parse request part as json'));
@@ -57983,7 +57982,7 @@ exports.fmtRes = (response, data) => {
     buffers.push(data);
   }
 
-  return Buffer.concat(buffers);
+  return buffers;
 };
 
 exports.fmtErr = e => {
@@ -58038,18 +58037,15 @@ class Endpoints {
     };
 
     this.encryptMsg = async (uncheckedReq, data) => {
-      const req = validate_1.Validate.encryptMsg(uncheckedReq, data);
-      const encrypted = await pgp_1.PgpMsg.encrypt(req.pubKeys, undefined, undefined, data, undefined, true);
+      const req = validate_1.Validate.encryptMsg(uncheckedReq);
+      const encrypted = await pgp_1.PgpMsg.encrypt(req.pubKeys, undefined, undefined, Buffer.concat(data), undefined, true);
       return fmt_1.fmtRes({}, Buffer.from(encrypted.data));
     };
 
     this.encryptFile = async (uncheckedReq, data) => {
-      const req = validate_1.Validate.encryptFile(uncheckedReq, data); // Debug.printChunk("encryptFile.data", data);
-
-      const encrypted = await pgp_1.PgpMsg.encrypt(req.pubKeys, undefined, undefined, data, req.name, false);
-      const encryptedData = encrypted.message.packets.write(); // Debug.printChunk("encryptFile.encryptedData", encryptedData);
-
-      return fmt_1.fmtRes({}, Buffer.from(encryptedData));
+      const req = validate_1.Validate.encryptFile(uncheckedReq);
+      const encrypted = await pgp_1.PgpMsg.encrypt(req.pubKeys, undefined, undefined, Buffer.concat(data), req.name, false);
+      return fmt_1.fmtRes({}, encrypted.message.packets.write());
     };
     /**
      * Todo - this will fail when it receives a Mime message, because emailjs mime libraries are not loaded, see platform/require.ts
@@ -58061,11 +58057,11 @@ class Endpoints {
         keys,
         passphrases,
         msgPwd
-      } = validate_1.Validate.decryptMsg(uncheckedReq, data);
+      } = validate_1.Validate.decryptMsg(uncheckedReq);
       const decrypted = await pgp_1.PgpMsg.decrypt({
         keys,
         passphrases
-      }, data, msgPwd, false);
+      }, Buffer.concat(data), msgPwd, false);
 
       if (!decrypted.success) {
         decrypted.message = undefined;
@@ -58089,12 +58085,12 @@ class Endpoints {
         keys,
         passphrases,
         msgPwd
-      } = validate_1.Validate.decryptFile(uncheckedReq, data); // Debug.printChunk("decryptFile.data", data);
+      } = validate_1.Validate.decryptFile(uncheckedReq); // Debug.printChunk("decryptFile.data", data);
 
       const decryptedMeta = await pgp_1.PgpMsg.decrypt({
         keys,
         passphrases
-      }, data, msgPwd, true);
+      }, Buffer.concat(data), msgPwd, true);
 
       if (!decryptedMeta.success) {
         decryptedMeta.message = undefined;
@@ -60437,7 +60433,7 @@ Object.defineProperty(exports, "__esModule", {
 
 class Validate {}
 
-Validate.encryptMsg = (v, data) => {
+Validate.encryptMsg = v => {
   if (isObj(v) && hasProp(v, 'pubKeys', 'string[]')) {
     return v;
   }
@@ -60445,7 +60441,7 @@ Validate.encryptMsg = (v, data) => {
   throw new Error('Wrong request structure for NodeRequest.encryptMsg');
 };
 
-Validate.encryptFile = (v, data) => {
+Validate.encryptFile = v => {
   if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasProp(v, 'name', 'string')) {
     return v;
   }
@@ -60453,16 +60449,16 @@ Validate.encryptFile = (v, data) => {
   throw new Error('Wrong request structure for NodeRequest.encryptFile');
 };
 
-Validate.decryptFile = (v, data) => {
-  if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasData(data)) {
+Validate.decryptFile = v => {
+  if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?')) {
     return v;
   }
 
   throw new Error('Wrong request structure for NodeRequest.decryptFile');
 };
 
-Validate.decryptMsg = (v, data) => {
-  if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasData(data)) {
+Validate.decryptMsg = v => {
+  if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?')) {
     return v;
   }
 
@@ -60503,10 +60499,6 @@ const hasProp = (v, name, type) => {
   }
 
   return false;
-};
-
-const hasData = data => {
-  return data.length > 0;
 };
 
 /***/ }),
