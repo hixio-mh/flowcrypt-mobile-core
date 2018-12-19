@@ -55,13 +55,13 @@ public class NodeSecret {
   private X509Certificate srvCrt;
   private PrivateKey srvKey;
 
-  int port;
-  String ca;
-  String key;
-  String crt;
-  String authPwd;
-  String authHeader;
-  String unixSocketFilePath;
+  public int port;
+  public String ca;
+  public String key;
+  public String crt;
+  public String authPwd;
+  public String authHeader;
+  public String unixSocketFilePath;
   private SSLSocketFactory sslSocketFactory;
 
   public NodeSecret(String writablePath) throws Exception {
