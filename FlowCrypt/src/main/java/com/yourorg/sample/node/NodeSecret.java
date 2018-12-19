@@ -31,6 +31,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Arrays;
 import java.util.Date;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -38,6 +39,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 import javax.xml.bind.DatatypeConverter;
 
 public class NodeSecret {
@@ -63,6 +65,8 @@ public class NodeSecret {
   public String authHeader;
   public String unixSocketFilePath;
   private SSLSocketFactory sslSocketFactory;
+  private X509TrustManager sslTrustManager;
+  private BigInteger sslCrtSerialNumber;
 
   public NodeSecret(String writablePath) throws Exception {
     this(writablePath, null);
@@ -91,21 +95,44 @@ public class NodeSecret {
     return NodeSecretCerts.fromNodeSecret(this);
   }
 
-  public SSLSocketFactory getSslSocketFactory() throws Exception {
-    if(sslSocketFactory == null) {
-      // create trust manager that trusts ca to verify server crt
-      TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-      tmf.init(newKeyStore("ca", caCrt, null)); // trust our ca
-      // create key manager to supply client key and crt (client and server use the same keypair)
-      KeyManagerFactory clientKmFactory = KeyManagerFactory.getInstance("X509");
-      clientKmFactory.init(newKeyStore("crt", srvCrt, srvKey), null); // slow
-      // new sslContext for http client that trusts the ca and provides client cert
-      SSLContext sslContext = SSLContext.getInstance("TLS");
-      TrustManager[] tm = tmf.getTrustManagers();
-      sslContext.init(clientKmFactory.getKeyManagers(), tm, secureRandom); // slow
-      sslSocketFactory = sslContext.getSocketFactory();
+  private void createSslAttributesIfNeeded() {
+    if(sslSocketFactory == null || sslTrustManager == null) {
+      try {
+        // create trust manager that trusts ca to verify server crt
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(newKeyStore("ca", caCrt, null)); // trust our ca
+        // create key manager to supply client key and crt (client and server use the same keypair)
+        KeyManagerFactory clientKmFactory = KeyManagerFactory.getInstance("X509");
+        clientKmFactory.init(newKeyStore("crt", srvCrt, srvKey), null); // slow
+        // new sslContext for http client that trusts the ca and provides client cert
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        TrustManager[] tms = tmf.getTrustManagers();
+        if (tms.length != 1 || !(tms[0] instanceof X509TrustManager)) {
+          throw new IllegalStateException("Unexpected default trust managers:" + Arrays.toString(tms));
+        }
+        sslContext.init(clientKmFactory.getKeyManagers(), tms, secureRandom); // slow
+        sslSocketFactory = sslContext.getSocketFactory();
+        sslTrustManager = (X509TrustManager) tms[0];
+        sslCrtSerialNumber = srvCrt.getSerialNumber();
+      } catch(Exception e) {
+        throw new RuntimeException("failed to create ssl attributes for node", e);
+      }
     }
+  }
+
+  public SSLSocketFactory getSslSocketFactory() {
+    createSslAttributesIfNeeded();
     return sslSocketFactory;
+  }
+
+  public X509TrustManager getSslTrustManager() {
+    createSslAttributesIfNeeded();
+    return sslTrustManager;
+  }
+
+  public BigInteger getSslCrtSerialNumber() {
+    createSslAttributesIfNeeded();
+    return sslCrtSerialNumber;
   }
 
   private X509Certificate parseCert(String certString) throws CertificateException {
