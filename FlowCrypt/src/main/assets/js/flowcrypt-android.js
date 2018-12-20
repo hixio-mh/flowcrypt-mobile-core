@@ -57843,7 +57843,10 @@ const handleReq = async (req, res) => {
       endpoint,
       request,
       data
-    } = await parse_1.parseReq(req);
+    } = await parse_1.parseReq(req); // console.log(endpoint);
+    // console.log(request);
+    // console.log(`LEN: ${Buffer.concat(data).toString().length}`);
+
     return await delegateReqToEndpoint(endpoint, request, data);
   }
 
@@ -58676,6 +58679,10 @@ Pgp.internal = {
   },
   cryptoKeyIds: armoredPubkey => openpgp.key.readArmored(armoredPubkey).keys[0].getKeyIds(),
   cryptoMsgPrepareForDecrypt: data => {
+    if (!data.length) {
+      throw new Error('Encrypted message could not be parsed because no data was provided');
+    }
+
     const first100bytes = common_js_1.Str.fromUint8(data.slice(0, 100));
     const isArmoredEncrypted = common_js_1.Value.is(Pgp.armor.headers('message').begin).in(first100bytes);
     const isArmoredSignedOnly = common_js_1.Value.is(Pgp.armor.headers('signedMsg').begin).in(first100bytes);
