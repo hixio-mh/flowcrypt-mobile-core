@@ -166,12 +166,9 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private String encryptMsgAndRender(String actionName, byte[] data, RequestService requestService) throws IOException {
-
-    ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data);
-
-    RequestBody requestBody = new NodeRequestBody<>("encryptMsg", new Pubkeys(testData.getMixedPubKeys()), byteArrayInputStream);
+    RequestBody requestBody = new NodeRequestBody<>("encryptMsg", new Pubkeys(testData.getMixedPubKeys()), data);
     Response<ResponseBody> responseBody = requestService.request(requestBody).execute();
-    EncryptMsgResult encryptMsgResult = new EncryptMsgResult(null, responseBody.body().byteStream(), responseBody.raw().sentRequestAtMillis());
+    EncryptMsgResult encryptMsgResult = new EncryptMsgResult(null, responseBody.body().byteStream(), responseBody.raw().receivedResponseAtMillis() - responseBody.raw().sentRequestAtMillis());
     addResultLine(actionName, encryptMsgResult);
     return encryptMsgResult.getEncryptedString();
   }
@@ -198,11 +195,9 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void decryptMsgAndRender(String actionName, byte[] data, PgpKeyInfo[] prvKeys, RequestService requestService) throws IOException {
-    ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data);
-
-    RequestBody requestBody = new NodeRequestBody<>("decryptMsg", new DecryptModel(prvKeys, testData.passphrases(), null), byteArrayInputStream);
+    RequestBody requestBody = new NodeRequestBody<>("decryptMsg", new DecryptModel(prvKeys, testData.passphrases(), null), data);
     Response<ResponseBody> responseBody = requestService.request(requestBody).execute();
-    DecryptMsgResult r = new DecryptMsgResult(null, responseBody.body().byteStream(), responseBody.raw().sentRequestAtMillis());
+    DecryptMsgResult r = new DecryptMsgResult(null, responseBody.body().byteStream(), responseBody.raw().receivedResponseAtMillis() - responseBody.raw().sentRequestAtMillis());
 
 //    DecryptMsgResult r = Node.decryptMsg(data, prvKeys, testData.passphrases(), null);
     if (r.getErr() != null) {
@@ -280,9 +275,9 @@ public class MainActivity extends AppCompatActivity {
           byte[] testMsgBytes = testMsg.getBytes();
           String encryptedMsg = encryptMsgAndRender("encrypt-msg", testMsgBytes, requestService);
           decryptMsgAndRender("decrypt-msg-ecc", encryptedMsg.getBytes(), testData.eccPrvKeyInfo(), requestService);
-          /*decryptMsgAndRender("decrypt-msg-rsa2048", encryptedMsg.getBytes(), testData.rsa2048PrvKeyInfo());
-          decryptMsgAndRender("decrypt-msg-rsa4096", encryptedMsg.getBytes(), testData.rsa4096PrvKeyInfo());
-          byte[] encryptedFileBytes = encryptFileAndRender("encrypt-file", testMsgBytes);
+          decryptMsgAndRender("decrypt-msg-rsa2048", encryptedMsg.getBytes(), testData.rsa2048PrvKeyInfo(), requestService);
+          decryptMsgAndRender("decrypt-msg-rsa4096", encryptedMsg.getBytes(), testData.rsa4096PrvKeyInfo(), requestService);
+          /*byte[] encryptedFileBytes = encryptFileAndRender("encrypt-file", testMsgBytes);
           decryptFileAndRender("decrypt-file-ecc", encryptedFileBytes, testData.eccPrvKeyInfo(), testMsgBytes);
           decryptFileAndRender("decrypt-file-rsa2048", encryptedFileBytes, testData.rsa2048PrvKeyInfo(), testMsgBytes);
           decryptFileAndRender("decrypt-file-rsa4096", encryptedFileBytes, testData.rsa4096PrvKeyInfo(), testMsgBytes);

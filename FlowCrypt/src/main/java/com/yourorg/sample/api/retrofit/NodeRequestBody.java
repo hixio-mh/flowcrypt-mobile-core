@@ -2,15 +2,17 @@ package com.yourorg.sample.api.retrofit;
 
 import com.google.gson.GsonBuilder;
 
-import org.apache.commons.io.IOUtils;
-
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
+import okhttp3.internal.Util;
 import okio.BufferedSink;
+import okio.Okio;
+import okio.Source;
 
 /**
  * @author DenBond7
@@ -23,7 +25,13 @@ public class NodeRequestBody<T> extends RequestBody {
   public NodeRequestBody(String endpoint, T request, InputStream inputStream) {
     this.endpoint = endpoint;
     this.request = request;
-    this.inputStream = inputStream;
+    this.inputStream = new BufferedInputStream(inputStream);
+  }
+
+  public NodeRequestBody(String endpoint, T request, byte[] data) {
+    this.endpoint = endpoint;
+    this.request = request;
+    this.inputStream = new BufferedInputStream(new ByteArrayInputStream(data));
   }
 
   @Override
@@ -42,8 +50,13 @@ public class NodeRequestBody<T> extends RequestBody {
     }
     sink.writeByte('\n');
     if (inputStream != null) {
-      OutputStream outputStream = sink.outputStream();
-      IOUtils.copy(inputStream, outputStream);
+      Source source = null;
+      try {
+        source = Okio.source(new BufferedInputStream(inputStream));
+        sink.writeAll(source);
+      } finally {
+        Util.closeQuietly(source);
+      }
     }
   }
 
