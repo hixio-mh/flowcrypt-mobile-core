@@ -1,6 +1,5 @@
 package com.yourorg.sample.node;
 
-import com.yourorg.sample.Constants;
 import com.yourorg.sample.lib.Base64;
 
 import org.spongycastle.asn1.x500.X500Name;
@@ -44,6 +43,9 @@ import javax.net.ssl.X509TrustManager;
 import javax.xml.bind.DatatypeConverter;
 
 public class NodeSecret {
+
+  public static final String HOSTNAME = "localhost";
+  public static final String CRT_SUBJECT = "CN=localhost";
 
   private static final String HEADER_CRT_BEGIN = "-----BEGIN CERTIFICATE-----\n";
   private static final String HEADER_CRT_END = "\n-----END CERTIFICATE-----\n";
@@ -161,7 +163,7 @@ public class NodeSecret {
     // new ca-signed srv crt and key (also used for client)
     KeyPair srvKeypair = keyGen.generateKeyPair();
     int srvKu = KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.dataEncipherment | KeyUsage.keyAgreement;
-    srvCrt = newSignedCrt(caKeypair, srvKeypair, new X500Name(Constants.X500_SERVER_CRT_SUBJECT), srvKu);
+    srvCrt = newSignedCrt(caKeypair, srvKeypair, new X500Name(CRT_SUBJECT), srvKu);
     srvKey = srvKeypair.getPrivate();
   }
 

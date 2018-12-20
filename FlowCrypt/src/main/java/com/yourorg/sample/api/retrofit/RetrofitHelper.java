@@ -9,7 +9,6 @@ import android.support.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.yourorg.sample.Constants;
 import com.yourorg.sample.node.NodeSecret;
 
 import java.io.IOException;
@@ -109,7 +108,7 @@ public final class RetrofitHelper {
       public boolean verify(String host, SSLSession session) {
         try {
           X509Certificate crt = (X509Certificate) session.getPeerCertificates()[0];
-          if (!Constants.HOST_NAME.equals(host) || !Constants.X500_SERVER_CRT_SUBJECT.equals(crt.getSubjectDN().getName())) {
+          if (!NodeSecret.HOSTNAME.equals(host) || !NodeSecret.CRT_SUBJECT.equals(crt.getSubjectDN().getName())) {
             return false;
           }
           return crt.getSerialNumber().equals(nodeSecret.getSslCrtSerialNumber());
