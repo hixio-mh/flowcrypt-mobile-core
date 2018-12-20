@@ -34,13 +34,13 @@ public class NodeRequestBody<T> extends RequestBody {
   @Override
   public void writeTo(BufferedSink sink) throws IOException {
     sink.writeUtf8(endpoint);
-    sink.writeUtf8("\n");
+    sink.writeByte('\n');
     if (request == null) {
       sink.writeUtf8("{}");
     } else {
       sink.writeUtf8(new GsonBuilder().create().toJson(request));
     }
-    sink.writeUtf8("\n");
+    sink.writeByte('\n');
     if (inputStream != null) {
       OutputStream outputStream = sink.outputStream();
       IOUtils.copy(inputStream, outputStream);

@@ -235,7 +235,8 @@ public class MainActivity extends AppCompatActivity {
     final RetrofitHelper retrofitHelper = RetrofitHelper.getInstance(nodeSecret);
     RequestService requestService = retrofitHelper.getRetrofit().create(RequestService.class);
 
-    requestService.getVersion(new NodeRequestBody<>("version", "{}", null)).enqueue(new Callback<Version>() {
+    ByteArrayInputStream shortData = new ByteArrayInputStream("abc".getBytes());
+    requestService.getVersion(new NodeRequestBody<>("version", null, shortData)).enqueue(new Callback<Version>() {
       @Override
       public void onResponse(Call<Version> call, Response<Version> response) {
         String text = null;
