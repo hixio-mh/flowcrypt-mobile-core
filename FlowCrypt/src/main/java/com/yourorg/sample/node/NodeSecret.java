@@ -1,5 +1,6 @@
 package com.yourorg.sample.node;
 
+import com.yourorg.sample.Constants;
 import com.yourorg.sample.lib.Base64;
 
 import org.spongycastle.asn1.x500.X500Name;
@@ -44,18 +45,11 @@ import javax.xml.bind.DatatypeConverter;
 
 public class NodeSecret {
 
+  private static final String HEADER_CRT_BEGIN = "-----BEGIN CERTIFICATE-----\n";
+  private static final String HEADER_CRT_END = "\n-----END CERTIFICATE-----\n";
+  private static final String HEADER_PRV_BEGIN = "-----BEGIN RSA PRIVATE KEY-----\n";
+  private static final String HEADER_PRV_END = "\n-----END RSA PRIVATE KEY-----\n";
   private static boolean wasBouncyCastleProviderInitialized = false;
-
-  private String HEADER_CRT_BEGIN = "-----BEGIN CERTIFICATE-----\n";
-  private String HEADER_CRT_END = "\n-----END CERTIFICATE-----\n";
-  private String HEADER_PRV_BEGIN = "-----BEGIN RSA PRIVATE KEY-----\n";
-  private String HEADER_PRV_END = "\n-----END RSA PRIVATE KEY-----\n";
-
-  private SecureRandom secureRandom;
-  private X500Name issuer;
-  private X509Certificate caCrt;
-  private X509Certificate srvCrt;
-  private PrivateKey srvKey;
 
   public int port;
   public String ca;
@@ -64,6 +58,12 @@ public class NodeSecret {
   public String authPwd;
   public String authHeader;
   public String unixSocketFilePath;
+
+  private SecureRandom secureRandom;
+  private X500Name issuer;
+  private X509Certificate caCrt;
+  private X509Certificate srvCrt;
+  private PrivateKey srvKey;
   private SSLSocketFactory sslSocketFactory;
   private X509TrustManager sslTrustManager;
   private BigInteger sslCrtSerialNumber;
@@ -75,7 +75,7 @@ public class NodeSecret {
   public NodeSecret(String writablePath, NodeSecretCerts nodeSecretCertsCache) throws Exception {
     unixSocketFilePath = writablePath + "/flowcrypt-node.sock"; // potentially usefull in the future
     secureRandom = new SecureRandom();
-    if(nodeSecretCertsCache != null) {
+    if (nodeSecretCertsCache != null) {
       ca = nodeSecretCertsCache.ca;
       crt = nodeSecretCertsCache.crt;
       key = nodeSecretCertsCache.key;
@@ -96,7 +96,7 @@ public class NodeSecret {
   }
 
   private void createSslAttributesIfNeeded() {
-    if(sslSocketFactory == null || sslTrustManager == null) {
+    if (sslSocketFactory == null || sslTrustManager == null) {
       try {
         // create trust manager that trusts ca to verify server crt
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
@@ -114,7 +114,7 @@ public class NodeSecret {
         sslSocketFactory = sslContext.getSocketFactory();
         sslTrustManager = (X509TrustManager) tms[0];
         sslCrtSerialNumber = srvCrt.getSerialNumber();
-      } catch(Exception e) {
+      } catch (Exception e) {
         throw new RuntimeException("failed to create ssl attributes for node", e);
       }
     }
@@ -161,7 +161,7 @@ public class NodeSecret {
     // new ca-signed srv crt and key (also used for client)
     KeyPair srvKeypair = keyGen.generateKeyPair();
     int srvKu = KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.dataEncipherment | KeyUsage.keyAgreement;
-    srvCrt = newSignedCrt(caKeypair, srvKeypair, new X500Name("CN=localhost"), srvKu);
+    srvCrt = newSignedCrt(caKeypair, srvKeypair, new X500Name(Constants.X500_SERVER_CRT_SUBJECT), srvKu);
     srvKey = srvKeypair.getPrivate();
   }
 
@@ -174,7 +174,7 @@ public class NodeSecret {
     KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
     keyStore.load(null, null);
     keyStore.setCertificateEntry(alias, crt); // todo - possible fail point
-    if(prv != null) { // todo - most likely current failpoint is here or line above for client certs
+    if (prv != null) { // todo - most likely current failpoint is here or line above for client certs
       keyStore.setKeyEntry(alias, prv, null, new Certificate[]{crt});
     }
     return keyStore;
@@ -190,7 +190,7 @@ public class NodeSecret {
     ContentSigner signer = new JcaContentSignerBuilder("SHA256WithRSAEncryption").build(issuerKeypair.getPrivate());
     X509CertificateHolder crtHolder = subjectCertBuilder.build(signer);
     InputStream is = new ByteArrayInputStream(crtHolder.getEncoded());
-    if(!wasBouncyCastleProviderInitialized) { // do not auto-init statically
+    if (!wasBouncyCastleProviderInitialized) { // do not auto-init statically
       Security.addProvider(new BouncyCastleProvider()); // takes about 150ms and is not always needed
       wasBouncyCastleProviderInitialized = true;
     }

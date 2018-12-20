@@ -5,8 +5,11 @@
 
 package com.yourorg.sample.api.retrofit;
 
+import android.support.annotation.NonNull;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.yourorg.sample.Constants;
 import com.yourorg.sample.node.NodeSecret;
 
 import java.io.IOException;
@@ -34,22 +37,7 @@ public final class RetrofitHelper {
   private Gson gson;
 
   private RetrofitHelper(final NodeSecret nodeSecret) {
-    OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
-        .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
-        .readTimeout(TIMEOUT, TimeUnit.SECONDS)
-        .writeTimeout(TIMEOUT, TimeUnit.SECONDS);
-
-    okHttpClientBuilder.addInterceptor(headersInterceptor(nodeSecret));
-    HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-    loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-    okHttpClientBuilder.addInterceptor(loggingInterceptor);
-    okHttpClientBuilder.sslSocketFactory(nodeSecret.getSslSocketFactory(), nodeSecret.getSslTrustManager());
-    okHttpClientBuilder.followRedirects(false);
-    okHttpClientBuilder.followSslRedirects(false);
-    okHttpClientBuilder.hostnameVerifier(trustOurOwnCrtHostnameVerifier(nodeSecret));
-
-    okHttpClient = okHttpClientBuilder.build();
-
+    okHttpClient = getOkHttpClientBuilder(nodeSecret).build();
     gson = new GsonBuilder()
         .excludeFieldsWithoutExposeAnnotation()
         .serializeNulls()
@@ -61,6 +49,41 @@ public final class RetrofitHelper {
         .client(okHttpClient);
 
     retrofit = retrofitBuilder.build();
+  }
+
+  public static RetrofitHelper getInstance(NodeSecret nodeSecret) {
+    return new RetrofitHelper(nodeSecret);
+  }
+
+  public OkHttpClient getOkHttpClient() {
+    return okHttpClient;
+  }
+
+  public Retrofit getRetrofit() {
+    return retrofit;
+  }
+
+  public Gson getGson() {
+    return gson;
+  }
+
+  @NonNull
+  private OkHttpClient.Builder getOkHttpClientBuilder(NodeSecret nodeSecret) {
+    return new OkHttpClient.Builder()
+        .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
+        .readTimeout(TIMEOUT, TimeUnit.SECONDS)
+        .writeTimeout(TIMEOUT, TimeUnit.SECONDS)
+        .addInterceptor(headersInterceptor(nodeSecret))
+        .addInterceptor(getHttpLoggingInterceptor())
+        .sslSocketFactory(nodeSecret.getSslSocketFactory(), nodeSecret.getSslTrustManager())
+        .followRedirects(false)
+        .followSslRedirects(false)
+        .hostnameVerifier(trustOurOwnCrtHostnameVerifier(nodeSecret));
+  }
+
+  @NonNull
+  private HttpLoggingInterceptor getHttpLoggingInterceptor() {
+    return new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY);
   }
 
   private Interceptor headersInterceptor(final NodeSecret nodeSecret) {
@@ -86,7 +109,7 @@ public final class RetrofitHelper {
       public boolean verify(String host, SSLSession session) {
         try {
           X509Certificate crt = (X509Certificate) session.getPeerCertificates()[0];
-          if(!"localhost".equals(host) || !"CN=localhost".equals(crt.getSubjectDN().getName())) {
+          if (!Constants.HOST_NAME.equals(host) || !Constants.X500_SERVER_CRT_SUBJECT.equals(crt.getSubjectDN().getName())) {
             return false;
           }
           return crt.getSerialNumber().equals(nodeSecret.getSslCrtSerialNumber());
@@ -95,21 +118,5 @@ public final class RetrofitHelper {
         }
       }
     };
-  }
-
-  public static RetrofitHelper getInstance(NodeSecret nodeSecret) {
-    return new RetrofitHelper(nodeSecret);
-  }
-
-  public OkHttpClient getOkHttpClient() {
-    return okHttpClient;
-  }
-
-  public Retrofit getRetrofit() {
-    return retrofit;
-  }
-
-  public Gson getGson() {
-    return gson;
   }
 }
