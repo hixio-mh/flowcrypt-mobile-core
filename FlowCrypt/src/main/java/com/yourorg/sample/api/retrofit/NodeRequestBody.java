@@ -1,5 +1,7 @@
 package com.yourorg.sample.api.retrofit;
 
+import com.google.gson.GsonBuilder;
+
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -33,7 +35,11 @@ public class NodeRequestBody<T> extends RequestBody {
   public void writeTo(BufferedSink sink) throws IOException {
     sink.writeUtf8(endpoint);
     sink.writeUtf8("\n");
-    sink.writeUtf8(request == null ? "{}" : request.toString());
+    if (request == null) {
+      sink.writeUtf8("{}");
+    } else {
+      sink.writeUtf8(new GsonBuilder().create().toJson(request));
+    }
     sink.writeUtf8("\n");
     if (inputStream != null) {
       OutputStream outputStream = sink.outputStream();
