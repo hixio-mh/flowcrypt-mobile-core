@@ -42,6 +42,9 @@ const handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<Buf
   }
   if (req.url === '/' && req.method === 'POST') {
     const { endpoint, request, data } = await parseReq(req);
+    // console.log(endpoint);
+    // console.log(request);
+    // console.log(`LEN: ${Buffer.concat(data).toString().length}`);
     return await delegateReqToEndpoint(endpoint, request, data);
   }
   throw new HttpClientErr(`unknown path ${req.url}`);
