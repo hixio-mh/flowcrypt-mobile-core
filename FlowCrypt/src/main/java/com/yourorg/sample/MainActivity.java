@@ -20,6 +20,7 @@ import com.yourorg.sample.node.NodeSecretCerts;
 import com.yourorg.sample.node.results.DecryptFileResult;
 import com.yourorg.sample.node.results.DecryptMsgResult;
 import com.yourorg.sample.node.results.EncryptFileResult;
+import com.yourorg.sample.node.results.EncryptMsgResult;
 import com.yourorg.sample.node.results.MsgBlock;
 import com.yourorg.sample.node.results.PgpKeyInfo;
 import com.yourorg.sample.node.results.RawNodeResult;
@@ -170,11 +171,9 @@ public class MainActivity extends AppCompatActivity {
 
     RequestBody requestBody = new NodeRequestBody<>("encryptMsg", new Pubkeys(testData.getMixedPubKeys()), byteArrayInputStream);
     Response<ResponseBody> responseBody = requestService.request(requestBody).execute();
-    String encryptedMsg = responseBody.body().string();
-
-    addResultLine(actionName, responseBody.raw().receivedResponseAtMillis() - responseBody.raw().sentRequestAtMillis(), null);
-
-    return encryptedMsg.substring(3);
+    EncryptMsgResult encryptMsgResult = new EncryptMsgResult(null, responseBody.body().byteStream(), responseBody.raw().sentRequestAtMillis());
+    addResultLine(actionName, encryptMsgResult);
+    return encryptMsgResult.getEncryptedString();
   }
 
   private byte[] encryptFileAndRender(String actionName, byte[] data) {
@@ -203,10 +202,9 @@ public class MainActivity extends AppCompatActivity {
 
     RequestBody requestBody = new NodeRequestBody<>("decryptMsg", new DecryptModel(prvKeys, testData.passphrases(), null), byteArrayInputStream);
     Response<ResponseBody> responseBody = requestService.request(requestBody).execute();
-    String decryptedMsg = responseBody.body().string();
+    DecryptMsgResult r = new DecryptMsgResult(null, responseBody.body().byteStream(), responseBody.raw().sentRequestAtMillis());
 
-
-    DecryptMsgResult r = Node.decryptMsg(data, prvKeys, testData.passphrases(), null);
+//    DecryptMsgResult r = Node.decryptMsg(data, prvKeys, testData.passphrases(), null);
     if (r.getErr() != null) {
       addResultLine(actionName, r.ms, r.getErr(), false);
     } else if (r.getDecryptErr() != null) {
