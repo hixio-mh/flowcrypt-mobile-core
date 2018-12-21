@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
@@ -20,18 +19,12 @@ import okio.Source;
 public class NodeRequestBody<T> extends RequestBody {
   private String endpoint;
   private T request;
-  private InputStream inputStream;
-
-  public NodeRequestBody(String endpoint, T request, InputStream inputStream) {
-    this.endpoint = endpoint;
-    this.request = request;
-    this.inputStream = new BufferedInputStream(inputStream);
-  }
+  private byte[] data;
 
   public NodeRequestBody(String endpoint, T request, byte[] data) {
     this.endpoint = endpoint;
     this.request = request;
-    this.inputStream = new BufferedInputStream(new ByteArrayInputStream(data));
+    this.data = data;
   }
 
   @Override
@@ -49,10 +42,10 @@ public class NodeRequestBody<T> extends RequestBody {
       sink.writeUtf8(new GsonBuilder().create().toJson(request));
     }
     sink.writeByte('\n');
-    if (inputStream != null) {
+    if (data != null) {
       Source source = null;
       try {
-        source = Okio.source(new BufferedInputStream(inputStream));
+        source = Okio.source(new BufferedInputStream(new ByteArrayInputStream(data)));
         sink.writeAll(source);
       } finally {
         Util.closeQuietly(source);
@@ -74,13 +67,5 @@ public class NodeRequestBody<T> extends RequestBody {
 
   public void setRequest(T request) {
     this.request = request;
-  }
-
-  public InputStream getInputStream() {
-    return inputStream;
-  }
-
-  public void setInputStream(InputStream inputStream) {
-    this.inputStream = inputStream;
   }
 }

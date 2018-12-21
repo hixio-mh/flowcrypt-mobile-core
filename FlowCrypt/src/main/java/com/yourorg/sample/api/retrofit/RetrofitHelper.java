@@ -31,6 +31,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 public final class RetrofitHelper {
   private static final int TIMEOUT = 30;
+  private static RetrofitHelper ourInstance;
   private OkHttpClient okHttpClient;
   private Retrofit retrofit;
   private Gson gson;
@@ -51,7 +52,11 @@ public final class RetrofitHelper {
   }
 
   public static RetrofitHelper getInstance(NodeSecret nodeSecret) {
-    return new RetrofitHelper(nodeSecret);
+    if (ourInstance == null) {
+      ourInstance = new RetrofitHelper(nodeSecret);
+    }
+
+    return ourInstance;
   }
 
   public OkHttpClient getOkHttpClient() {

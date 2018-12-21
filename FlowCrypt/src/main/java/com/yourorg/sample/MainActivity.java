@@ -12,6 +12,7 @@ import com.yourorg.sample.api.retrofit.NodeRequestBody;
 import com.yourorg.sample.api.retrofit.RequestService;
 import com.yourorg.sample.api.retrofit.RetrofitHelper;
 import com.yourorg.sample.api.retrofit.request.model.DecryptModel;
+import com.yourorg.sample.api.retrofit.request.model.FileModel;
 import com.yourorg.sample.api.retrofit.request.model.Pubkeys;
 import com.yourorg.sample.api.retrofit.response.models.Version;
 import com.yourorg.sample.node.Node;
@@ -25,14 +26,12 @@ import com.yourorg.sample.node.results.MsgBlock;
 import com.yourorg.sample.node.results.PgpKeyInfo;
 import com.yourorg.sample.node.results.RawNodeResult;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 import okhttp3.RequestBody;
@@ -173,14 +172,18 @@ public class MainActivity extends AppCompatActivity {
     return encryptMsgResult.getEncryptedString();
   }
 
-  private byte[] encryptFileAndRender(String actionName, byte[] data) {
-    EncryptFileResult r = Node.encryptFile(data, testData.getMixedPubKeys(), "file.txt");
+  private byte[] encryptFileAndRender(String actionName, byte[] data, RequestService requestService) throws IOException {
+    RequestBody requestBody = new NodeRequestBody<>("encryptFile", new FileModel(testData.getMixedPubKeys(), "file.txt"), data);
+    Response<ResponseBody> responseBody = requestService.request(requestBody).execute();
+    EncryptFileResult r = new EncryptFileResult(null, responseBody.body().byteStream(), responseBody.raw().receivedResponseAtMillis() - responseBody.raw().sentRequestAtMillis());
     addResultLine(actionName, r);
     return r.getEncryptedDataBytes();
   }
 
-  private void decryptFileAndRender(String actionName, byte[] encryptedData, PgpKeyInfo[] prvKeys, byte[] originalData) throws UnsupportedEncodingException {
-    DecryptFileResult r = Node.decryptFile(encryptedData, prvKeys, testData.passphrases(), null);
+  private void decryptFileAndRender(String actionName, byte[] encryptedData, PgpKeyInfo[] prvKeys, byte[] originalData, RequestService requestService) throws IOException {
+    RequestBody requestBody = new NodeRequestBody<>("decryptFile", new DecryptModel(prvKeys, testData.passphrases(), null), encryptedData);
+    Response<ResponseBody> responseBody = requestService.request(requestBody).execute();
+    DecryptFileResult r = new DecryptFileResult(null, responseBody.body().byteStream(), responseBody.raw().receivedResponseAtMillis() - responseBody.raw().sentRequestAtMillis());
     if (r.getErr() != null) {
       addResultLine(actionName, r.ms, r.getErr(), false);
     } else if (r.getDecryptErr() != null) {
@@ -230,8 +233,7 @@ public class MainActivity extends AppCompatActivity {
     final RetrofitHelper retrofitHelper = RetrofitHelper.getInstance(nodeSecret);
     RequestService requestService = retrofitHelper.getRetrofit().create(RequestService.class);
 
-    ByteArrayInputStream shortData = new ByteArrayInputStream("abc".getBytes());
-    requestService.getVersion(new NodeRequestBody<>("version", null, shortData)).enqueue(new Callback<Version>() {
+    requestService.getVersion(new NodeRequestBody<>("version", null, "abc".getBytes())).enqueue(new Callback<Version>() {
       @Override
       public void onResponse(Call<Version> call, Response<Version> response) {
         String text = null;
@@ -277,15 +279,15 @@ public class MainActivity extends AppCompatActivity {
           decryptMsgAndRender("decrypt-msg-ecc", encryptedMsg.getBytes(), testData.eccPrvKeyInfo(), requestService);
           decryptMsgAndRender("decrypt-msg-rsa2048", encryptedMsg.getBytes(), testData.rsa2048PrvKeyInfo(), requestService);
           decryptMsgAndRender("decrypt-msg-rsa4096", encryptedMsg.getBytes(), testData.rsa4096PrvKeyInfo(), requestService);
-          /*byte[] encryptedFileBytes = encryptFileAndRender("encrypt-file", testMsgBytes);
-          decryptFileAndRender("decrypt-file-ecc", encryptedFileBytes, testData.eccPrvKeyInfo(), testMsgBytes);
-          decryptFileAndRender("decrypt-file-rsa2048", encryptedFileBytes, testData.rsa2048PrvKeyInfo(), testMsgBytes);
-          decryptFileAndRender("decrypt-file-rsa4096", encryptedFileBytes, testData.rsa4096PrvKeyInfo(), testMsgBytes);
+          byte[] encryptedFileBytes = encryptFileAndRender("encrypt-file", testMsgBytes, requestService);
+          decryptFileAndRender("decrypt-file-ecc", encryptedFileBytes, testData.eccPrvKeyInfo(), testMsgBytes, requestService);
+          decryptFileAndRender("decrypt-file-rsa2048", encryptedFileBytes, testData.rsa2048PrvKeyInfo(), testMsgBytes, requestService);
+          decryptFileAndRender("decrypt-file-rsa4096", encryptedFileBytes, testData.rsa4096PrvKeyInfo(), testMsgBytes, requestService);
           for (int mb : new int[]{1, 3, 5}) {
             byte[] payload = testData.payload(mb);
-            byte[] bytes = encryptFileAndRender("encrypt-file-" + mb + "m" + "-rsa2048", payload);
-            decryptFileAndRender("decrypt-file-" + mb + "m" + "-rsa2048", bytes, testData.rsa2048PrvKeyInfo(), payload);
-          }*/
+            byte[] bytes = encryptFileAndRender("encrypt-file-" + mb + "m" + "-rsa2048", payload, requestService);
+            decryptFileAndRender("decrypt-file-" + mb + "m" + "-rsa2048", bytes, testData.rsa2048PrvKeyInfo(), payload, requestService);
+          }
           if (!hasTestFailure) {
             addResultLine("all-tests", System.currentTimeMillis() - startTime, "success", true);
           } else {
