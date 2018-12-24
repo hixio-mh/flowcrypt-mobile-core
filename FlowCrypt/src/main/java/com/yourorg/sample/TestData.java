@@ -6,36 +6,7 @@ import java.util.Arrays;
 
 public class TestData {
 
-  TestData() {
-  }
-
-  public byte[] payload(int mb) {
-    byte[] data = new byte[mb == 0 ? 100 : mb * 1024 * 1024]; // min 100 bytes
-    Arrays.fill(data, (byte)'X');
-    return data;
-  }
-
-  public String[] passphrases() {
-    return new String[]{"some long pp"};
-  }
-
-  public PgpKeyInfo[] eccPrvKeyInfo () {
-    return new PgpKeyInfo[] { new PgpKeyInfo(eccPrvKey, "063635B3E33EB14C")};
-  }
-
-  public PgpKeyInfo[] rsa2048PrvKeyInfo () {
-    return new PgpKeyInfo[] { new PgpKeyInfo(rsa2048PrvKey, "3A30F4CC0A9A8F10")};
-  }
-
-  public PgpKeyInfo[] rsa4096PrvKeyInfo () {
-    return new PgpKeyInfo[] { new PgpKeyInfo(rsa4096PrvKey, "7C307E6F2092962D")};
-  }
-
-  public String[] getMixedPubKeys() {
-    return new String[] { eccPubKey, rsa2048PubKey, rsa4096PubKey };
-  }
-
-  private String eccPubKey = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
+  public static final String ECC_PUB_KEY = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
       "Version: FlowCrypt 6.3.5 Gmail Encryption\n" +
       "Comment: Seamlessly send and receive encrypted email\n" +
       "\n" +
@@ -50,7 +21,7 @@ public class TestData {
       "=WZgv\n" +
       "-----END PGP PUBLIC KEY BLOCK-----\n";
 
-  private String eccPrvKey = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+  public static final String ECC_PRV_KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
       "Version: FlowCrypt 6.3.5 Gmail Encryption\n" +
       "Comment: Seamlessly send and receive encrypted email\n" +
       "\n" +
@@ -69,7 +40,7 @@ public class TestData {
       "=8qZ6\n" +
       "-----END PGP PRIVATE KEY BLOCK-----";
 
-  private String rsa2048PrvKey = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+  public static final String RSA_2048_PRV_KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
       "Version: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption\n" +
       "Comment: Seamlessly send and receive encrypted email\n" +
       "\n" +
@@ -133,7 +104,7 @@ public class TestData {
       "=15Xc\n" +
       "-----END PGP PRIVATE KEY BLOCK-----";
 
-  private String rsa2048PubKey = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
+  public static final String RSA_2048_PUB_KEY = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
       "Version: FlowCrypt 6.3.5 Gmail Encryption\n" +
       "Comment: Seamlessly send and receive encrypted email\n" +
       "\n" +
@@ -166,7 +137,7 @@ public class TestData {
       "=VKq5\n" +
       "-----END PGP PUBLIC KEY BLOCK-----\n";
 
-  private String rsa4096PrvKey = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+  public static final String RSA_4096_PRV_KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
       "Version: FlowCrypt  Email Encryption - flowcrypt.com\n" +
       "Comment: Seamlessly send, receive and search encrypted email\n" +
       "\n" +
@@ -282,7 +253,7 @@ public class TestData {
       "=5aR+\n" +
       "-----END PGP PRIVATE KEY BLOCK-----";
 
-  private String rsa4096PubKey = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
+  public static final String RSA_4096_PUB_KEY = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
       "Version: FlowCrypt 6.3.5 Gmail Encryption\n" +
       "Comment: Seamlessly send and receive encrypted email\n" +
       "\n" +
@@ -338,5 +309,32 @@ public class TestData {
       "=eep/\n" +
       "-----END PGP PUBLIC KEY BLOCK-----\n";
 
+  TestData() {
+  }
 
+  public static byte[] payload(int mb) {
+    byte[] data = new byte[mb == 0 ? 100 : mb * 1024 * 1024]; // min 100 bytes
+    Arrays.fill(data, (byte) 'X');
+    return data;
+  }
+
+  public static String[] passphrases() {
+    return new String[]{"some long pp"};
+  }
+
+  public static PgpKeyInfo[] eccPrvKeyInfo() {
+    return new PgpKeyInfo[]{new PgpKeyInfo(ECC_PRV_KEY, "063635B3E33EB14C")};
+  }
+
+  public static PgpKeyInfo[] rsa2048PrvKeyInfo() {
+    return new PgpKeyInfo[]{new PgpKeyInfo(RSA_2048_PRV_KEY, "3A30F4CC0A9A8F10")};
+  }
+
+  public static PgpKeyInfo[] rsa4096PrvKeyInfo() {
+    return new PgpKeyInfo[]{new PgpKeyInfo(RSA_4096_PRV_KEY, "7C307E6F2092962D")};
+  }
+
+  public static String[] getMixedPubKeys() {
+    return new String[]{ECC_PUB_KEY, RSA_2048_PUB_KEY, RSA_4096_PUB_KEY};
+  }
 }

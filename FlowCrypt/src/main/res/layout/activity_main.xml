@@ -28,6 +28,17 @@
         app:layout_constraintLeft_toRightOf="@+id/btnVersion"
         tools:layout_editor_absoluteY="8dp" />
 
+    <Button
+        android:id="@+id/btnChooseFile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/choose_file"
+        app:layout_constraintLeft_toRightOf="@+id/btnAllTests"
+        tools:layout_editor_absoluteY="8dp" />
+
     <TextView
         android:id="@+id/tvResult"
         android:layout_width="341dp"

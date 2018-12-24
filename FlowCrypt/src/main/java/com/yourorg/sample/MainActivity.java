@@ -1,9 +1,13 @@
 package com.yourorg.sample;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
@@ -26,12 +30,18 @@ import com.yourorg.sample.node.results.MsgBlock;
 import com.yourorg.sample.node.results.PgpKeyInfo;
 import com.yourorg.sample.node.results.RawNodeResult;
 
+import org.apache.commons.io.IOUtils;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 
 import okhttp3.RequestBody;
@@ -42,7 +52,8 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-  private static final TestData testData = new TestData();
+  private static final int REQUEST_CODE_CHOOSE_FILE = 10;
+  
   private final String nodeSecretsCacheFilename = "flowcrypt-node-secrets-cache";
   private final String testMsg = "this is ~\na test for\n\ndecrypting\nunicode:\u03A3\nthat's all";
   private final String testMsgHtml = "this is ~<br>a test for<br><br>decrypting<br>unicode:\u03A3<br>that&#39;s all";
@@ -88,9 +99,29 @@ public class MainActivity extends AppCompatActivity {
         runAllTestsAndRender();
       }
     });
+    findViewById(R.id.btnChooseFile).setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        chooseFile();
+      }
+    });
   }
 
-  public void asyncGenSecretsAndStartNode() {
+  @Override
+  public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+
+    switch (requestCode) {
+      case REQUEST_CODE_CHOOSE_FILE:
+        switch (resultCode) {
+          case Activity.RESULT_OK:
+            encryptDecryptFile(data.getData());
+            break;
+        }
+
+    }
+  }
+
+  private void asyncGenSecretsAndStartNode() {
     new Thread(new Runnable() {
       @Override
       public void run() {
@@ -126,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
     }).start();
   }
 
-  public void newTitleEvent(String title) {
+  private void newTitleEvent(String title) {
     System.out.println("newTitleEvent: " + title);
     newTitle = title;
     newTitleHandler.sendEmptyMessage(0);
@@ -165,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private String encryptMsgAndRender(String actionName, byte[] data, RequestService requestService) throws IOException {
-    RequestBody requestBody = new NodeRequestBody<>("encryptMsg", new Pubkeys(testData.getMixedPubKeys()), data);
+    RequestBody requestBody = new NodeRequestBody<>("encryptMsg", new Pubkeys(TestData.getMixedPubKeys()), data);
     Response<ResponseBody> responseBody = requestService.request(requestBody).execute();
     EncryptMsgResult encryptMsgResult = new EncryptMsgResult(null, responseBody.body().byteStream(), responseBody.raw().receivedResponseAtMillis() - responseBody.raw().sentRequestAtMillis());
     addResultLine(actionName, encryptMsgResult);
@@ -173,7 +204,15 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private byte[] encryptFileAndRender(String actionName, byte[] data, RequestService requestService) throws IOException {
-    RequestBody requestBody = new NodeRequestBody<>("encryptFile", new FileModel(testData.getMixedPubKeys(), "file.txt"), data);
+    RequestBody requestBody = new NodeRequestBody<>("encryptFile", new FileModel(TestData.getMixedPubKeys(), "file.txt"), data);
+    Response<ResponseBody> responseBody = requestService.request(requestBody).execute();
+    EncryptFileResult r = new EncryptFileResult(null, responseBody.body().byteStream(), responseBody.raw().receivedResponseAtMillis() - responseBody.raw().sentRequestAtMillis());
+    addResultLine(actionName, r);
+    return r.getEncryptedDataBytes();
+  }
+
+  private byte[] encryptFileAndRender(String actionName, Uri uri, RequestService requestService) throws IOException {
+    RequestBody requestBody = new NodeRequestBody<>(this.getApplicationContext(), "encryptFile", new FileModel(TestData.getMixedPubKeys(), "file.txt"), uri);
     Response<ResponseBody> responseBody = requestService.request(requestBody).execute();
     EncryptFileResult r = new EncryptFileResult(null, responseBody.body().byteStream(), responseBody.raw().receivedResponseAtMillis() - responseBody.raw().sentRequestAtMillis());
     addResultLine(actionName, r);
@@ -181,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void decryptFileAndRender(String actionName, byte[] encryptedData, PgpKeyInfo[] prvKeys, byte[] originalData, RequestService requestService) throws IOException {
-    RequestBody requestBody = new NodeRequestBody<>("decryptFile", new DecryptModel(prvKeys, testData.passphrases(), null), encryptedData);
+    RequestBody requestBody = new NodeRequestBody<>("decryptFile", new DecryptModel(prvKeys, TestData.passphrases(), null), encryptedData);
     Response<ResponseBody> responseBody = requestService.request(requestBody).execute();
     DecryptFileResult r = new DecryptFileResult(null, responseBody.body().byteStream(), responseBody.raw().receivedResponseAtMillis() - responseBody.raw().sentRequestAtMillis());
     if (r.getErr() != null) {
@@ -197,12 +236,27 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
+  private void decryptFileAndRender(String actionName, File file, PgpKeyInfo[] prvKeys, RequestService requestService) throws IOException {
+    RequestBody requestBody = new NodeRequestBody<>("decryptFile", new DecryptModel(prvKeys, TestData.passphrases(), null), file);
+    Response<ResponseBody> responseBody = requestService.request(requestBody).execute();
+    DecryptFileResult r = new DecryptFileResult(null, responseBody.body().byteStream(), responseBody.raw().receivedResponseAtMillis() - responseBody.raw().sentRequestAtMillis());
+    if (r.getErr() != null) {
+      addResultLine(actionName, r.ms, r.getErr(), false);
+    } else if (r.getDecryptErr() != null) {
+      addResultLine(actionName, r.ms, r.getDecryptErr().type + ":" + r.getDecryptErr().error, false);
+    } else if (!"file.txt".equals(r.getName())) {
+      addResultLine(actionName, r.ms, "wrong filename", false);
+    } else {
+      addResultLine(actionName, r);
+    }
+  }
+
   private void decryptMsgAndRender(String actionName, byte[] data, PgpKeyInfo[] prvKeys, RequestService requestService) throws IOException {
-    RequestBody requestBody = new NodeRequestBody<>("decryptMsg", new DecryptModel(prvKeys, testData.passphrases(), null), data);
+    RequestBody requestBody = new NodeRequestBody<>("decryptMsg", new DecryptModel(prvKeys, TestData.passphrases(), null), data);
     Response<ResponseBody> responseBody = requestService.request(requestBody).execute();
     DecryptMsgResult r = new DecryptMsgResult(null, responseBody.body().byteStream(), responseBody.raw().receivedResponseAtMillis() - responseBody.raw().sentRequestAtMillis());
 
-//    DecryptMsgResult r = Node.decryptMsg(data, prvKeys, testData.passphrases(), null);
+//    DecryptMsgResult r = Node.decryptMsg(data, prvKeys, TestData.passphrases(), null);
     if (r.getErr() != null) {
       addResultLine(actionName, r.ms, r.getErr(), false);
     } else if (r.getDecryptErr() != null) {
@@ -229,7 +283,7 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  public void getVersionsAndRender() {
+  private void getVersionsAndRender() {
     final RetrofitHelper retrofitHelper = RetrofitHelper.getInstance(nodeSecret);
     RequestService requestService = retrofitHelper.getRetrofit().create(RequestService.class);
 
@@ -263,7 +317,7 @@ public class MainActivity extends AppCompatActivity {
     });
   }
 
-  public void runAllTestsAndRender() {
+  private void runAllTestsAndRender() {
     resultText = "";
     final long startTime = System.currentTimeMillis();
     Thread t = new Thread(new Runnable() {
@@ -276,17 +330,17 @@ public class MainActivity extends AppCompatActivity {
           hasTestFailure = false;
           byte[] testMsgBytes = testMsg.getBytes();
           String encryptedMsg = encryptMsgAndRender("encrypt-msg", testMsgBytes, requestService);
-          decryptMsgAndRender("decrypt-msg-ecc", encryptedMsg.getBytes(), testData.eccPrvKeyInfo(), requestService);
-          decryptMsgAndRender("decrypt-msg-rsa2048", encryptedMsg.getBytes(), testData.rsa2048PrvKeyInfo(), requestService);
-          decryptMsgAndRender("decrypt-msg-rsa4096", encryptedMsg.getBytes(), testData.rsa4096PrvKeyInfo(), requestService);
+          decryptMsgAndRender("decrypt-msg-ecc", encryptedMsg.getBytes(), TestData.eccPrvKeyInfo(), requestService);
+          decryptMsgAndRender("decrypt-msg-rsa2048", encryptedMsg.getBytes(), TestData.rsa2048PrvKeyInfo(), requestService);
+          decryptMsgAndRender("decrypt-msg-rsa4096", encryptedMsg.getBytes(), TestData.rsa4096PrvKeyInfo(), requestService);
           byte[] encryptedFileBytes = encryptFileAndRender("encrypt-file", testMsgBytes, requestService);
-          decryptFileAndRender("decrypt-file-ecc", encryptedFileBytes, testData.eccPrvKeyInfo(), testMsgBytes, requestService);
-          decryptFileAndRender("decrypt-file-rsa2048", encryptedFileBytes, testData.rsa2048PrvKeyInfo(), testMsgBytes, requestService);
-          decryptFileAndRender("decrypt-file-rsa4096", encryptedFileBytes, testData.rsa4096PrvKeyInfo(), testMsgBytes, requestService);
+          decryptFileAndRender("decrypt-file-ecc", encryptedFileBytes, TestData.eccPrvKeyInfo(), testMsgBytes, requestService);
+          decryptFileAndRender("decrypt-file-rsa2048", encryptedFileBytes, TestData.rsa2048PrvKeyInfo(), testMsgBytes, requestService);
+          decryptFileAndRender("decrypt-file-rsa4096", encryptedFileBytes, TestData.rsa4096PrvKeyInfo(), testMsgBytes, requestService);
           for (int mb : new int[]{1, 3, 5}) {
-            byte[] payload = testData.payload(mb);
+            byte[] payload = TestData.payload(mb);
             byte[] bytes = encryptFileAndRender("encrypt-file-" + mb + "m" + "-rsa2048", payload, requestService);
-            decryptFileAndRender("decrypt-file-" + mb + "m" + "-rsa2048", bytes, testData.rsa2048PrvKeyInfo(), payload, requestService);
+            decryptFileAndRender("decrypt-file-" + mb + "m" + "-rsa2048", bytes, TestData.rsa2048PrvKeyInfo(), payload, requestService);
           }
           if (!hasTestFailure) {
             addResultLine("all-tests", System.currentTimeMillis() - startTime, "success", true);
@@ -309,7 +363,7 @@ public class MainActivity extends AppCompatActivity {
   /**
    * this is just an example. Production app should use encrypted store
    */
-  public void nodeSecretCertsCacheSave(NodeSecretCerts nodeSecretCerts) {
+  private void nodeSecretCertsCacheSave(NodeSecretCerts nodeSecretCerts) {
     try {
       FileOutputStream fos = getApplicationContext().openFileOutput(nodeSecretsCacheFilename, Context.MODE_PRIVATE);
       ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -324,7 +378,7 @@ public class MainActivity extends AppCompatActivity {
   /**
    * this is just an example. Production app should use encrypted store
    */
-  public NodeSecretCerts nodeSecretCertsCacheLoad() {
+  private NodeSecretCerts nodeSecretCertsCacheLoad() {
     try {
       FileInputStream fis = getApplicationContext().openFileInput(nodeSecretsCacheFilename);
       ObjectInputStream ois = new ObjectInputStream(fis);
@@ -334,6 +388,55 @@ public class MainActivity extends AppCompatActivity {
     } catch (Exception e) {
       throw new RuntimeException("Could not load certs cache", e);
     }
+  }
+
+  private void chooseFile() {
+    Intent intent = new Intent();
+    intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
+    intent.addCategory(Intent.CATEGORY_OPENABLE);
+    intent.setType("*/*");
+    startActivityForResult(Intent.createChooser(intent, getString(R.string.choose_file)), REQUEST_CODE_CHOOSE_FILE);
+  }
+
+  private void encryptDecryptFile(final Uri data) {
+    resultText = "";
+    final long startTime = System.currentTimeMillis();
+    Thread t = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          final RetrofitHelper retrofitHelper = RetrofitHelper.getInstance(nodeSecret);
+          RequestService requestService = retrofitHelper.getRetrofit().create(RequestService.class);
+
+          hasTestFailure = false;
+          byte[] encryptedFileBytes = encryptFileAndRender("encrypt-file", data, requestService);
+
+          File temp = File.createTempFile("prefix", "suffix", getCacheDir());
+          try (InputStream inputStream = new ByteArrayInputStream(encryptedFileBytes);
+               OutputStream outputStream = new FileOutputStream(temp)) {
+            IOUtils.copy(inputStream, outputStream);
+          }
+
+          decryptFileAndRender("decrypt-file-ecc", temp, TestData.eccPrvKeyInfo(), requestService);
+          decryptFileAndRender("decrypt-file-rsa2048", temp, TestData.rsa2048PrvKeyInfo(), requestService);
+          decryptFileAndRender("decrypt-file-rsa4096", temp, TestData.rsa4096PrvKeyInfo(), requestService);
+
+          if (!hasTestFailure) {
+            addResultLine("all-tests", System.currentTimeMillis() - startTime, "success", true);
+          } else {
+            addResultLine("all-tests", System.currentTimeMillis() - startTime, "hasTestFailure", true);
+          }
+        } catch (Exception e) {
+          addResultLine("all-tests", System.currentTimeMillis() - startTime, e, true);
+        }
+      }
+    });
+    t.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+      public void uncaughtException(Thread th, Throwable e) {
+        addResultLine("all-tests", System.currentTimeMillis() - startTime, e, true);
+      }
+    });
+    t.start();
   }
 
 }

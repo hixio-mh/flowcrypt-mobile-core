@@ -1,9 +1,14 @@
 package com.yourorg.sample.api.retrofit;
 
+import android.content.Context;
+import android.net.Uri;
+
 import com.google.gson.GsonBuilder;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 import okhttp3.MediaType;
@@ -17,14 +22,30 @@ import okio.Source;
  * @author DenBond7
  */
 public class NodeRequestBody<T> extends RequestBody {
+  private Context context;
   private String endpoint;
   private T request;
   private byte[] data;
+  private Uri uri;
+  private File file;
 
   public NodeRequestBody(String endpoint, T request, byte[] data) {
     this.endpoint = endpoint;
     this.request = request;
     this.data = data;
+  }
+
+  public NodeRequestBody(String endpoint, T request, File file) {
+    this.endpoint = endpoint;
+    this.request = request;
+    this.file = file;
+  }
+
+  public NodeRequestBody(Context context, String endpoint, T request, Uri uri) {
+    this.context = context;
+    this.endpoint = endpoint;
+    this.request = request;
+    this.uri = uri;
   }
 
   @Override
@@ -46,6 +67,26 @@ public class NodeRequestBody<T> extends RequestBody {
       Source source = null;
       try {
         source = Okio.source(new BufferedInputStream(new ByteArrayInputStream(data)));
+        sink.writeAll(source);
+      } finally {
+        Util.closeQuietly(source);
+      }
+    }
+
+    if (uri != null) {
+      Source source = null;
+      try {
+        source = Okio.source(context.getContentResolver().openInputStream(uri));
+        sink.writeAll(source);
+      } finally {
+        Util.closeQuietly(source);
+      }
+    }
+
+    if (file != null) {
+      Source source = null;
+      try {
+        source = Okio.source(new FileInputStream(file));
         sink.writeAll(source);
       } finally {
         Util.closeQuietly(source);

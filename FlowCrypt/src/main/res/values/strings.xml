@@ -2,4 +2,5 @@
     <string name="app_name">FlowCrypt Android Node.js</string>
     <string name="run_all_tests">run all tests</string>
     <string name="versions">VERSION</string>
+    <string name="choose_file">Choose a file</string>
 </resources>
