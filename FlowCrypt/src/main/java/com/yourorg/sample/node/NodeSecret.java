@@ -1,6 +1,6 @@
 package com.yourorg.sample.node;
 
-import com.yourorg.sample.lib.Base64;
+import android.util.Base64;
 
 import org.spongycastle.asn1.x500.X500Name;
 import org.spongycastle.asn1.x509.Extension;
@@ -16,6 +16,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.math.BigInteger;
+import java.net.ServerSocket;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -75,12 +76,16 @@ public class NodeSecret {
   }
 
   public NodeSecret(String writablePath, NodeSecretCerts nodeSecretCertsCache) throws Exception {
+    ServerSocket ss = new ServerSocket(0);
+    port = ss.getLocalPort();
+    ss.close();
+
     unixSocketFilePath = writablePath + "/flowcrypt-node.sock"; // potentially usefull in the future
     secureRandom = new SecureRandom();
     if (nodeSecretCertsCache != null) {
-      ca = nodeSecretCertsCache.ca;
-      crt = nodeSecretCertsCache.crt;
-      key = nodeSecretCertsCache.key;
+      ca = nodeSecretCertsCache.getCa();
+      crt = nodeSecretCertsCache.getCrt();
+      key = nodeSecretCertsCache.getKey();
       caCrt = parseCert(ca);
       srvCrt = parseCert(crt);
       srvKey = parseKey(key);
@@ -145,7 +150,7 @@ public class NodeSecret {
   private PrivateKey parseKey(String keyString) throws NoSuchAlgorithmException, InvalidKeySpecException {
     keyString = keyString.replace(HEADER_PRV_BEGIN, "").replace(HEADER_PRV_END, "").replaceAll("\\n", "");
     KeyFactory kf = KeyFactory.getInstance("RSA");
-    return kf.generatePrivate(new PKCS8EncodedKeySpec(Base64.getDecoder().decode(keyString)));
+    return kf.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(keyString, Base64.DEFAULT)));
   }
 
   private void genCerts() throws Exception {
@@ -169,7 +174,7 @@ public class NodeSecret {
 
   private void genAuthPwdAndHeader() {
     this.authPwd = genPwd();
-    this.authHeader = "Basic " + new String(Base64.getEncoder().encode(this.authPwd.getBytes()));
+    this.authHeader = "Basic " + new String(Base64.encode(this.authPwd.getBytes(), Base64.NO_WRAP));
   }
 
   private KeyStore newKeyStore(String alias, Certificate crt, PrivateKey prv) throws Exception {
@@ -219,7 +224,7 @@ public class NodeSecret {
   private String genPwd() {
     byte bytes[] = new byte[32];
     secureRandom.nextBytes(bytes);
-    return new String(Base64.getEncoder().encode(bytes));
+    return new String(Base64.encode(bytes, Base64.NO_WRAP));
   }
 
 }

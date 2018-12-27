@@ -2,9 +2,9 @@ package com.yourorg.sample.node;
 
 public class NodeSecretCerts implements java.io.Serializable {
 
-  String ca;
-  String key;
-  String crt;
+  private String ca;
+  private String key;
+  private String crt;
 
   private NodeSecretCerts() {
 
@@ -18,4 +18,15 @@ public class NodeSecretCerts implements java.io.Serializable {
     return nodeSecretCerts;
   }
 
+  String getCa() {
+    return ca;
+  }
+
+  String getKey() {
+    return key;
+  }
+
+  String getCrt() {
+    return crt;
+  }
 }

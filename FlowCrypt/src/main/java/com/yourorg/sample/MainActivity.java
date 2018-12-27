@@ -20,7 +20,6 @@ import com.yourorg.sample.api.retrofit.request.model.FileModel;
 import com.yourorg.sample.api.retrofit.request.model.Pubkeys;
 import com.yourorg.sample.api.retrofit.response.models.Version;
 import com.yourorg.sample.node.Node;
-import com.yourorg.sample.node.NodeSecret;
 import com.yourorg.sample.node.NodeSecretCerts;
 import com.yourorg.sample.node.results.DecryptFileResult;
 import com.yourorg.sample.node.results.DecryptMsgResult;
@@ -51,13 +50,11 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
-
   private static final int REQUEST_CODE_CHOOSE_FILE = 10;
-  
+
   private final String nodeSecretsCacheFilename = "flowcrypt-node-secrets-cache";
   private final String testMsg = "this is ~\na test for\n\ndecrypting\nunicode:\u03A3\nthat's all";
   private final String testMsgHtml = "this is ~<br>a test for<br><br>decrypting<br>unicode:\u03A3<br>that&#39;s all";
-//  final private String testMsgShort = "abc\n\u03A3";
 
   private String newTitle = "Node";
   Handler newTitleHandler = new Handler(new Handler.Callback() {
@@ -77,16 +74,16 @@ public class MainActivity extends AppCompatActivity {
     }
   });
   private boolean hasTestFailure;
-  private NodeSecret nodeSecret;
+  private Node node;
+
+  public MainActivity() {
+    node = Node.getInstance();
+  }
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
-
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
-
-    asyncGenSecretsAndStartNode();
-
     tvResult = findViewById(R.id.tvResult);
 
     findViewById(R.id.btnVersion).setOnClickListener(new View.OnClickListener() {
@@ -119,48 +116,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-  }
-
-  private void asyncGenSecretsAndStartNode() {
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          long start = System.currentTimeMillis();
-          newTitleEvent("Loading cache..");
-          NodeSecretCerts certsCache = nodeSecretCertsCacheLoad();
-          long secretsStart = System.currentTimeMillis();
-          if (certsCache == null) {
-            newTitleEvent("Generating node secrets..");
-            nodeSecret = new NodeSecret(getFilesDir().getAbsolutePath());
-            System.out.println("Generating secrets took " + (System.currentTimeMillis() - secretsStart) + "ms");
-            // remember to cache node secrets for faster startup time
-            nodeSecretCertsCacheSave(nodeSecret.getCache());
-          } else {
-            newTitleEvent("Loading node secrets..");
-            nodeSecret = new NodeSecret(getFilesDir().getAbsolutePath(), certsCache);
-            System.out.println("Loading secrets took " + (System.currentTimeMillis() - secretsStart) + "ms");
-          }
-          newTitleEvent("Starting Node..");
-          long nodeStart = System.currentTimeMillis();
-          Node.start(getAssets(), nodeSecret);
-          System.out.println("Starting node took additional " + (System.currentTimeMillis() - nodeStart) + "ms");
-          newTitleEvent("Waiting for Node to become ready..");
-          long readyStart = System.currentTimeMillis();
-          Node.waitUntilReady();
-          System.out.println("Waiting for node to be ready took took additional " + (System.currentTimeMillis() - readyStart) + "ms");
-          newTitleEvent("Node ready from " + (certsCache == null ? "scratch" : "cache") + " (" + (System.currentTimeMillis() - start) + "ms)");
-        } catch (Exception e) {
-          throw new RuntimeException("Could not initialize Node", e);
-        }
-      }
-    }).start();
-  }
-
-  private void newTitleEvent(String title) {
-    System.out.println("newTitleEvent: " + title);
-    newTitle = title;
-    newTitleHandler.sendEmptyMessage(0);
   }
 
   private void addResultLine(String actionName, long ms, String result, boolean isFinal) {
@@ -284,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void getVersionsAndRender() {
-    final RetrofitHelper retrofitHelper = RetrofitHelper.getInstance(nodeSecret);
+    final RetrofitHelper retrofitHelper = RetrofitHelper.getInstance(node.getNodeSecret());
     RequestService requestService = retrofitHelper.getRetrofit().create(RequestService.class);
 
     requestService.getVersion(new NodeRequestBody<>("version", null, "abc".getBytes())).enqueue(new Callback<Version>() {
@@ -324,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
       @Override
       public void run() {
         try {
-          final RetrofitHelper retrofitHelper = RetrofitHelper.getInstance(nodeSecret);
+          final RetrofitHelper retrofitHelper = RetrofitHelper.getInstance(node.getNodeSecret());
           RequestService requestService = retrofitHelper.getRetrofit().create(RequestService.class);
 
           hasTestFailure = false;
@@ -405,7 +360,7 @@ public class MainActivity extends AppCompatActivity {
       @Override
       public void run() {
         try {
-          final RetrofitHelper retrofitHelper = RetrofitHelper.getInstance(nodeSecret);
+          final RetrofitHelper retrofitHelper = RetrofitHelper.getInstance(node.getNodeSecret());
           RequestService requestService = retrofitHelper.getRetrofit().create(RequestService.class);
 
           hasTestFailure = false;

@@ -1,34 +1,89 @@
 package com.yourorg.sample.node;
 
+import android.app.Application;
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MutableLiveData;
+import android.content.Context;
 import android.content.res.AssetManager;
+import android.support.annotation.NonNull;
 
-import com.yourorg.sample.node.results.DecryptFileResult;
-import com.yourorg.sample.node.results.DecryptMsgResult;
-import com.yourorg.sample.node.results.EncryptFileResult;
-import com.yourorg.sample.node.results.EncryptMsgResult;
-import com.yourorg.sample.node.results.PgpKeyInfo;
-import com.yourorg.sample.node.results.TestNodeResult;
+import com.yourorg.sample.node.exception.NodeNotReady;
 
-import org.json.JSONObject;
+import org.apache.commons.io.IOUtils;
 
-import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.nio.charset.StandardCharsets;
 
+/**
+ * This is node.js manager.
+ */
 public class Node {
+  private static final String NODE_SECRETS_CACHE_FILENAME = "flowcrypt-node-secrets-cache";
 
-  private static NativeNode nativeNode = null;
+  private static final Node ourInstance = new Node();
+  private volatile NativeNode nativeNode;
+  private NodeSecret nodeSecret;
+  private MutableLiveData<Boolean> liveData;
 
-  public static void start(AssetManager am, NodeSecret nodeSecret) {
-    if(nativeNode == null) {
-      nativeNode = new NativeNode(nodeSecret); // takes about 100ms due to static native loads
-    }
-    nativeNode.startIfNotRunning(am);
+  private Node() {
+    liveData = new MutableLiveData<>();
   }
 
-  public static void waitUntilReady() throws NodeNotReady {
-    if(nativeNode == null) {
+  public static Node getInstance() {
+    return ourInstance;
+  }
+
+  public static void init(@NonNull Application app) {
+    Node node = Node.getInstance();
+    node.start(app);
+  }
+
+  public LiveData<Boolean> getLiveData() {
+    return liveData;
+  }
+
+  public NativeNode getNativeNode() {
+    return nativeNode;
+  }
+
+  public NodeSecret getNodeSecret() {
+    return nodeSecret;
+  }
+
+  private void start(final Context context) {
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        Thread.currentThread().setName("Node");
+        try {
+          NodeSecretCerts certs = getCachedNodeSecretCerts(context);
+          if (certs == null) {
+            nodeSecret = new NodeSecret(context.getFilesDir().getAbsolutePath());
+            saveNodeSecretCertsToCache(context, nodeSecret.getCache());
+          } else {
+            nodeSecret = new NodeSecret(context.getFilesDir().getAbsolutePath(), certs);
+          }
+          start(context.getAssets(), nodeSecret);
+          waitUntilReady();
+          liveData.postValue(true);
+        } catch (Exception e) {
+          e.printStackTrace();
+          liveData.postValue(false);
+        }
+      }
+    }).start();
+  }
+
+  private void waitUntilReady() throws NodeNotReady {
+    if (nativeNode == null) {
       throw new NodeNotReady("NativeNode not started. Call Node.start first");
     }
-    while(!nativeNode.isReady()) {
+    while (!nativeNode.isReady()) {
       try {
         Thread.sleep(50);
       } catch (InterruptedException e) {
@@ -37,53 +92,40 @@ public class Node {
     }
   }
 
-  private static <T> T request(String endpoint, JSONObject req, byte[] data, Class<T> cls) {
-    if(nativeNode == null) {
-      try {
-        Class[] argClasses = new Class[]{Exception.class, InputStream.class, long.class};
-        return cls.getDeclaredConstructor(argClasses).newInstance(new NodeNotReady("Node.js process not started yet", null), null, 0);
-      } catch (Exception e) {
-        throw new RuntimeException("Node.request wrong constructor definition", e);
-      }
+  /**
+   * this is just an example. Production app should use encrypted store
+   */
+  private void saveNodeSecretCertsToCache(Context context, NodeSecretCerts nodeSecretCerts) {
+    try {
+      FileOutputStream fos = context.openFileOutput(NODE_SECRETS_CACHE_FILENAME, Context.MODE_PRIVATE);
+      ObjectOutputStream oos = new ObjectOutputStream(fos);
+      oos.writeObject(nodeSecretCerts);
+      oos.close();
+      fos.close();
+    } catch (Exception e) {
+      throw new RuntimeException("Could not save certs cache", e);
     }
-    return nativeNode.request(endpoint, req, data).convertTo(cls);
   }
 
-  public static TestNodeResult version() {
-    return request("version", null, null, TestNodeResult.class);
+  /**
+   * this is just an example. Production app should use encrypted store
+   */
+  private NodeSecretCerts getCachedNodeSecretCerts(Context context) {
+    try {
+      FileInputStream fis = context.openFileInput(NODE_SECRETS_CACHE_FILENAME);
+      ObjectInputStream ois = new ObjectInputStream(fis);
+      return (NodeSecretCerts) ois.readObject();
+    } catch (FileNotFoundException e) {
+      return null;
+    } catch (Exception e) {
+      throw new RuntimeException("Could not load certs cache", e);
+    }
   }
 
-  public static EncryptMsgResult encryptMsg(byte[] data, String[] pubKeys) {
-    Json req = new Json();
-    req.putStringArr("pubKeys", pubKeys);
-    return request("encryptMsg", req, data, EncryptMsgResult.class);
+  private void start(AssetManager am, NodeSecret nodeSecret) throws IOException {
+    if (nativeNode == null) {
+      nativeNode = new NativeNode(nodeSecret); // takes about 100ms due to static native loads
+    }
+    nativeNode.start(IOUtils.toString(am.open("js/flowcrypt-android.js"), StandardCharsets.UTF_8));
   }
-
-  public static EncryptFileResult encryptFile(byte[] data, String[] pubKeys, String name) {
-    Json req = new Json();
-    req.putStringArr("pubKeys", pubKeys);
-    req.putString("name", name);
-    return request("encryptFile", req, data, EncryptFileResult.class);
-  }
-
-  public static DecryptMsgResult decryptMsg(byte[] data, PgpKeyInfo[] prvKeys, String[] passphrases, String msgPwd) {
-    Json req = new Json();
-    req.putPrvKeyInfoArr("keys", prvKeys);
-    req.putStringArr("passphrases", passphrases);
-    req.putString("msgPwd", msgPwd);
-    return request("decryptMsg", req, data, DecryptMsgResult.class);
-  }
-
-  public static DecryptFileResult decryptFile(byte[] data, PgpKeyInfo[] prvKeys, String[] passphrases, String msgPwd) {
-    Json req = new Json();
-    req.putPrvKeyInfoArr("keys", prvKeys);
-    req.putStringArr("passphrases", passphrases);
-    req.putString("msgPwd", msgPwd);
-    return request("decryptFile", req, data, DecryptFileResult.class);
-  }
-
-  public static TestNodeResult testRequest(String endpoint) {
-    return request(endpoint, null, null, TestNodeResult.class);
-  }
-
 }

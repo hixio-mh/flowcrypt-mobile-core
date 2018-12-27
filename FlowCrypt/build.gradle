@@ -77,5 +77,8 @@ dependencies {
     implementation "com.squareup.retrofit2:retrofit:${RETROFIT_VERSION}"
     implementation "com.squareup.retrofit2:converter-gson:${RETROFIT_VERSION}"
     implementation "com.squareup.okhttp3:logging-interceptor:${OKHTTP_VERSION}"
+
+    implementation "android.arch.lifecycle:extensions:1.1.1"
+    annotationProcessor "android.arch.lifecycle:compiler:1.1.1"
     
 }
