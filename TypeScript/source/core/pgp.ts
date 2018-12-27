@@ -10,10 +10,11 @@ import { AttMeta } from './att.js';
 import { mnemonic } from './mnemonic.js';
 import { requireOpenpgp } from '../platform/require.js';
 import { secureRandomBytes, base64encode } from '../platform/util.js';
+import { FcAttLinkData } from './att.js';
 
 const openpgp = requireOpenpgp();
 
-if (typeof openpgp !== 'undefined') { // in certain environments, eg browser content scripts, openpgp may be undefined while loading
+if (typeof openpgp !== 'undefined') { // in certain environments, eg browser content scripts, openpgp is not included (not all functions below need it)
   openpgp.config.versionstring = `FlowCrypt ${Catch.version()} Gmail Encryption`;
   openpgp.config.commentstring = 'Seamlessly send and receive encrypted email';
   // openpgp.config.require_uid_self_cert = false;
@@ -23,6 +24,7 @@ export namespace PgpMsgMethod {
   export type DiagnosePubkeys = (acctEmail: string, m: string | Uint8Array | OpenPGP.message.Message) => Promise<DiagnoseMsgPubkeysResult>;
   export type VerifyDetached = (plaintext: string | Uint8Array, sigText: string | Uint8Array) => Promise<MsgVerifyResult>;
   export type Decrypt = (kisWithPp: KeyInfosWithPassphrases, encryptedData: string | Uint8Array, msgPwd?: string, getUint8?: boolean) => Promise<DecryptSuccess | DecryptError>;
+  export type Type = (data: string | Uint8Array) => Promise<PgpMsgTypeResult>;
 }
 
 type KeyDetails$ids = {
@@ -73,6 +75,7 @@ type OpenpgpMsgOrCleartext = OpenPGP.message.Message | OpenPGP.cleartext.Clearte
 
 export type Pwd = { question?: string; answer: string; };
 export type MsgVerifyResult = { signer?: string; contact?: Contact; match?: boolean; error?: string; };
+export type PgpMsgTypeResult = { armored: boolean, type: MsgBlockType } | undefined;
 export type DecryptResult = DecryptSuccess | DecryptError;
 export type DiagnoseMsgPubkeysResult = { found_match: boolean, receivers: number, };
 export enum DecryptErrTypes {
@@ -543,7 +546,7 @@ export class Pgp {
 
 export class PgpMsg {
 
-  static type = (data: string | Uint8Array): { armored: boolean, type: MsgBlockType } | undefined => {
+  static type = async (data: string | Uint8Array): Promise<PgpMsgTypeResult> => { // promisified because used through BgExec
     if (!data || !data.length) {
       return undefined;
     }
@@ -707,10 +710,10 @@ export class PgpMsg {
   static fmtDecrypted = async (decryptedContent: string): Promise<MsgBlock[]> => {
     const blocks: MsgBlock[] = [];
     if (!Mime.resemblesMsg(decryptedContent)) {
-      decryptedContent = Str.extractFcAtts(decryptedContent, blocks);
-      decryptedContent = Str.stripFcTeplyToken(decryptedContent);
+      decryptedContent = PgpMsg.extractFcAtts(decryptedContent, blocks);
+      decryptedContent = PgpMsg.stripFcTeplyToken(decryptedContent);
       const armoredPubKeys: string[] = [];
-      decryptedContent = Str.stripPublicKeys(decryptedContent, armoredPubKeys);
+      decryptedContent = PgpMsg.stripPublicKeys(decryptedContent, armoredPubKeys);
       blocks.push(Pgp.internal.msgBlockObj('html', Str.asEscapedHtml(decryptedContent)));
       PgpMsg.pushArmoredPubkeysToBlocks(armoredPubKeys, blocks);
     } else {
@@ -731,6 +734,50 @@ export class PgpMsg {
       }
     }
     return blocks;
+  }
+
+  public static extractFcAtts = (decryptedContent: string, blocks: MsgBlock[]) => {
+    // these tags were created by FlowCrypt exclusively, so the structure is fairly rigid
+    // `<a href="${att.url}" class="cryptup_file" cryptup-data="${fcData}">${linkText}</a>\n`
+    // thus we use RegEx so that it works on both browser and node
+    if (Value.is('class="cryptup_file"').in(decryptedContent)) {
+      decryptedContent = decryptedContent.replace(/<a\s+href="([^"]+)"\s+class="cryptup_file"\s+cryptup-data="([^"]+)"\s*>[^<]+<\/a>\n?/gm, (_, url, fcData) => {
+        const a = Str.htmlAttrDecode(String(fcData));
+        if (PgpMsg.isFcAttLinkData(a)) {
+          blocks.push(Pgp.internal.msgBlockAttObj('attachment', '', { type: a.type, name: a.name, length: a.size, url: String(url) }));
+        }
+        return '';
+      });
+    }
+    return decryptedContent;
+  }
+
+  public static stripPublicKeys = (decryptedContent: string, foundPublicKeys: string[]) => {
+    let { blocks, normalized } = Pgp.armor.detectBlocks(decryptedContent); // tslint:disable-line:prefer-const
+    for (const block of blocks) {
+      if (block.type === 'publicKey') {
+        foundPublicKeys.push(block.content);
+        normalized = normalized.replace(block.content, '');
+      }
+    }
+    return normalized;
+  }
+
+  // public static extractFcReplyToken = (decryptedContent: string) => { // todo - used exclusively on the web - move to a web package
+  //   const fcTokenElement = $(`<div>${decryptedContent}</div>`).find('.cryptup_reply');
+  //   if (fcTokenElement.length) {
+  //     const fcData = fcTokenElement.attr('cryptup-data');
+  //     if (fcData) {
+  //       return Str.htmlAttrDecode(fcData);
+  //     }
+  //   }
+  // }
+
+  public static stripFcTeplyToken = (decryptedContent: string) => decryptedContent.replace(/<div[^>]+class="cryptup_reply"[^>]+><\/div>/, '');
+
+  private static isFcAttLinkData = (o: any): o is FcAttLinkData => {
+    return o && typeof o === 'object' && typeof (o as FcAttLinkData).name !== 'undefined'
+      && typeof (o as FcAttLinkData).size !== 'undefined' && typeof (o as FcAttLinkData).type !== 'undefined';
   }
 
   private static pushArmoredPubkeysToBlocks = (armoredPubkeys: string[], blocks: MsgBlock[]): void => {

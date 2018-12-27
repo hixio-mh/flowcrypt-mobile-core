@@ -58154,7 +58154,7 @@ const util_js_1 = __webpack_require__(8);
 const openpgp = require_js_1.requireOpenpgp();
 
 if (typeof openpgp !== 'undefined') {
-  // in certain environments, eg browser content scripts, openpgp may be undefined while loading
+  // in certain environments, eg browser content scripts, openpgp is not included (not all functions below need it)
   openpgp.config.versionstring = `FlowCrypt ${catch_js_1.Catch.version()} Gmail Encryption`;
   openpgp.config.commentstring = 'Seamlessly send and receive encrypted email'; // openpgp.config.require_uid_self_cert = false;
 }
@@ -58851,7 +58851,7 @@ exports.Pgp = Pgp;
 
 class PgpMsg {}
 
-PgpMsg.type = data => {
+PgpMsg.type = async data => {
   if (!data || !data.length) {
     return undefined;
   }
@@ -59131,10 +59131,10 @@ PgpMsg.fmtDecrypted = async decryptedContent => {
   const blocks = [];
 
   if (!mime_js_1.Mime.resemblesMsg(decryptedContent)) {
-    decryptedContent = common_js_1.Str.extractFcAtts(decryptedContent, blocks);
-    decryptedContent = common_js_1.Str.stripFcTeplyToken(decryptedContent);
+    decryptedContent = PgpMsg.extractFcAtts(decryptedContent, blocks);
+    decryptedContent = PgpMsg.stripFcTeplyToken(decryptedContent);
     const armoredPubKeys = [];
-    decryptedContent = common_js_1.Str.stripPublicKeys(decryptedContent, armoredPubKeys);
+    decryptedContent = PgpMsg.stripPublicKeys(decryptedContent, armoredPubKeys);
     blocks.push(Pgp.internal.msgBlockObj('html', common_js_1.Str.asEscapedHtml(decryptedContent)));
     PgpMsg.pushArmoredPubkeysToBlocks(armoredPubKeys, blocks);
   } else {
@@ -59160,6 +59160,61 @@ PgpMsg.fmtDecrypted = async decryptedContent => {
   }
 
   return blocks;
+};
+
+PgpMsg.extractFcAtts = (decryptedContent, blocks) => {
+  // these tags were created by FlowCrypt exclusively, so the structure is fairly rigid
+  // `<a href="${att.url}" class="cryptup_file" cryptup-data="${fcData}">${linkText}</a>\n`
+  // thus we use RegEx so that it works on both browser and node
+  if (common_js_1.Value.is('class="cryptup_file"').in(decryptedContent)) {
+    decryptedContent = decryptedContent.replace(/<a\s+href="([^"]+)"\s+class="cryptup_file"\s+cryptup-data="([^"]+)"\s*>[^<]+<\/a>\n?/gm, (_, url, fcData) => {
+      const a = common_js_1.Str.htmlAttrDecode(String(fcData));
+
+      if (PgpMsg.isFcAttLinkData(a)) {
+        blocks.push(Pgp.internal.msgBlockAttObj('attachment', '', {
+          type: a.type,
+          name: a.name,
+          length: a.size,
+          url: String(url)
+        }));
+      }
+
+      return '';
+    });
+  }
+
+  return decryptedContent;
+};
+
+PgpMsg.stripPublicKeys = (decryptedContent, foundPublicKeys) => {
+  let {
+    blocks,
+    normalized
+  } = Pgp.armor.detectBlocks(decryptedContent); // tslint:disable-line:prefer-const
+
+  for (const block of blocks) {
+    if (block.type === 'publicKey') {
+      foundPublicKeys.push(block.content);
+      normalized = normalized.replace(block.content, '');
+    }
+  }
+
+  return normalized;
+}; // public static extractFcReplyToken = (decryptedContent: string) => { // todo - used exclusively on the web - move to a web package
+//   const fcTokenElement = $(`<div>${decryptedContent}</div>`).find('.cryptup_reply');
+//   if (fcTokenElement.length) {
+//     const fcData = fcTokenElement.attr('cryptup-data');
+//     if (fcData) {
+//       return Str.htmlAttrDecode(fcData);
+//     }
+//   }
+// }
+
+
+PgpMsg.stripFcTeplyToken = decryptedContent => decryptedContent.replace(/<div[^>]+class="cryptup_reply"[^>]+><\/div>/, '');
+
+PgpMsg.isFcAttLinkData = o => {
+  return o && typeof o === 'object' && typeof o.name !== 'undefined' && typeof o.size !== 'undefined' && typeof o.type !== 'undefined';
 };
 
 PgpMsg.pushArmoredPubkeysToBlocks = (armoredPubkeys, blocks) => {
@@ -59257,8 +59312,6 @@ exports.Store = Store;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-const pgp_js_1 = __webpack_require__(5);
 
 const util_js_1 = __webpack_require__(8);
 
@@ -59470,61 +59523,6 @@ Str.fromHex = hex => {
   }
 
   return str;
-};
-
-Str.isFcAttLinkData = o => {
-  return o && typeof o === 'object' && typeof o.name !== 'undefined' && typeof o.size !== 'undefined' && typeof o.type !== 'undefined';
-};
-
-Str.extractFcAtts = (decryptedContent, blocks) => {
-  // these tags were created by FlowCrypt exclusively, so the structure is fairly rigid
-  // `<a href="${att.url}" class="cryptup_file" cryptup-data="${fcData}">${linkText}</a>\n`
-  // thus we use RegEx so that it works on both browser and node
-  if (Value.is('class="cryptup_file"').in(decryptedContent)) {
-    decryptedContent = decryptedContent.replace(/<a\s+href="([^"]+)"\s+class="cryptup_file"\s+cryptup-data="([^"]+)"\s*>[^<]+<\/a>\n?/gm, (_, url, fcData) => {
-      const a = Str.htmlAttrDecode(String(fcData));
-
-      if (Str.isFcAttLinkData(a)) {
-        blocks.push(pgp_js_1.Pgp.internal.msgBlockAttObj('attachment', '', {
-          type: a.type,
-          name: a.name,
-          length: a.size,
-          url: String(url)
-        }));
-      }
-
-      return '';
-    });
-  }
-
-  return decryptedContent;
-}; // public static extractFcReplyToken = (decryptedContent: string) => { // todo - used exclusively on the web - move to a web package
-//   const fcTokenElement = $(`<div>${decryptedContent}</div>`).find('.cryptup_reply');
-//   if (fcTokenElement.length) {
-//     const fcData = fcTokenElement.attr('cryptup-data');
-//     if (fcData) {
-//       return Str.htmlAttrDecode(fcData);
-//     }
-//   }
-// }
-
-
-Str.stripFcTeplyToken = decryptedContent => decryptedContent.replace(/<div[^>]+class="cryptup_reply"[^>]+><\/div>/, '');
-
-Str.stripPublicKeys = (decryptedContent, foundPublicKeys) => {
-  let {
-    blocks,
-    normalized
-  } = pgp_js_1.Pgp.armor.detectBlocks(decryptedContent); // tslint:disable-line:prefer-const
-
-  for (const block of blocks) {
-    if (block.type === 'publicKey') {
-      foundPublicKeys.push(block.content);
-      normalized = normalized.replace(block.content, '');
-    }
-  }
-
-  return normalized;
 };
 
 Str.intToHex = intAsStr => {
@@ -60247,12 +60245,6 @@ Att.keyinfoAsPubkeyAtt = ki => new Att({
   type: 'application/pgp-keys',
   name: `0x${ki.longid}.asc`
 });
-
-Att.fromMsgBlock = attBlock => {
-  const attMeta = attBlock.attMeta;
-  attMeta.data = attBlock.content || attMeta.data;
-  return new Att(attMeta);
-};
 
 exports.Att = Att;
 
