@@ -11,9 +11,7 @@ const fixedImportsSrc = wipSrc
   .replace(/require\(['"]bn\.js['"]\)/g, 'dereq_bn')
   .replace(/require\(['"]minimalistic-assert['"]\)/g, 'dereq_minimalistic_assert')
   .replace(/require\(['"]inherits['"]\)/g, 'require("util").inherits')
-  .replace(/_dereq_\(['"]bn\.js['"]\)/g, 'dereq_bn')
-  .replace(/_dereq_\(['"]asn1\.js['"]\)/g, 'dereq_asn1')
-  .replace(/_dereq_\(['"]inherits['"]\)/g, 'require("util").inherits');
+  .replace(/require\(['"]asn1\.js['"]\)/g, 'dereq_asn1');
 
 const finalSrc = `
 try {

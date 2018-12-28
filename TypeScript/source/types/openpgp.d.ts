@@ -22,21 +22,33 @@ declare namespace OpenPGP {
   }
 
   export interface EncryptOptions {
-    data: string | Uint8Array;
-    dataType?: DataPacketType;
+    /** message to be encrypted as created by openpgp.message.fromText or openpgp.message.fromBinary */
+    message: message.Message;
+    /** (optional) array of keys or single key, used to encrypt the message */
     publicKeys?: key.Key | key.Key[];
+    /** (optional) private keys for signing. If omitted message will not be signed */
     privateKeys?: key.Key | key.Key[];
+    /** (optional) array of passwords or a single password to encrypt the message */
     passwords?: string | string[];
+    /** (optional) session key in the form: { data:Uint8Array, algorithm:String } */
     sessionKey?: SessionKey;
-    filename?: string;
+    /** (optional) which compression algorithm to compress the message with, defaults to what is specified in config */
     compression?: enums.compression;
+    /** (optional) if the return values should be ascii armored or the message/signature objects */
     armor?: boolean;
+    /** (optional) whether to return data as a stream. Defaults to the type of stream `message` was created from, if any. */
+    streaming?: 'web' | 'node' | false
+    /** (optional) if the signature should be detached (if true, signature will be added to returned object) */
     detached?: boolean;
+    /** (optional) a detached signature to add to the encrypted message */
     signature?: signature.Signature;
+    /** (optional) if the unencrypted session key should be added to returned object */
     returnSessionKey?: boolean;
+    /** (optional) use a key ID of 0 instead of the public key IDs */
     wildcard?: boolean;
-    date?: Date;
+    /** (optional) user ID to sign with, e.g. { name:'Steve Sender', email:'steve@openpgp.org' } */
     fromUserId?: UserId;
+    /** (optional) user ID to encrypt for, e.g. { name:'Robert Receiver', email:'robert@openpgp.org' } */
     toUserId?: UserId;
   }
 
@@ -243,14 +255,22 @@ declare namespace OpenPGP {
   export type SignResult = SignArmorResult | SignBinaryResult;
 
   export interface DecryptOptions {
+    /** the message object with the encrypted data */
     message: message.Message;
+    /** (optional) private keys with decrypted secret key data or session key */
     privateKeys?: key.Key | key.Key[];
+    /** (optional) passwords to decrypt the message */
     passwords?: string | string[];
+    /** (optional) session keys in the form: { data:Uint8Array, algorithm:String } */
     sessionKeys?: SessionKey | SessionKey[];
+    /** (optional) array of public keys or single key, to verify signatures */
     publicKeys?: key.Key | key.Key[];
+    /** (optional) whether to return data as a string(Stream) or Uint8Array(Stream). If 'utf8' (the default), also normalize newlines. */
     format?: string;
+    /** (optional) whether to return data as a stream. Defaults to the type of stream `message` was created from, if any. */
+    streaming?: 'web' | 'node' | false;
+    /** (optional) detached signature for verification */
     signature?: signature.Signature;
-    date?: Date;
   }
 
   export interface SignOptions {
@@ -353,23 +373,8 @@ declare namespace OpenPGP {
   /**
    * Encrypts message text/data with public keys, passwords or both at once. At least either public keys or passwords
    *   must be specified. If private keys are specified, those will be used to sign the message.
-   * @param {String|Uint8Array} data               text/data to be encrypted as JavaScript binary string or Uint8Array
-   * @param {utf8|binary|text|mime} dataType       (optional) data packet type
-   * @param {Key|Array<Key>} publicKeys            (optional) array of keys or single key, used to encrypt the message
-   * @param {Key|Array<Key>} privateKeys           (optional) private keys for signing. If omitted message will not be signed
-   * @param {String|Array<String>} passwords       (optional) array of passwords or a single password to encrypt the message
-   * @param {Object} sessionKey                    (optional) session key in the form: { data:Uint8Array, algorithm:String }
-   * @param {String} filename                      (optional) a filename for the literal data packet
-   * @param {module:enums.compression} compression (optional) which compression algorithm to compress the message with, defaults to what is specified in config
-   * @param {Boolean} armor                        (optional) if the return values should be ascii armored or the message/signature objects
-   * @param {Boolean} detached                     (optional) if the signature should be detached (if true, signature will be added to returned object)
-   * @param {Signature} signature                  (optional) a detached signature to add to the encrypted message
-   * @param {Boolean} returnSessionKey             (optional) if the unencrypted session key should be added to returned object
-   * @param {Boolean} wildcard                     (optional) use a key ID of 0 instead of the public key IDs
-   * @param {Date} date                            (optional) override the creation date of the message and the message signature
-   * @param {Object} fromUserId                    (optional) user ID to sign with, e.g. { name:'Steve Sender', email:'steve@openpgp.org' }
-   * @param {Object} toUserId                      (optional) user ID to encrypt for, e.g. { name:'Robert Receiver', email:'robert@openpgp.org' }
-   * @returns {Promise<Object>}                      encrypted (and optionally signed message) in the form:
+   * @param {EncryptOptions} options               See `EncryptOptions`
+   * @returns {Promise<EncryptResult>}             Promise of `EncryptResult` (and optionally signed message) in the form:
    *                                                 {data: ASCII armored message if 'armor' is true;
    *                                                  message: full Message object if 'armor' is false, signature: detached signature if 'detached' is true}
    * @async
@@ -397,15 +402,8 @@ declare namespace OpenPGP {
   /**
    * Decrypts a message with the user's private key, a session key or a password. Either a private key;
    *   a session key or a password must be specified.
-   * @param {Message} message                  the message object with the encrypted data
-   * @param {Key|Array<Key>} privateKeys       (optional) private keys with decrypted secret key data or session key
-   * @param {String|Array<String>} passwords   (optional) passwords to decrypt the message
-   * @param {Object|Array<Object>} sessionKeys (optional) session keys in the form: { data:Uint8Array, algorithm:String }
-   * @param {Key|Array<Key>} publicKeys        (optional) array of public keys or single key, to verify signatures
-   * @param {String} format                    (optional) return data format either as 'utf8' or 'binary'
-   * @param {Signature} signature              (optional) detached signature for verification
-   * @param {Date} date                        (optional) use the given date for verification instead of the current time
-   * @returns {Promise<Object>}             decrypted and verified message in the form:
+   * @param {DecryptOptions} options           see `DecryptOptions`
+   * @returns {Promise<DecryptMessageResult>}  Promise of `DecryptMessageResult` and verified message in the form:
    *                                        { data:Uint8Array|String, filename:String, signatures:[{ keyid:String, valid:Boolean }] }
    * @async
    * @static
@@ -510,7 +508,14 @@ declare namespace OpenPGP {
       verify(keys: key.Key[]): Promise<message.VerifiedSignature[]>;
     }
 
-    function readArmored(armoredText: string): CleartextMessage;
+    /**
+     * reads an OpenPGP cleartext signed message and returns a CleartextMessage object
+     * @param armoredText text to be parsed
+     * @returns new cleartext message object
+     * @async
+     * @static
+     */
+    function readArmored(armoredText: string): Promise<CleartextMessage>;
   }
 
   export namespace config {
@@ -614,26 +619,10 @@ declare namespace OpenPGP {
     }
 
     namespace random {
-      /** Create a secure random big integer of bits length
-          @param bits Bit length of the MPI to create
-      */
-      function getRandomBigInteger(bits: number): number;
-
       /** Retrieve secure random byte string of the specified length
           @param length Length in bytes to generate
       */
-      function getRandomBytes(length: number): string;
-
-      /** Helper routine which calls platform specific crypto random generator
-          @param buf
-      */
-      function getRandomValues(buf: Uint8Array): void;
-
-      /** Return a secure random number in the specified range
-          @param from Min of the random number
-          @param to Max of the random number (max 32bit)
-      */
-      function getSecureRandom(from: number, to: number): number;
+      function getRandomBytes(length: number): Promise<Uint8Array>;
     }
 
     namespace signature {
@@ -668,14 +657,14 @@ declare namespace OpenPGP {
     function read(type: typeof keyStatus, e: keyStatus): keyStatusNames | string | any;
     function read(type: typeof keyFlags, e: keyFlags): keyFlagsNames | string | any;
 
-    export type armorNames = 'multipart_section' | 'multipart_last' | 'signed' | 'message' | 'publicKey' | 'privateKey';
+    export type armorNames = 'multipart_section' | 'multipart_last' | 'signed' | 'message' | 'public_key' | 'private_key';
     enum armor {
       multipart_section = 0,
       multipart_last = 1,
       signed = 2,
       message = 3,
-      publicKey = 4,
-      privateKey = 5,
+      public_key = 4,
+      private_key = 5,
       signature = 6,
     }
 
@@ -847,13 +836,13 @@ declare namespace OpenPGP {
 
         @param armoredText text to be parsed
     */
-    function readArmored(armoredText: string): KeyResult;
+    function readArmored(armoredText: string): Promise<KeyResult>;
 
     /** Reads an OpenPGP binary data and returns one or multiple key objects
 
-        @param armoredText text to be parsed
+        @param data to be parsed
     */
-    function read(data: string | Uint8Array): KeyResult;
+    function read(data: Uint8Array): Promise<KeyResult>;
   }
 
   export namespace signature {
@@ -861,8 +850,17 @@ declare namespace OpenPGP {
       constructor(packetlist: packet.List<packet.Signature>);
       armor(): string;
     }
-    function readArmored(armoredText: string): Signature;
-    function read(input: Uint8Array): Signature;
+    /** reads an OpenPGP armored signature and returns a signature object
+
+        @param armoredText text to be parsed
+    */
+    function readArmored(armoredText: string): Promise<Signature>;
+
+    /** reads an OpenPGP signature as byte array and returns a signature object
+
+        @param  input   binary signature
+    */
+    function read(input: Uint8Array): Promise<Signature>;
   }
 
   export namespace message {
@@ -876,7 +874,7 @@ declare namespace OpenPGP {
       /** Decrypt the message
           @param privateKey private key with decrypted secret data
       */
-      decrypt(privateKeys?: key.Key[] | null, passwords?: string[] | null, sessionKeys?: SessionKey[] | null): Promise<Message>;
+      decrypt(privateKeys?: key.Key[] | null, passwords?: string[] | null, sessionKeys?: SessionKey[] | null, streaming?: boolean): Promise<Message>;
 
       /** Encrypt the message
           @param keys array of keys, used to encrypt the message
@@ -889,7 +887,7 @@ declare namespace OpenPGP {
 
       /** Get literal data that is the body of the message
        */
-      getLiteralData(): Uint8Array;
+      getLiteralData(): Uint8Array | null | ReadableStream<Uint8Array>;
 
       /** Returns the key IDs of the keys that signed the message
        */
@@ -897,7 +895,7 @@ declare namespace OpenPGP {
 
       /** Get literal data as text
        */
-      getText(): string;
+      getText(): string | null | ReadableStream<string>;
 
       getFilename(): string | null;
 
@@ -937,26 +935,26 @@ declare namespace OpenPGP {
     /** creates new message object from binary data
         @param bytes
     */
-    function fromBinary(bytes: string): Message;
+    function fromBinary(bytes: Uint8Array | ReadableStream<Uint8Array>, filename?: string, date?: Date, type?: DataPacketType): Message;
 
     /** creates new message object from text
         @param text
     */
-    function fromText(text: string): Message;
+    function fromText(text: string | ReadableStream<string>, filename?: string, date?: Date, type?: DataPacketType): Message;
 
     /** reads an OpenPGP armored message and returns a message object
 
         @param armoredText text to be parsed
     */
-    function readArmored(armoredText: string): Message;
+    function readArmored(armoredText: string | ReadableStream<string>): Promise<Message>;
 
     /**
      * reads an OpenPGP message as byte array and returns a message object
-     * @param {Uint8Array} input   binary message
+     * @param {Uint8Array} input  binary message
      * @returns {Message}           new message object
      * @static
      */
-    function read(data: Uint8Array): Message;
+    function read(input: Uint8Array): Promise<Message>;
   }
 
   export class HKP {
@@ -1044,6 +1042,15 @@ declare namespace OpenPGP {
     function formatUserId(userid: UserId): string;
 
     function normalizeDate(date: Date | null): Date | null;
+  }
+
+  export namespace stream {
+    function readToEnd<T extends Uint8Array | string>(input: ReadableStream<T> | T, concat?: (list: T[]) => T): Promise<T>;
+    // concat
+    // slice
+    // clone
+    // webToNode
+    // nodeToWeb
   }
 
 }
