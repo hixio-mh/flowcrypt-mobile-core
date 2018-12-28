@@ -40,8 +40,8 @@ export class Store {
   // static saveError(err: any, errMsg?: string) {
   // }
 
-  static dbContactObj(email: string, name?: string, client?: string, pubkey?: string, attested?: boolean, pendingLookup?: boolean | number, lastUse?: number): Contact {
-    const fingerprint = pubkey ? Pgp.key.fingerprint(pubkey) : undefined;
+  static dbContactObj = async (email: string, name?: string, client?: string, pubkey?: string, attested?: boolean, pendingLookup?: boolean | number, lastUse?: number): Promise<Contact> => {
+    const fingerprint = pubkey ? await Pgp.key.fingerprint(pubkey) : undefined;
     email = Str.parseEmail(email).email;
     if (!Str.isEmailValid(email)) {
       throw new Error(`Cannot save contact because email is not valid: ${email}`);
@@ -55,8 +55,8 @@ export class Store {
       client: pubkey ? (client || null) : null, // tslint:disable-line:no-null-keyword
       attested: pubkey ? Boolean(attested) : null, // tslint:disable-line:no-null-keyword
       fingerprint: fingerprint || null, // tslint:disable-line:no-null-keyword
-      longid: fingerprint ? (Pgp.key.longid(fingerprint) || null) : null, // tslint:disable-line:no-null-keyword
-      keywords: fingerprint ? mnemonic(Pgp.key.longid(fingerprint)!) || null : null, // tslint:disable-line:no-null-keyword
+      longid: fingerprint ? (await Pgp.key.longid(fingerprint) || null) : null, // tslint:disable-line:no-null-keyword
+      keywords: fingerprint ? mnemonic(await Pgp.key.longid(fingerprint) || '') || null : null, // tslint:disable-line:no-null-keyword
       pending_lookup: pubkey ? 0 : (pendingLookup ? 1 : 0),
       last_use: lastUse || null, // tslint:disable-line:no-null-keyword
       date: null, // tslint:disable-line:no-null-keyword

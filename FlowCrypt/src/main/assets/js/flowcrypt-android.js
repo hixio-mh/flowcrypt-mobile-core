@@ -58289,7 +58289,7 @@ Pgp.armor = {
     };
   },
   detectBlocks: origText => {
-    let blocks = [];
+    const blocks = [];
     const normalized = common_js_1.Str.normalize(origText);
     let startAt = 0;
 
@@ -58297,7 +58297,7 @@ Pgp.armor = {
       const r = Pgp.internal.detectBlockNext(normalized, startAt);
 
       if (r.found) {
-        blocks = blocks.concat(r.found);
+        blocks.push(...r.found);
       }
 
       if (typeof r.continueAt === 'undefined') {
@@ -58375,7 +58375,12 @@ Pgp.key = {
       private: k.privateKeyArmored
     };
   },
-  read: armoredKey => openpgp.key.readArmored(armoredKey).keys[0],
+  read: async armoredKey => {
+    const {
+      keys: [key]
+    } = await openpgp.key.readArmored(armoredKey);
+    return key;
+  },
   decrypt: async (key, passphrases) => {
     try {
       return await key.decrypt(passphrases);
@@ -58387,17 +58392,17 @@ Pgp.key = {
       throw e;
     }
   },
-  normalize: armored => {
+  normalize: async armored => {
     try {
       let keys = [];
       armored = Pgp.armor.normalize(armored, 'key');
 
       if (RegExp(Pgp.armor.headers('publicKey', 're').begin).test(armored)) {
-        keys = openpgp.key.readArmored(armored).keys;
+        keys = (await openpgp.key.readArmored(armored)).keys;
       } else if (RegExp(Pgp.armor.headers('privateKey', 're').begin).test(armored)) {
-        keys = openpgp.key.readArmored(armored).keys;
+        keys = (await openpgp.key.readArmored(armored)).keys;
       } else if (RegExp(Pgp.armor.headers('message', 're').begin).test(armored)) {
-        keys = [new openpgp.key.Key(openpgp.message.readArmored(armored).packets)];
+        keys = [new openpgp.key.Key((await openpgp.message.readArmored(armored)).packets)];
       }
 
       for (const k of keys) {
@@ -58418,7 +58423,7 @@ Pgp.key = {
       };
     }
   },
-  fingerprint: (key, formatting = 'default') => {
+  fingerprint: async (key, formatting = 'default') => {
     if (!key) {
       return undefined;
     } else if (key instanceof openpgp.key.Key) {
@@ -58440,7 +58445,7 @@ Pgp.key = {
       }
     } else {
       try {
-        return Pgp.key.fingerprint(openpgp.key.readArmored(key).keys[0], formatting);
+        return await Pgp.key.fingerprint((await Pgp.key.read(key)), formatting);
       } catch (e) {
         if (e instanceof Error && e.message === 'openpgp is not defined') {
           catch_js_1.Catch.handleErr(e);
@@ -58451,7 +58456,7 @@ Pgp.key = {
       }
     }
   },
-  longid: keyOrFingerprintOrBytes => {
+  longid: async keyOrFingerprintOrBytes => {
     if (!keyOrFingerprintOrBytes || typeof keyOrFingerprintOrBytes === 'undefined') {
       return undefined;
     } else if (typeof keyOrFingerprintOrBytes === 'string' && keyOrFingerprintOrBytes.length === 8) {
@@ -58461,7 +58466,7 @@ Pgp.key = {
     } else if (typeof keyOrFingerprintOrBytes === 'string' && keyOrFingerprintOrBytes.length === 49) {
       return keyOrFingerprintOrBytes.replace(/ /g, '').substr(-16);
     } else {
-      return Pgp.key.longid(Pgp.key.fingerprint(keyOrFingerprintOrBytes));
+      return await Pgp.key.longid((await Pgp.key.fingerprint(keyOrFingerprintOrBytes)));
     }
   },
   usable: async armored => {
@@ -58469,7 +58474,9 @@ Pgp.key = {
       return false;
     }
 
-    const pubkey = openpgp.key.readArmored(armored).keys[0];
+    const {
+      keys: [pubkey]
+    } = await openpgp.key.readArmored(armored);
 
     if (!pubkey) {
       return false;
@@ -58505,18 +58512,18 @@ Pgp.key = {
 
     return undefined;
   },
-  parse: armored => {
+  parse: async armored => {
     const {
       normalized,
       keys
-    } = Pgp.key.normalize(armored);
+    } = await Pgp.key.normalize(armored);
     return {
       original: armored,
       normalized,
-      keys: keys.map(Pgp.key.serialize)
+      keys: await Promise.all(keys.map(Pgp.key.serialize))
     };
   },
-  serialize: k => {
+  serialize: async k => {
     const keyPackets = [];
 
     for (const keyPacket of k.getKeys()) {
@@ -58531,27 +58538,31 @@ Pgp.key = {
       algorithmId: openpgp.enums.publicKey[algoInfo.algorithm]
     };
     const created = k.primaryKey.created.getTime() / 1000;
+    const ids = [];
+
+    for (const keyPacket of keyPackets) {
+      const fingerprint = keyPacket.getFingerprint().toUpperCase();
+
+      if (fingerprint) {
+        const longid = await Pgp.key.longid(fingerprint);
+
+        if (longid) {
+          const shortid = longid.substr(-8);
+          ids.push({
+            fingerprint,
+            longid,
+            shortid,
+            keywords: mnemonic_js_1.mnemonic(longid)
+          });
+        }
+      }
+    }
+
     return {
       private: k.isPrivate() ? k.armor() : undefined,
       public: k.toPublic().armor(),
       users: k.getUserIds(),
-      ids: keyPackets.map(k => k.getFingerprint().toUpperCase()).map(fingerprint => {
-        if (fingerprint) {
-          const longid = Pgp.key.longid(fingerprint);
-
-          if (longid) {
-            const shortid = longid.substr(-8);
-            return {
-              fingerprint,
-              longid,
-              shortid,
-              keywords: mnemonic_js_1.mnemonic(longid)
-            };
-          }
-        }
-
-        return undefined;
-      }).filter(Boolean),
+      ids,
       algo,
       created
     };
@@ -58688,7 +58699,6 @@ Pgp.internal = {
 
     return string;
   },
-  cryptoKeyIds: armoredPubkey => openpgp.key.readArmored(armoredPubkey).keys[0].getKeyIds(),
   cryptoMsgPrepareForDecrypt: data => {
     if (!data.length) {
       throw new Error('Encrypted message could not be parsed because no data was provided');
@@ -58731,8 +58741,8 @@ Pgp.internal = {
       prvForDecryptWithoutPassphrases: []
     };
     const encryptedForKeyId = msg instanceof openpgp.message.Message ? msg.getEncryptionKeyIds() : [];
-    keys.encryptedFor = encryptedForKeyId.map(id => Pgp.key.longid(id.bytes)).filter(Boolean);
-    keys.signedBy = (msg.getSigningKeyIds ? msg.getSigningKeyIds() : []).filter(Boolean).map(id => Pgp.key.longid(id.bytes)).filter(Boolean);
+    keys.encryptedFor = (await Promise.all(encryptedForKeyId.map(id => Pgp.key.longid(id.bytes)))).filter(Boolean);
+    keys.signedBy = (await Promise.all((msg.getSigningKeyIds ? msg.getSigningKeyIds() : []).filter(Boolean).map(id => Pgp.key.longid(id.bytes)))).filter(Boolean);
     keys.prvMatching = kiWithPp.keys.filter(ki => common_js_1.Value.is(ki.longid).in(keys.encryptedFor));
 
     if (keys.prvMatching.length) {
@@ -58742,10 +58752,12 @@ Pgp.internal = {
     }
 
     for (const prvForDecrypt of keys.prvForDecrypt) {
-      const key = openpgp.key.readArmored(prvForDecrypt.private).keys[0];
+      const {
+        keys: [prv]
+      } = await openpgp.key.readArmored(prvForDecrypt.private);
 
-      if (key.isDecrypted() || kiWithPp.passphrases.length && (await Pgp.key.decrypt(key, kiWithPp.passphrases)) === true) {
-        prvForDecrypt.decrypted = key;
+      if (prv.isDecrypted() || kiWithPp.passphrases.length && (await Pgp.key.decrypt(prv, kiWithPp.passphrases)) === true) {
+        prvForDecrypt.decrypted = prv;
         keys.prvForDecryptDecrypted.push(prvForDecrypt);
       } else {
         keys.prvForDecryptWithoutPassphrases.push(prvForDecrypt);
@@ -58754,9 +58766,15 @@ Pgp.internal = {
 
     if (keys.signedBy.length && typeof store_js_1.Store.dbContactGet === 'function') {
       const verificationContacts = await store_js_1.Store.dbContactGet(undefined, keys.signedBy);
-      keys.verificationContacts = verificationContacts.filter(contact => contact && contact.pubkey); // tslint:disable-next-line:no-unsafe-any
+      keys.verificationContacts = verificationContacts.filter(contact => contact && contact.pubkey);
+      keys.forVerification = [];
 
-      keys.forVerification = [].concat.apply([], keys.verificationContacts.map(contact => openpgp.key.readArmored(contact.pubkey).keys)); // pubkey! checked above
+      for (const contact of keys.verificationContacts) {
+        const {
+          keys: keysForVerification
+        } = await openpgp.key.readArmored(contact.pubkey);
+        keys.forVerification.push(...keysForVerification);
+      }
     }
 
     return keys;
@@ -58923,7 +58941,7 @@ PgpMsg.verify = async (message, keysForVerification, optionalContact) => {
       sig.match = common_js_1.Value.is(sig.match).in([true, undefined]) && verifyRes.valid; // this will probably falsely show as not matching in some rare cases. Needs testing.
 
       if (!sig.signer) {
-        sig.signer = Pgp.key.longid(verifyRes.keyid.bytes);
+        sig.signer = await Pgp.key.longid(verifyRes.keyid.bytes);
       }
     }
   } catch (verifyErr) {
@@ -59075,7 +59093,10 @@ PgpMsg.encrypt = async (pubkeys, signingPrv, pwd, data, filename, armor, date) =
     options.publicKeys = [];
 
     for (const armoredPubkey of pubkeys) {
-      options.publicKeys = options.publicKeys.concat(openpgp.key.readArmored(armoredPubkey).keys);
+      const {
+        keys: publicKeys
+      } = await openpgp.key.readArmored(armoredPubkey);
+      options.publicKeys.push(...publicKeys);
     }
   }
 
@@ -59107,8 +59128,12 @@ PgpMsg.diagnosePubkeys = async (acctEmail, m) => {
   }
 
   const msgKeyIds = message.getEncryptionKeyIds ? message.getEncryptionKeyIds() : [];
-  const privateKeys = await store_js_1.Store.keysGet(acctEmail);
-  const localKeyIds = [].concat.apply([], privateKeys.map(ki => ki.public).map(Pgp.internal.cryptoKeyIds)); // tslint:disable-line:no-unsafe-any
+  const privateKis = await store_js_1.Store.keysGet(acctEmail);
+  const localKeyIds = [];
+
+  for (const k of await Promise.all(privateKis.map(ki => Pgp.key.read(ki.public)))) {
+    localKeyIds.push(...k.getKeyIds());
+  }
 
   const diagnosis = {
     found_match: false,
@@ -59117,7 +59142,7 @@ PgpMsg.diagnosePubkeys = async (acctEmail, m) => {
 
   for (const msgKeyId of msgKeyIds) {
     for (const localKeyId of localKeyIds) {
-      if (msgKeyId === localKeyId) {
+      if (msgKeyId.bytes === localKeyId.bytes) {
         diagnosis.found_match = true;
         return diagnosis;
       }
@@ -59136,7 +59161,7 @@ PgpMsg.fmtDecrypted = async decryptedContent => {
     const armoredPubKeys = [];
     decryptedContent = PgpMsg.stripPublicKeys(decryptedContent, armoredPubKeys);
     blocks.push(Pgp.internal.msgBlockObj('html', common_js_1.Str.asEscapedHtml(decryptedContent)));
-    PgpMsg.pushArmoredPubkeysToBlocks(armoredPubKeys, blocks);
+    await PgpMsg.pushArmoredPubkeysToBlocks(armoredPubKeys, blocks);
   } else {
     const decoded = await mime_js_1.Mime.decode(decryptedContent);
 
@@ -59154,7 +59179,7 @@ PgpMsg.fmtDecrypted = async decryptedContent => {
           name: att.name
         }));
       } else {
-        PgpMsg.pushArmoredPubkeysToBlocks([att.asText()], blocks);
+        await PgpMsg.pushArmoredPubkeysToBlocks([att.asText()], blocks);
       }
     }
   }
@@ -59217,9 +59242,13 @@ PgpMsg.isFcAttLinkData = o => {
   return o && typeof o === 'object' && typeof o.name !== 'undefined' && typeof o.size !== 'undefined' && typeof o.type !== 'undefined';
 };
 
-PgpMsg.pushArmoredPubkeysToBlocks = (armoredPubkeys, blocks) => {
+PgpMsg.pushArmoredPubkeysToBlocks = async (armoredPubkeys, blocks) => {
   for (const armoredPubkey of armoredPubkeys) {
-    for (const keyDetails of Pgp.key.parse(armoredPubkey).keys) {
+    const {
+      keys
+    } = await Pgp.key.parse(armoredPubkey);
+
+    for (const keyDetails of keys) {
       blocks.push(Pgp.internal.msgBlockKeyObj('publicKey', keyDetails.public, keyDetails));
     }
   }
@@ -59252,36 +59281,36 @@ class Store {
 
   static async keysGet(acctEmail, longids) {
     return [];
-  } // static saveError(err: any, errMsg?: string) {
-  // }
-
-
-  static dbContactObj(email, name, client, pubkey, attested, pendingLookup, lastUse) {
-    const fingerprint = pubkey ? pgp_js_1.Pgp.key.fingerprint(pubkey) : undefined;
-    email = common_js_1.Str.parseEmail(email).email;
-
-    if (!common_js_1.Str.isEmailValid(email)) {
-      throw new Error(`Cannot save contact because email is not valid: ${email}`);
-    }
-
-    return {
-      email,
-      name: name || null,
-      pubkey: pubkey || null,
-      has_pgp: pubkey ? 1 : 0,
-      searchable: [],
-      client: pubkey ? client || null : null,
-      attested: pubkey ? Boolean(attested) : null,
-      fingerprint: fingerprint || null,
-      longid: fingerprint ? pgp_js_1.Pgp.key.longid(fingerprint) || null : null,
-      keywords: fingerprint ? mnemonic_js_1.mnemonic(pgp_js_1.Pgp.key.longid(fingerprint)) || null : null,
-      pending_lookup: pubkey ? 0 : pendingLookup ? 1 : 0,
-      last_use: lastUse || null,
-      date: null
-    };
   }
 
-}
+} // static saveError(err: any, errMsg?: string) {
+// }
+
+
+Store.dbContactObj = async (email, name, client, pubkey, attested, pendingLookup, lastUse) => {
+  const fingerprint = pubkey ? await pgp_js_1.Pgp.key.fingerprint(pubkey) : undefined;
+  email = common_js_1.Str.parseEmail(email).email;
+
+  if (!common_js_1.Str.isEmailValid(email)) {
+    throw new Error(`Cannot save contact because email is not valid: ${email}`);
+  }
+
+  return {
+    email,
+    name: name || null,
+    pubkey: pubkey || null,
+    has_pgp: pubkey ? 1 : 0,
+    searchable: [],
+    client: pubkey ? client || null : null,
+    attested: pubkey ? Boolean(attested) : null,
+    fingerprint: fingerprint || null,
+    longid: fingerprint ? (await pgp_js_1.Pgp.key.longid(fingerprint)) || null : null,
+    keywords: fingerprint ? mnemonic_js_1.mnemonic((await pgp_js_1.Pgp.key.longid(fingerprint)) || '') || null : null,
+    pending_lookup: pubkey ? 0 : pendingLookup ? 1 : 0,
+    last_use: lastUse || null,
+    date: null
+  };
+};
 
 Store.dbContactSave = async (db, contact) => {
   return;
@@ -59745,11 +59774,11 @@ class Mime {}
 
 Mime.process = async mimeMsg => {
   const decoded = await Mime.decode(mimeMsg);
-  let blocks = [];
+  const blocks = [];
 
   if (decoded.text) {
     // may be undefined or empty
-    blocks = blocks.concat(pgp_js_1.Pgp.armor.detectBlocks(decoded.text).blocks);
+    blocks.push(...pgp_js_1.Pgp.armor.detectBlocks(decoded.text).blocks);
   }
 
   for (const file of decoded.atts) {
@@ -59764,7 +59793,7 @@ Mime.process = async mimeMsg => {
     } else if (treatAs === 'signature') {
       decoded.signature = decoded.signature || file.asText();
     } else if (treatAs === 'publicKey') {
-      blocks = blocks.concat(pgp_js_1.Pgp.armor.detectBlocks(file.asText()).blocks);
+      blocks.push(...pgp_js_1.Pgp.armor.detectBlocks(file.asText()).blocks);
     }
   }
 
