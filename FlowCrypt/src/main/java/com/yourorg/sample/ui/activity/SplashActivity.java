@@ -8,7 +8,6 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
-import com.yourorg.sample.MainActivity;
 import com.yourorg.sample.R;
 import com.yourorg.sample.node.Node;
 

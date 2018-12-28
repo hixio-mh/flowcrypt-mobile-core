@@ -1,4 +1,4 @@
-package com.yourorg.sample;
+package com.yourorg.sample.ui.activity;
 
 import android.app.Activity;
 import android.content.Context;
@@ -12,6 +12,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
 
+import com.yourorg.sample.R;
+import com.yourorg.sample.TestData;
 import com.yourorg.sample.api.retrofit.NodeRequestBody;
 import com.yourorg.sample.api.retrofit.RequestService;
 import com.yourorg.sample.api.retrofit.RetrofitHelper;
