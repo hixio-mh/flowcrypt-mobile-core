@@ -5,7 +5,7 @@
 import * as EventEmitter from 'events';
 
 let send = (msg: string) => {
-  console.error(`-------------------- native bridge nor present for message --------------------\n${msg}\n--------------------`);
+  console.error(`-------------------- native bridge not present for message --------------------\n${msg}\n--------------------`);
 };
 
 try {
