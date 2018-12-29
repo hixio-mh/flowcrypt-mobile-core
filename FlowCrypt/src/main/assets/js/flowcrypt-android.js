@@ -47791,19 +47791,27 @@ PgpMsg.sign = async (signingPrv, data) => {
 
 PgpMsg.verify = async (message, keysForVerification, optionalContact) => {
   const sig = {
-    contact: optionalContact
+    contact: optionalContact,
+    match: null
   };
 
   try {
-    for (const verifyRes of await message.verify(keysForVerification)) {
-      sig.match = common_js_1.Value.is(sig.match).in([true, undefined]) && verifyRes.valid; // this will probably falsely show as not matching in some rare cases. Needs testing.
+    const verifyResults = await message.verify(keysForVerification);
+
+    for (const verifyRes of verifyResults) {
+      // todo - a valid signature is a valid signature, and should be surfaced. Currently, if any of the signatures are not valid, it's showing all as invalid
+      // .. as it is now this could allow an attacker to append bogus signatures to validly signed messages, making otherwise correct messages seem incorrect
+      // .. which is not really an issue - an attacker that can append signatures could have also just slightly changed the message, causing the same experience
+      // .. so for now #wontfix unless a reasonable usecase surfaces
+      sig.match = (sig.match === true || sig.match === null) && (await verifyRes.verified);
 
       if (!sig.signer) {
+        // todo - currently only the first signer will be reported. Should we be showing all signers? How common is that?
         sig.signer = await Pgp.key.longid(verifyRes.keyid.bytes);
       }
     }
   } catch (verifyErr) {
-    sig.match = undefined;
+    sig.match = null;
 
     if (verifyErr instanceof Error && verifyErr.message === 'Can only verify message with one literal data packet.') {
       sig.error = 'FlowCrypt is not equipped to verify this message (err 101)';
@@ -47817,17 +47825,7 @@ PgpMsg.verify = async (message, keysForVerification, optionalContact) => {
 };
 
 PgpMsg.verifyDetached = async (plaintext, sigText) => {
-  if (plaintext instanceof Uint8Array) {
-    // until https://github.com/openpgpjs/openpgpjs/issues/657 fixed
-    plaintext = common_js_1.Str.fromUint8(plaintext);
-  }
-
-  if (sigText instanceof Uint8Array) {
-    // until https://github.com/openpgpjs/openpgpjs/issues/657 fixed
-    sigText = common_js_1.Str.fromUint8(sigText);
-  }
-
-  const message = openpgp.message.fromText(plaintext);
+  const message = typeof plaintext === 'string' ? openpgp.message.fromText(plaintext) : openpgp.message.fromBinary(plaintext);
   message.appendSignature(sigText);
   const keys = await Pgp.internal.cryptoMsgGetSortedKeys({
     keys: [],
