@@ -78,7 +78,7 @@ public final class RetrofitHelper {
         .readTimeout(TIMEOUT, TimeUnit.SECONDS)
         .writeTimeout(TIMEOUT, TimeUnit.SECONDS)
         .addInterceptor(headersInterceptor(nodeSecret))
-        //.addInterceptor(getHttpLoggingInterceptor())
+        .addInterceptor(getHttpLoggingInterceptor())
         .sslSocketFactory(nodeSecret.getSslSocketFactory(), nodeSecret.getSslTrustManager())
         .followRedirects(false)
         .followSslRedirects(false)
