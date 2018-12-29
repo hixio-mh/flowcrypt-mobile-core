@@ -21,6 +21,16 @@ declare namespace OpenPGP {
     algorithm: string;
   }
 
+  interface BaseStream<T extends Uint8Array | string> { }
+  interface WebStream<T extends Uint8Array | string> extends BaseStream<T> { // copied+simplified version of ReadableStream from lib.dom.d.ts
+    readonly locked: boolean; cancel(reason?: any): Promise<void>; getReader: Function; pipeThrough: Function; pipeTo: Function; tee: Function;
+  }
+  interface NodeStream<T extends Uint8Array | string> extends BaseStream<T> { // copied+simplified version of ReadableStream from @types/node/index.d.ts
+    readable: boolean; read(size?: number): string | Uint8Array; setEncoding(encoding: string): this; pause(): this; resume(): this;
+    isPaused(): boolean; pipe: Function; unpipe: Function; unshift(chunk: string): void; unshift(chunk: Uint8Array): void; wrap: Function;
+  }
+  type Stream<T extends Uint8Array | string> = WebStream<T> | NodeStream<T>;
+
   export interface EncryptOptions {
     /** message to be encrypted as created by openpgp.message.fromText or openpgp.message.fromBinary */
     message: message.Message;
@@ -505,7 +515,7 @@ declare namespace OpenPGP {
       /** Verify signatures of cleartext signed message
        *  @param keys array of keys to verify signatures
        */
-      verify(keys: key.Key[]): Promise<message.VerifiedSignature[]>;
+      verify(keys: key.Key[]): Promise<message.Verification[]>;
     }
 
     /**
@@ -887,7 +897,7 @@ declare namespace OpenPGP {
 
       /** Get literal data that is the body of the message
        */
-      getLiteralData(): Uint8Array | null | ReadableStream<Uint8Array>;
+      getLiteralData(): Uint8Array | null | Stream<Uint8Array>;
 
       /** Returns the key IDs of the keys that signed the message
        */
@@ -895,7 +905,7 @@ declare namespace OpenPGP {
 
       /** Get literal data as text
        */
-      getText(): string | null | ReadableStream<string>;
+      getText(): string | null | Stream<string>;
 
       getFilename(): string | null;
 
@@ -911,7 +921,7 @@ declare namespace OpenPGP {
       /** Verify message signatures
           @param keys array of keys to verify signatures
       */
-      verify(keys: key.Key[]): Promise<VerifiedSignature[]>;
+      verify(keys: key.Key[]): Promise<Verification[]>;
 
       /**
        * Append signature to unencrypted message object
@@ -926,27 +936,27 @@ declare namespace OpenPGP {
 
     }
 
-    export interface VerifiedSignature {
+    export interface Verification {
       keyid: Keyid;
-      valid: boolean;
-      signature: signature.Signature;
+      verified: Promise<null | boolean>;
+      signature: Promise<signature.Signature>;
     }
 
     /** creates new message object from binary data
         @param bytes
     */
-    function fromBinary(bytes: Uint8Array | ReadableStream<Uint8Array>, filename?: string, date?: Date, type?: DataPacketType): Message;
+    function fromBinary(bytes: Uint8Array | Stream<Uint8Array>, filename?: string, date?: Date, type?: DataPacketType): Message;
 
     /** creates new message object from text
         @param text
     */
-    function fromText(text: string | ReadableStream<string>, filename?: string, date?: Date, type?: DataPacketType): Message;
+    function fromText(text: string | Stream<string>, filename?: string, date?: Date, type?: DataPacketType): Message;
 
     /** reads an OpenPGP armored message and returns a message object
 
         @param armoredText text to be parsed
     */
-    function readArmored(armoredText: string | ReadableStream<string>): Promise<Message>;
+    function readArmored(armoredText: string | Stream<string>): Promise<Message>;
 
     /**
      * reads an OpenPGP message as byte array and returns a message object
@@ -1045,7 +1055,7 @@ declare namespace OpenPGP {
   }
 
   export namespace stream {
-    function readToEnd<T extends Uint8Array | string>(input: ReadableStream<T> | T, concat?: (list: T[]) => T): Promise<T>;
+    function readToEnd<T extends Uint8Array | string>(input: Stream<T> | T, concat?: (list: T[]) => T): Promise<T>;
     // concat
     // slice
     // clone
