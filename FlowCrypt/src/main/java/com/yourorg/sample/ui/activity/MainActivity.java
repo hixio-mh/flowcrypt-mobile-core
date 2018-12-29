@@ -1,7 +1,6 @@
 package com.yourorg.sample.ui.activity;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -22,7 +21,6 @@ import com.yourorg.sample.api.retrofit.request.model.FileModel;
 import com.yourorg.sample.api.retrofit.request.model.Pubkeys;
 import com.yourorg.sample.api.retrofit.response.models.Version;
 import com.yourorg.sample.node.Node;
-import com.yourorg.sample.node.NodeSecretCerts;
 import com.yourorg.sample.node.results.DecryptFileResult;
 import com.yourorg.sample.node.results.DecryptMsgResult;
 import com.yourorg.sample.node.results.EncryptFileResult;
@@ -35,13 +33,9 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 
@@ -54,29 +48,21 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
   private static final int REQUEST_CODE_CHOOSE_FILE = 10;
 
-  private final String nodeSecretsCacheFilename = "flowcrypt-node-secrets-cache";
-  private final String testMsg = "this is ~\na test for\n\ndecrypting\nunicode:\u03A3\nthat's all";
-  private final String testMsgHtml = "this is ~<br>a test for<br><br>decrypting<br>unicode:\u03A3<br>that&#39;s all";
+  private static final String TEST_MSG = "this is ~\na test for\n\ndecrypting\nunicode:\u03A3\nthat's all";
+  private static final String TEST_MSG_HTML = "this is ~<br>a test for<br><br>decrypting<br>unicode:\u03A3<br>that&#39;s all";
 
-  private String newTitle = "Node";
-  Handler newTitleHandler = new Handler(new Handler.Callback() {
-    @Override
-    public boolean handleMessage(Message msg) {
-      setTitle(newTitle);
-      return true;
-    }
-  });
+  private Node node;
   private String resultText;
   private TextView tvResult;
-  Handler newResultTextHandler = new Handler(new Handler.Callback() {
+  private Handler newResultTextHandler = new Handler(new Handler.Callback() {
     @Override
     public boolean handleMessage(Message msg) {
       tvResult.setText(resultText);
       return true;
     }
   });
+
   private boolean hasTestFailure;
-  private Node node;
 
   public MainActivity() {
     node = Node.getInstance();
@@ -220,8 +206,8 @@ public class MainActivity extends AppCompatActivity {
       addResultLine(actionName, r.ms, r.getDecryptErr().type + ":" + r.getDecryptErr().error, false);
     } else if (r.getAllBlockMetas().length != 1) {
       addResultLine(actionName, r.ms, "wrong amount of block metas: " + r.getAllBlockMetas().length, false);
-    } else if (r.getAllBlockMetas()[0].length != testMsgHtml.length()) {
-      addResultLine(actionName, r.ms, "wrong meta block len " + r.getAllBlockMetas()[0].length + "!=" + testMsgHtml.length(), false);
+    } else if (r.getAllBlockMetas()[0].length != TEST_MSG_HTML.length()) {
+      addResultLine(actionName, r.ms, "wrong meta block len " + r.getAllBlockMetas()[0].length + "!=" + TEST_MSG_HTML.length(), false);
     } else if (!r.getAllBlockMetas()[0].type.equals(MsgBlock.TYPE_HTML)) {
       addResultLine(actionName, r.ms, "wrong meta block type: " + r.getAllBlockMetas()[0].type, false);
     } else {
@@ -230,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
         addResultLine(actionName, r.ms, "getNextBlock unexpectedly null", false);
       } else if (!block.getType().equals(MsgBlock.TYPE_HTML)) {
         addResultLine(actionName, r.ms, "wrong block type: " + r.getAllBlockMetas()[0].length, false);
-      } else if (!block.getContent().equals(testMsgHtml)) {
+      } else if (!block.getContent().equals(TEST_MSG_HTML)) {
         addResultLine(actionName, r.ms, "block content mismatch", false);
       } else if (r.getNextBlock() != null) {
         addResultLine(actionName, r.ms, "unexpected second block", false);
@@ -285,7 +271,7 @@ public class MainActivity extends AppCompatActivity {
           RequestService requestService = retrofitHelper.getRetrofit().create(RequestService.class);
 
           hasTestFailure = false;
-          byte[] testMsgBytes = testMsg.getBytes();
+          byte[] testMsgBytes = TEST_MSG.getBytes();
           String encryptedMsg = encryptMsgAndRender("encrypt-msg", testMsgBytes, requestService);
           decryptMsgAndRender("decrypt-msg-ecc", encryptedMsg.getBytes(), TestData.eccPrvKeyInfo(), requestService);
           decryptMsgAndRender("decrypt-msg-rsa2048", encryptedMsg.getBytes(), TestData.rsa2048PrvKeyInfo(), requestService);
@@ -315,36 +301,6 @@ public class MainActivity extends AppCompatActivity {
       }
     });
     t.start();
-  }
-
-  /**
-   * this is just an example. Production app should use encrypted store
-   */
-  private void nodeSecretCertsCacheSave(NodeSecretCerts nodeSecretCerts) {
-    try {
-      FileOutputStream fos = getApplicationContext().openFileOutput(nodeSecretsCacheFilename, Context.MODE_PRIVATE);
-      ObjectOutputStream oos = new ObjectOutputStream(fos);
-      oos.writeObject(nodeSecretCerts);
-      oos.close();
-      fos.close();
-    } catch (Exception e) {
-      throw new RuntimeException("Could not save certs cache", e);
-    }
-  }
-
-  /**
-   * this is just an example. Production app should use encrypted store
-   */
-  private NodeSecretCerts nodeSecretCertsCacheLoad() {
-    try {
-      FileInputStream fis = getApplicationContext().openFileInput(nodeSecretsCacheFilename);
-      ObjectInputStream ois = new ObjectInputStream(fis);
-      return (NodeSecretCerts) ois.readObject();
-    } catch (FileNotFoundException e) {
-      return null;
-    } catch (Exception e) {
-      throw new RuntimeException("Could not load certs cache", e);
-    }
   }
 
   private void chooseFile() {
@@ -395,5 +351,4 @@ public class MainActivity extends AppCompatActivity {
     });
     t.start();
   }
-
 }
