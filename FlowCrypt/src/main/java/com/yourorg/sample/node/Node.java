@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.support.annotation.NonNull;
 
+import com.yourorg.sample.api.retrofit.request.RequestsManager;
 import com.yourorg.sample.node.exception.NodeNotReady;
 
 import org.apache.commons.io.IOUtils;
@@ -29,6 +30,7 @@ public class Node {
   private volatile NativeNode nativeNode;
   private NodeSecret nodeSecret;
   private MutableLiveData<Boolean> liveData;
+  private RequestsManager requestsManager;
 
   private Node() {
     liveData = new MutableLiveData<>();
@@ -45,6 +47,10 @@ public class Node {
 
   public LiveData<Boolean> getLiveData() {
     return liveData;
+  }
+
+  public RequestsManager getRequestsManager() {
+    return requestsManager;
   }
 
   public NativeNode getNativeNode() {
@@ -68,6 +74,7 @@ public class Node {
           } else {
             nodeSecret = new NodeSecret(context.getFilesDir().getAbsolutePath(), certs);
           }
+          requestsManager = new RequestsManager(nodeSecret);
           start(context.getAssets(), nodeSecret);
           waitUntilReady();
           liveData.postValue(true);
