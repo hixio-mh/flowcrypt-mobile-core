@@ -1,5 +1,7 @@
 package com.yourorg.sample.node.results;
 
+import android.support.annotation.NonNull;
+
 import org.apache.commons.io.Charsets;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,13 +20,13 @@ public class RawNodeResult {
    */
 
   private final int bufferSize = 1024; // buffer sizes: 1024*8 or 1024*16 or 1024*32
-  private Exception err;
-  private InputStream inputStream;
-  private boolean errWasTested = false;
+  public long ms;
   protected boolean jsonResponseLineAlreadyStripped = false;
   protected String jsonResponseRaw;
   protected JSONObject jsonResponseParsed;
-  public long ms;
+  private Exception err;
+  private InputStream inputStream;
+  private boolean errWasTested = false;
 
   public RawNodeResult(Exception err, InputStream inputStream, long ms) {
     this.err = err;
@@ -36,7 +38,7 @@ public class RawNodeResult {
     try {
       Class[] argClasses = new Class[]{Exception.class, InputStream.class, long.class};
       return cls.getDeclaredConstructor(argClasses).newInstance(this.err, this.inputStream, this.ms);
-    } catch(Exception e) {
+    } catch (Exception e) {
       throw new RuntimeException("RawNodeResult wrong constructor definition", e);
     }
   }
@@ -48,7 +50,7 @@ public class RawNodeResult {
   }
 
   protected void throwIfErrNotTested() {
-    if(!errWasTested) {
+    if (!errWasTested) {
       throw new Error("RawNodeResult getErr() must be called before accessing data");
     }
   }
@@ -60,13 +62,19 @@ public class RawNodeResult {
 
   protected void closeInputStream() {
     throwIfErrNotTested();
-    if(inputStream != null) {
+    if (inputStream != null) {
       try {
         inputStream.close();
       } catch (IOException e) {
         e.printStackTrace();
       }
     }
+  }
+
+  @NonNull
+  @Override
+  public String toString() {
+    return jsonResponseParsed.toString();
   }
 
   private String markAndInterpretUtfBytesFromInputStream(ByteArrayOutputStream bytes, InputStream inputStream) {
@@ -76,14 +84,14 @@ public class RawNodeResult {
 
   protected String readOneUtfLineFromInputStream() {
     throwIfErrNotTested();
-    if(inputStream == null) {
+    if (inputStream == null) {
       return null;
     }
     // do not use StringBuilder, it cannot do utf one byte at a time
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     int c;
     try {
-      while((c = inputStream.read()) != -1) {
+      while ((c = inputStream.read()) != -1) {
         if (c == '\n') {
           return markAndInterpretUtfBytesFromInputStream(bytes, inputStream);
         }
@@ -96,7 +104,7 @@ public class RawNodeResult {
   }
 
   protected JSONObject parseJson(String line) {
-    if(line == null) {
+    if (line == null) {
       return null;
     }
     try {
@@ -108,16 +116,20 @@ public class RawNodeResult {
 
   private void stripAndParseJsonResponseLineIfNotStrippedYet() {
     throwIfErrNotTested();
-    if(!jsonResponseLineAlreadyStripped) {
+    if (!jsonResponseLineAlreadyStripped) {
       jsonResponseLineAlreadyStripped = true;
       jsonResponseRaw = readOneUtfLineFromInputStream();
       jsonResponseParsed = parseJson(jsonResponseRaw);
     }
   }
 
+  public String getJsonResponseRaw() {
+    return jsonResponseRaw;
+  }
+
   protected byte[] getDataBinaryBytes() throws IOException {
     throwIfErrNotTested();
-    if(inputStream == null) {
+    if (inputStream == null) {
       return null;
     }
     ByteArrayOutputStream collector = new ByteArrayOutputStream();
@@ -129,7 +141,7 @@ public class RawNodeResult {
     return collector.toByteArray();
   }
 
-  protected String getDataTextString() {
+  public String getDataTextString() {
     throwIfErrNotTested();
     BufferedReader br = new BufferedReader(new InputStreamReader(getInputStream()), bufferSize);
     return br.lines().collect(Collectors.joining("\n"));
@@ -163,7 +175,7 @@ abstract class DecryptResult extends RawNodeResult {
     throwIfErrNotTested();
     decryptErrTested = true;
     try {
-      if(jsonResponseParsed.getBoolean("success")) {
+      if (jsonResponseParsed.getBoolean("success")) {
         return null;
       }
       JSONObject error = jsonResponseParsed.getJSONObject("error");
@@ -175,7 +187,7 @@ abstract class DecryptResult extends RawNodeResult {
   }
 
   protected void throwIfDecryptErrNotTested() {
-    if(!decryptErrTested) {
+    if (!decryptErrTested) {
       throw new Error("DecryptResult getDecryptErr() must be called before accessing data");
     }
   }
