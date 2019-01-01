@@ -5,7 +5,7 @@
 //                 FlowCrypt Limited <https://flowcrypt.com>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
-/* tslint:disable:only-arrow-functions variable-name max-line-length no-null-keyword */
+/* tslint:disable:only-arrow-functions variable-name max-line-length no-null-keyword ban-types */
 
 declare namespace OpenPGP {
 
@@ -27,7 +27,7 @@ declare namespace OpenPGP {
   }
   interface NodeStream<T extends Uint8Array | string> extends BaseStream<T> { // copied+simplified version of ReadableStream from @types/node/index.d.ts
     readable: boolean; read(size?: number): string | Uint8Array; setEncoding(encoding: string): this; pause(): this; resume(): this;
-    isPaused(): boolean; pipe: Function; unpipe: Function; unshift(chunk: string): void; unshift(chunk: Uint8Array): void; wrap: Function;
+    isPaused(): boolean; pipe: Function; unpipe: Function; unshift(chunk: string | Uint8Array): void; wrap: Function;
   }
   type Stream<T extends Uint8Array | string> = WebStream<T> | NodeStream<T>;
 
@@ -47,7 +47,7 @@ declare namespace OpenPGP {
     /** (optional) if the return values should be ascii armored or the message/signature objects */
     armor?: boolean;
     /** (optional) whether to return data as a stream. Defaults to the type of stream `message` was created from, if any. */
-    streaming?: 'web' | 'node' | false
+    streaming?: 'web' | 'node' | false;
     /** (optional) if the signature should be detached (if true, signature will be added to returned object) */
     detached?: boolean;
     /** (optional) a detached signature to add to the encrypted message */
@@ -253,8 +253,8 @@ declare namespace OpenPGP {
   export type EncryptResult = EncryptArmorResult | EncryptBinaryResult;
 
   export interface SignArmorResult {
-    data: string;
-    signature: string;
+    data: string | Stream<string>;
+    signature: string | Stream<string>;
   }
 
   export interface SignBinaryResult {
@@ -284,11 +284,12 @@ declare namespace OpenPGP {
   }
 
   export interface SignOptions {
-    data: string | Uint8Array;
-    dataType?: DataPacketType;
-    armor?: boolean;
-    detached?: boolean;
+    message: cleartext.CleartextMessage | message.Message;
     privateKeys?: key.Key | key.Key[];
+    armor?: boolean;
+    streaming?: 'web' | 'node' | false;
+    dataType?: DataPacketType;
+    detached?: boolean;
     date?: Date;
     fromUserId?: UserId;
   }
@@ -526,6 +527,8 @@ declare namespace OpenPGP {
      * @static
      */
     function readArmored(armoredText: string): Promise<CleartextMessage>;
+
+    function fromText(text: string): CleartextMessage;
   }
 
   export namespace config {
@@ -620,7 +623,7 @@ declare namespace OpenPGP {
           @param algo Hash algorithm type
           @param data Data to be hashed
       */
-      function digest(algo: enums.hash, data: string): Uint8Array;
+      function digest(algo: enums.hash, data: Uint8Array): Promise<Uint8Array>;
 
       /** Returns the hash size in bytes of the specified hash algorithm type
           @param algo Hash algorithm type

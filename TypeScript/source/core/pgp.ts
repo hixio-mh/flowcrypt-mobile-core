@@ -215,10 +215,20 @@ export class Pgp {
   };
 
   public static hash = {
-    sha1: (string: string) => Str.toHex(Str.fromUint8(openpgp.crypto.hash.digest(openpgp.enums.hash.sha1, string))),
-    doubleSha1Upper: (string: string) => Pgp.hash.sha1(Pgp.hash.sha1(string)).toUpperCase(),
-    sha256: (string: string) => Str.toHex(Str.fromUint8(openpgp.crypto.hash.digest(openpgp.enums.hash.sha256, string))),
-    challengeAnswer: (answer: string) => Pgp.internal.cryptoHashSha256Loop(answer),
+    sha1: async (string: string): Promise<string> => {
+      const digest = await openpgp.crypto.hash.digest(openpgp.enums.hash.sha1, Str.toUint8(string));
+      return Str.toHex(Str.fromUint8(digest));
+    },
+    doubleSha1Upper: async (string: string) => {
+      return (await Pgp.hash.sha1(await Pgp.hash.sha1(string))).toUpperCase();
+    },
+    sha256: async (string: string) => {
+      const digest = await openpgp.crypto.hash.digest(openpgp.enums.hash.sha256, Str.toUint8(string));
+      return Str.toHex(Str.fromUint8(digest));
+    },
+    challengeAnswer: async (answer: string) => {
+      return await Pgp.internal.cryptoHashSha256Loop(answer);
+    },
   };
 
   public static key = {
@@ -455,9 +465,9 @@ export class Pgp {
       }
       return result;
     },
-    cryptoHashSha256Loop: (string: string, times = 100000) => {
+    cryptoHashSha256Loop: async (string: string, times = 100000) => {
       for (let i = 0; i < times; i++) {
-        string = Pgp.hash.sha256(string);
+        string = await Pgp.hash.sha256(string);
       }
       return string;
     },
@@ -477,6 +487,16 @@ export class Pgp {
         return { isArmored, isCleartext: false, message: await openpgp.message.read(Str.toUint8(data)) };
       }
     },
+    longids: async (keyIds: OpenPGP.Keyid[]) => {
+      const longids: string[] = [];
+      for (const id of keyIds) {
+        const longid = await Pgp.key.longid(id.bytes);
+        if (longid) {
+          longids.push(longid);
+        }
+      }
+      return longids;
+    },
     cryptoMsgGetSortedKeys: async (kiWithPp: KeyInfosWithPassphrases, msg: OpenpgpMsgOrCleartext): Promise<SortedKeysForDecrypt> => {
       const keys: SortedKeysForDecrypt = {
         verificationContacts: [],
@@ -488,15 +508,10 @@ export class Pgp {
         prvForDecryptDecrypted: [],
         prvForDecryptWithoutPassphrases: [],
       };
-      const encryptedForKeyId = msg instanceof openpgp.message.Message ? (msg as OpenPGP.message.Message).getEncryptionKeyIds() : [];
-      keys.encryptedFor = (await Promise.all(encryptedForKeyId.map(id => Pgp.key.longid(id.bytes)))).filter(Boolean) as string[];
-      keys.signedBy = (await Promise.all((msg.getSigningKeyIds ? msg.getSigningKeyIds() : []).filter(Boolean).map(id => Pgp.key.longid(id.bytes)))).filter(Boolean) as string[];
+      keys.encryptedFor = await Pgp.internal.longids(msg instanceof openpgp.message.Message ? (msg as OpenPGP.message.Message).getEncryptionKeyIds() : []);
+      keys.signedBy = await Pgp.internal.longids(msg.getSigningKeyIds ? msg.getSigningKeyIds() : []);
       keys.prvMatching = kiWithPp.keys.filter(ki => Value.is(ki.longid).in(keys.encryptedFor));
-      if (keys.prvMatching.length) {
-        keys.prvForDecrypt = keys.prvMatching;
-      } else {
-        keys.prvForDecrypt = kiWithPp.keys;
-      }
+      keys.prvForDecrypt = keys.prvMatching.length ? keys.prvMatching : kiWithPp.keys;
       for (const prvForDecrypt of keys.prvForDecrypt) {
         const { keys: [prv] } = await openpgp.key.readArmored(prvForDecrypt.private);
         if (prv.isDecrypted() || (kiWithPp.passphrases.length && await Pgp.key.decrypt(prv, kiWithPp.passphrases) === true)) {
@@ -609,13 +624,14 @@ export class PgpMsg {
     return undefined;
   }
 
-  static sign = async (signingPrv: OpenPGP.key.Key, data: string): Promise<string> => {
-    const signRes = await openpgp.sign({ data, armor: true, privateKeys: [signingPrv] });
-    return (signRes as OpenPGP.SignArmorResult).data;
+  static sign = async (signingPrv: OpenPGP.key.Key, data: string | Uint8Array): Promise<string> => {
+    const message = openpgp.cleartext.fromText(Str.fromUint8(data));
+    const signRes = await openpgp.sign({ message, armor: true, privateKeys: [signingPrv] });
+    return await openpgp.stream.readToEnd((signRes as OpenPGP.SignArmorResult).data);
   }
 
   static verify = async (message: OpenpgpMsgOrCleartext, keysForVerification: OpenPGP.key.Key[], optionalContact?: Contact): Promise<MsgVerifyResult> => {
-    const sig: MsgVerifyResult = { contact: optionalContact, match: null };
+    const sig: MsgVerifyResult = { contact: optionalContact, match: null }; // tslint:disable-line:no-null-keyword
     try {
       const verifyResults = await message.verify(keysForVerification);
       for (const verifyRes of verifyResults) {
@@ -630,7 +646,7 @@ export class PgpMsg {
         }
       }
     } catch (verifyErr) {
-      sig.match = null;
+      sig.match = null; // tslint:disable-line:no-null-keyword
       if (verifyErr instanceof Error && verifyErr.message === 'Can only verify message with one literal data packet.') {
         sig.error = 'FlowCrypt is not equipped to verify this message (err 101)';
       } else {
@@ -682,10 +698,10 @@ export class PgpMsg {
       const decrypted = await (prepared.message as OpenPGP.message.Message).decrypt(privateKeys, passwords, undefined, false);
       // const signature = keys.signed_by.length ? Pgp.message.verify(message, keys.for_verification, keys.verification_contacts[0]) : false;
       if (getUint8) {
-        const uint8 = await openpgp.stream.readToEnd(decrypted.getLiteralData()!);
+        const uint8 = new Uint8Array(await openpgp.stream.readToEnd(decrypted.getLiteralData()!));
         return { success: true, content: { uint8, filename: decrypted.getFilename() || undefined }, isEncrypted };
       } else {
-        const text = await openpgp.stream.readToEnd(decrypted.getText()!);
+        const text = String(await openpgp.stream.readToEnd(decrypted.getText()!));
         return { success: true, content: { text, filename: decrypted.getFilename() || undefined }, isEncrypted };
       }
     } catch (e) {
@@ -707,7 +723,7 @@ export class PgpMsg {
       }
     }
     if (pwd && pwd.answer) {
-      options.passwords = [Pgp.hash.challengeAnswer(pwd.answer)];
+      options.passwords = [await Pgp.hash.challengeAnswer(pwd.answer)];
       usedChallenge = true;
     }
     if (!pubkeys && !usedChallenge) {

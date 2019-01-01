@@ -47217,10 +47217,20 @@ Pgp.armor = {
   }
 };
 Pgp.hash = {
-  sha1: string => common_js_1.Str.toHex(common_js_1.Str.fromUint8(openpgp.crypto.hash.digest(openpgp.enums.hash.sha1, string))),
-  doubleSha1Upper: string => Pgp.hash.sha1(Pgp.hash.sha1(string)).toUpperCase(),
-  sha256: string => common_js_1.Str.toHex(common_js_1.Str.fromUint8(openpgp.crypto.hash.digest(openpgp.enums.hash.sha256, string))),
-  challengeAnswer: answer => Pgp.internal.cryptoHashSha256Loop(answer)
+  sha1: async string => {
+    const digest = await openpgp.crypto.hash.digest(openpgp.enums.hash.sha1, common_js_1.Str.toUint8(string));
+    return common_js_1.Str.toHex(common_js_1.Str.fromUint8(digest));
+  },
+  doubleSha1Upper: async string => {
+    return (await Pgp.hash.sha1((await Pgp.hash.sha1(string)))).toUpperCase();
+  },
+  sha256: async string => {
+    const digest = await openpgp.crypto.hash.digest(openpgp.enums.hash.sha256, common_js_1.Str.toUint8(string));
+    return common_js_1.Str.toHex(common_js_1.Str.fromUint8(digest));
+  },
+  challengeAnswer: async answer => {
+    return await Pgp.internal.cryptoHashSha256Loop(answer);
+  }
 };
 Pgp.key = {
   create: async (userIds, numBits, passphrase) => {
@@ -47550,9 +47560,9 @@ Pgp.internal = {
 
     return result;
   },
-  cryptoHashSha256Loop: (string, times = 100000) => {
+  cryptoHashSha256Loop: async (string, times = 100000) => {
     for (let i = 0; i < times; i++) {
-      string = Pgp.hash.sha256(string);
+      string = await Pgp.hash.sha256(string);
     }
 
     return string;
@@ -47587,6 +47597,19 @@ Pgp.internal = {
       };
     }
   },
+  longids: async keyIds => {
+    const longids = [];
+
+    for (const id of keyIds) {
+      const longid = await Pgp.key.longid(id.bytes);
+
+      if (longid) {
+        longids.push(longid);
+      }
+    }
+
+    return longids;
+  },
   cryptoMsgGetSortedKeys: async (kiWithPp, msg) => {
     const keys = {
       verificationContacts: [],
@@ -47598,16 +47621,10 @@ Pgp.internal = {
       prvForDecryptDecrypted: [],
       prvForDecryptWithoutPassphrases: []
     };
-    const encryptedForKeyId = msg instanceof openpgp.message.Message ? msg.getEncryptionKeyIds() : [];
-    keys.encryptedFor = (await Promise.all(encryptedForKeyId.map(id => Pgp.key.longid(id.bytes)))).filter(Boolean);
-    keys.signedBy = (await Promise.all((msg.getSigningKeyIds ? msg.getSigningKeyIds() : []).filter(Boolean).map(id => Pgp.key.longid(id.bytes)))).filter(Boolean);
+    keys.encryptedFor = await Pgp.internal.longids(msg instanceof openpgp.message.Message ? msg.getEncryptionKeyIds() : []);
+    keys.signedBy = await Pgp.internal.longids(msg.getSigningKeyIds ? msg.getSigningKeyIds() : []);
     keys.prvMatching = kiWithPp.keys.filter(ki => common_js_1.Value.is(ki.longid).in(keys.encryptedFor));
-
-    if (keys.prvMatching.length) {
-      keys.prvForDecrypt = keys.prvMatching;
-    } else {
-      keys.prvForDecrypt = kiWithPp.keys;
-    }
+    keys.prvForDecrypt = keys.prvMatching.length ? keys.prvMatching : kiWithPp.keys;
 
     for (const prvForDecrypt of keys.prvForDecrypt) {
       const {
@@ -47781,19 +47798,20 @@ PgpMsg.type = async data => {
 };
 
 PgpMsg.sign = async (signingPrv, data) => {
+  const message = openpgp.cleartext.fromText(common_js_1.Str.fromUint8(data));
   const signRes = await openpgp.sign({
-    data,
+    message,
     armor: true,
     privateKeys: [signingPrv]
   });
-  return signRes.data;
+  return await openpgp.stream.readToEnd(signRes.data);
 };
 
 PgpMsg.verify = async (message, keysForVerification, optionalContact) => {
   const sig = {
     contact: optionalContact,
     match: null
-  };
+  }; // tslint:disable-line:no-null-keyword
 
   try {
     const verifyResults = await message.verify(keysForVerification);
@@ -47811,7 +47829,7 @@ PgpMsg.verify = async (message, keysForVerification, optionalContact) => {
       }
     }
   } catch (verifyErr) {
-    sig.match = null;
+    sig.match = null; // tslint:disable-line:no-null-keyword
 
     if (verifyErr instanceof Error && verifyErr.message === 'Can only verify message with one literal data packet.') {
       sig.error = 'FlowCrypt is not equipped to verify this message (err 101)';
@@ -47909,7 +47927,7 @@ PgpMsg.decrypt = async (kisWithPp, encryptedData, msgPwd, getUint8 = false) => {
     const decrypted = await prepared.message.decrypt(privateKeys, passwords, undefined, false); // const signature = keys.signed_by.length ? Pgp.message.verify(message, keys.for_verification, keys.verification_contacts[0]) : false;
 
     if (getUint8) {
-      const uint8 = await openpgp.stream.readToEnd(decrypted.getLiteralData());
+      const uint8 = new Uint8Array((await openpgp.stream.readToEnd(decrypted.getLiteralData())));
       return {
         success: true,
         content: {
@@ -47919,7 +47937,7 @@ PgpMsg.decrypt = async (kisWithPp, encryptedData, msgPwd, getUint8 = false) => {
         isEncrypted
       };
     } else {
-      const text = await openpgp.stream.readToEnd(decrypted.getText());
+      const text = String((await openpgp.stream.readToEnd(decrypted.getText())));
       return {
         success: true,
         content: {
@@ -47960,7 +47978,7 @@ PgpMsg.encrypt = async (pubkeys, signingPrv, pwd, data, filename, armor, date) =
   }
 
   if (pwd && pwd.answer) {
-    options.passwords = [Pgp.hash.challengeAnswer(pwd.answer)];
+    options.passwords = [await Pgp.hash.challengeAnswer(pwd.answer)];
     usedChallenge = true;
   }
 
@@ -48184,10 +48202,15 @@ Str.numberFormat = number => {
   }
 
   return x1 + x2;
-}; // tslint:disable-next-line:max-line-length
+};
 
+Str.isEmailValid = email => {
+  if (email.indexOf(' ') !== -1) {
+    return false;
+  }
 
-Str.isEmailValid = email => /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/i.test(email);
+  return /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/i.test(email);
+};
 
 Str.monthName = monthIndex => ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][monthIndex];
 
