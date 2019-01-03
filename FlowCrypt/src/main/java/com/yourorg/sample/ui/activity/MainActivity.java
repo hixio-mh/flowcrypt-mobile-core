@@ -19,7 +19,7 @@ import com.yourorg.sample.node.results.DecryptMsgResult;
 import com.yourorg.sample.node.results.EncryptFileResult;
 import com.yourorg.sample.node.results.MsgBlock;
 import com.yourorg.sample.node.results.RawNodeResult;
-import com.yourorg.sample.node.results.TestNodeResult;
+import com.yourorg.sample.node.results.VersionResult;
 
 import java.util.Arrays;
 
@@ -92,8 +92,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     if (nodeResponse != null) {
       switch (nodeResponse.getRequestCode()) {
         case R.id.req_id_get_version:
-          TestNodeResult testNodeResult = (TestNodeResult) nodeResponse.getRawNodeResult();
-          resultText = testNodeResult.getRawJsonResponse() + "\n\n";
+          VersionResult testNodeResult = (VersionResult) nodeResponse.getRawNodeResult();
+          resultText = testNodeResult.debugGetRawJson() + "\n\n";
           addResultLine("version", nodeResponse.getRawNodeResult());
           break;
 
