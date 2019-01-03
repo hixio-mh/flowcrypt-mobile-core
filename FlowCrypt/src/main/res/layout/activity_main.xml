@@ -29,7 +29,6 @@
         tools:layout_editor_absoluteY="8dp" />
 
     <Button
-        android:enabled="false"
         android:id="@+id/btnChooseFile"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

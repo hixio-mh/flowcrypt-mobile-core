@@ -55,7 +55,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
       case REQUEST_CODE_CHOOSE_FILE:
         switch (resultCode) {
           case Activity.RESULT_OK:
-
+            if (data != null) {
+              requestsManager.encryptFile(R.id.req_id_encrypt_file_from_uri, getApplicationContext(), data.getData());
+            }
             break;
         }
         break;
@@ -78,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         break;
 
       case R.id.btnChooseFile:
+        resultText = "";
         chooseFile();
         break;
     }
@@ -181,6 +184,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             addResultLine("all-tests", System.currentTimeMillis() - allTestsStartTime, "hasTestFailure", true);
           }
           break;
+
+        case R.id.req_id_encrypt_file_from_uri:
+          EncryptFileResult encryptFileFromUriResult = (EncryptFileResult) nodeResponse.getRawNodeResult();
+          addResultLine("encrypt-file", encryptFileFromUriResult);
+          requestsManager.decryptFile(R.id.req_id_decrypt_file_rsa_2048_from_uri, encryptFileFromUriResult.getEncryptedDataBytes(), TestData.rsa2048PrvKeyInfo());
+          break;
+
+        case R.id.req_id_decrypt_file_rsa_2048_from_uri:
+          DecryptFileResult rsa2048DecryptFileFromUriResult3Mb = (DecryptFileResult) nodeResponse.getRawNodeResult();
+          printDecryptFileResult("decrypt-file-rsa2048", null, rsa2048DecryptFileFromUriResult3Mb);
+          break;
       }
     }
   }
@@ -196,13 +210,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     tvResult.setText(resultText);
   }
 
-  private void addResultLine(String actionName, long ms, Throwable e, boolean isFinal) {
-    addResultLine(actionName, ms, e.getClass().getName() + ": " + e.getMessage(), isFinal);
+  private void addResultLine(String actionName, long ms, Throwable e) {
+    addResultLine(actionName, ms, e.getClass().getName() + ": " + e.getMessage(), false);
   }
 
   private void addResultLine(String actionName, RawNodeResult result) {
     if (result.getErr() != null) {
-      addResultLine(actionName, result.ms, result.getErr(), false);
+      addResultLine(actionName, result.ms, result.getErr());
     } else {
       addResultLine(actionName, result.ms, "ok", false);
     }
@@ -210,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
   private void printDecryptMsgResult(String actionName, DecryptMsgResult r) {
     if (r.getErr() != null) {
-      addResultLine(actionName, r.ms, r.getErr(), false);
+      addResultLine(actionName, r.ms, r.getErr());
     } else if (r.getDecryptErr() != null) {
       addResultLine(actionName, r.ms, r.getDecryptErr().type + ":" + r.getDecryptErr().error, false);
     } else if (r.getAllBlockMetas().length != 1) {
@@ -237,12 +251,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
   private void printDecryptFileResult(String actionName, byte[] originalData, DecryptFileResult r) {
     if (r.getErr() != null) {
-      addResultLine(actionName, r.ms, r.getErr(), false);
+      addResultLine(actionName, r.ms, r.getErr());
     } else if (r.getDecryptErr() != null) {
       addResultLine(actionName, r.ms, r.getDecryptErr().type + ":" + r.getDecryptErr().error, false);
     } else if (!"file.txt".equals(r.getName())) {
       addResultLine(actionName, r.ms, "wrong filename", false);
-    } else if (!Arrays.equals(r.getDecryptedDataBytes(), originalData)) {
+    } else if (originalData != null && !Arrays.equals(r.getDecryptedDataBytes(), originalData)) {
       addResultLine(actionName, r.ms, "decrypted file content mismatch", false);
     } else {
       addResultLine(actionName, r);

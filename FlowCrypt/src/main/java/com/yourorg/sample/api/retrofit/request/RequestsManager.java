@@ -1,6 +1,8 @@
 package com.yourorg.sample.api.retrofit.request;
 
 import android.arch.lifecycle.LiveData;
+import android.content.Context;
+import android.net.Uri;
 import android.os.AsyncTask;
 
 import com.yourorg.sample.R;
@@ -55,6 +57,10 @@ public class RequestsManager {
     load(requestCode, new NodeRequestBody<>("encryptFile", new FileModel(TestData.getMixedPubKeys(), "file.txt"), data));
   }
 
+  public void encryptFile(int requestCode, Context context, Uri fileUri) {
+    load(requestCode, new NodeRequestBody<>(context, "encryptFile", new FileModel(TestData.getMixedPubKeys(), "file.txt"), fileUri));
+  }
+
   public void decryptFile(int requestCode, byte[] encryptedData, PgpKeyInfo[] prvKeys) {
     load(requestCode, new NodeRequestBody<>("decryptFile", new DecryptModel(prvKeys, TestData.passphrases(), null), encryptedData));
   }
@@ -92,6 +98,7 @@ public class RequestsManager {
           case R.id.req_id_encrypt_file_rsa_2048_1mb:
           case R.id.req_id_encrypt_file_rsa_2048_3mb:
           case R.id.req_id_encrypt_file_rsa_2048_5mb:
+          case R.id.req_id_encrypt_file_from_uri:
             rawNodeResult = new EncryptFileResult(null, response.body().byteStream(), time);
             break;
 
@@ -101,6 +108,7 @@ public class RequestsManager {
           case R.id.req_id_decrypt_file_rsa_2048_1mb:
           case R.id.req_id_decrypt_file_rsa_2048_3mb:
           case R.id.req_id_decrypt_file_rsa_2048_5mb:
+          case R.id.req_id_decrypt_file_rsa_2048_from_uri:
             rawNodeResult = new DecryptFileResult(null, response.body().byteStream(), time);
             break;
 

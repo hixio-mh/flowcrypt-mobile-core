@@ -15,4 +15,6 @@
     <item name="req_id_decrypt_file_rsa_2048_1mb" type="id" />
     <item name="req_id_decrypt_file_rsa_2048_3mb" type="id" />
     <item name="req_id_decrypt_file_rsa_2048_5mb" type="id" />
+    <item name="req_id_encrypt_file_from_uri" type="id" />
+    <item name="req_id_decrypt_file_rsa_2048_from_uri" type="id" />
 </resources>
