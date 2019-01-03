@@ -78,6 +78,7 @@ public class RequestsManager {
       this.requestService = requestService;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected NodeResponse doInBackground(NodeRequest... nodeRequests) {
       NodeRequest nodeRequest = nodeRequests[0];
@@ -87,38 +88,42 @@ public class RequestsManager {
       try {
         Response<ResponseBody> response = requestService.request(nodeRequest.getNodeRequestBody()).execute();
         time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis();
-        switch (nodeRequest.getRequestCode()) {
-          case R.id.req_id_decrypt_msg_ecc:
-          case R.id.req_id_decrypt_msg_rsa_2048:
-          case R.id.req_id_decrypt_msg_rsa_4096:
-            rawNodeResult = new DecryptMsgResult(null, response.body().byteStream(), time);
-            break;
+        if (response.body() != null) {
+          switch (nodeRequest.getRequestCode()) {
+            case R.id.req_id_decrypt_msg_ecc:
+            case R.id.req_id_decrypt_msg_rsa_2048:
+            case R.id.req_id_decrypt_msg_rsa_4096:
+              rawNodeResult = new DecryptMsgResult(null, response.body().byteStream(), time);
+              break;
 
-          case R.id.req_id_encrypt_file:
-          case R.id.req_id_encrypt_file_rsa_2048_1mb:
-          case R.id.req_id_encrypt_file_rsa_2048_3mb:
-          case R.id.req_id_encrypt_file_rsa_2048_5mb:
-          case R.id.req_id_encrypt_file_from_uri:
-            rawNodeResult = new EncryptFileResult(null, response.body().byteStream(), time);
-            break;
+            case R.id.req_id_encrypt_file:
+            case R.id.req_id_encrypt_file_rsa_2048_1mb:
+            case R.id.req_id_encrypt_file_rsa_2048_3mb:
+            case R.id.req_id_encrypt_file_rsa_2048_5mb:
+            case R.id.req_id_encrypt_file_from_uri:
+              rawNodeResult = new EncryptFileResult(null, response.body().byteStream(), time);
+              break;
 
-          case R.id.req_id_decrypt_file_ecc:
-          case R.id.req_id_decrypt_file_rsa_2048:
-          case R.id.req_id_decrypt_file_rsa_4096:
-          case R.id.req_id_decrypt_file_rsa_2048_1mb:
-          case R.id.req_id_decrypt_file_rsa_2048_3mb:
-          case R.id.req_id_decrypt_file_rsa_2048_5mb:
-          case R.id.req_id_decrypt_file_rsa_2048_from_uri:
-            rawNodeResult = new DecryptFileResult(null, response.body().byteStream(), time);
-            break;
+            case R.id.req_id_decrypt_file_ecc:
+            case R.id.req_id_decrypt_file_rsa_2048:
+            case R.id.req_id_decrypt_file_rsa_4096:
+            case R.id.req_id_decrypt_file_rsa_2048_1mb:
+            case R.id.req_id_decrypt_file_rsa_2048_3mb:
+            case R.id.req_id_decrypt_file_rsa_2048_5mb:
+            case R.id.req_id_decrypt_file_rsa_2048_from_uri:
+              rawNodeResult = new DecryptFileResult(null, response.body().byteStream(), time);
+              break;
 
-          default:
-            rawNodeResult = new RawNodeResult(null, response.body().byteStream(), time);
-            break;
-        }
+            default:
+              rawNodeResult = new RawNodeResult(null, response.body().byteStream(), time);
+              break;
+          }
 
-        if (rawNodeResult.getErr() != null) {
+          if (rawNodeResult.getErr() != null) {
 
+          }
+        } else {
+          throw new NullPointerException("The response body is null!");
         }
       } catch (Exception e) {
         e.printStackTrace();

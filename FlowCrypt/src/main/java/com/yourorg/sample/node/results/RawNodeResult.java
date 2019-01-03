@@ -143,10 +143,12 @@ public class RawNodeResult {
 
   public String getDataTextString() {
     throwIfErrNotTested();
-    BufferedReader br = new BufferedReader(new InputStreamReader(getInputStream()), bufferSize);
-    return br.lines().collect(Collectors.joining("\n"));
+    InputStream inputStream = getInputStream();
+    if (inputStream != null) {
+      BufferedReader br = new BufferedReader(new InputStreamReader(getInputStream()), bufferSize);
+      return br.lines().collect(Collectors.joining("\n"));
+    } else return "";
   }
-
 }
 
 /**
