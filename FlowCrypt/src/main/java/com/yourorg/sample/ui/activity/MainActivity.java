@@ -17,6 +17,7 @@ import com.yourorg.sample.node.Node;
 import com.yourorg.sample.node.results.DecryptFileResult;
 import com.yourorg.sample.node.results.DecryptMsgResult;
 import com.yourorg.sample.node.results.EncryptFileResult;
+import com.yourorg.sample.node.results.EncryptMsgResult;
 import com.yourorg.sample.node.results.MsgBlock;
 import com.yourorg.sample.node.results.RawNodeResult;
 import com.yourorg.sample.node.results.VersionResult;
@@ -98,8 +99,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
           break;
 
         case R.id.req_id_encrypt_msg:
-          addResultLine("encrypt-msg", nodeResponse.getRawNodeResult());
-          encryptedMsg = nodeResponse.getRawNodeResult().getDataTextString();
+          EncryptMsgResult encryptMsgResult = (EncryptMsgResult) nodeResponse.getRawNodeResult();
+          addResultLine("encrypt-msg", encryptMsgResult);
+          encryptedMsg = encryptMsgResult.getEncryptedString();
           requestsManager.decryptMsg(R.id.req_id_decrypt_msg_ecc, TestData.eccPrvKeyInfo(), encryptedMsg);
           break;
 

@@ -19,6 +19,7 @@ import com.yourorg.sample.node.NodeSecret;
 import com.yourorg.sample.node.results.DecryptFileResult;
 import com.yourorg.sample.node.results.DecryptMsgResult;
 import com.yourorg.sample.node.results.EncryptFileResult;
+import com.yourorg.sample.node.results.EncryptMsgResult;
 import com.yourorg.sample.node.results.PgpKeyInfo;
 import com.yourorg.sample.node.results.RawNodeResult;
 import com.yourorg.sample.node.results.VersionResult;
@@ -93,6 +94,10 @@ public class RequestsManager {
           switch (nodeRequest.getRequestCode()) {
             case R.id.req_id_get_version:
               rawNodeResult = new VersionResult(null, response.body().byteStream(), time);
+              break;
+
+            case R.id.req_id_encrypt_msg:
+              rawNodeResult = new EncryptMsgResult(null, response.body().byteStream(), time);
               break;
 
             case R.id.req_id_decrypt_msg_ecc:

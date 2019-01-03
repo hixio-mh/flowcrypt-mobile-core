@@ -137,7 +137,7 @@ public class RawNodeResult {
     return collector.toByteArray();
   }
 
-  public String getDataTextString() {
+  protected String getDataTextString() {
     throwIfErrNotTested();
     InputStream inputStream = getInputStream();
     if (inputStream != null) {
