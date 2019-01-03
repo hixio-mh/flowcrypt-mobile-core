@@ -123,10 +123,6 @@ public class RawNodeResult {
     }
   }
 
-  public String getJsonResponseRaw() {
-    return jsonResponseRaw;
-  }
-
   protected byte[] getDataBinaryBytes() throws IOException {
     throwIfErrNotTested();
     if (inputStream == null) {

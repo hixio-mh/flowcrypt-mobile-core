@@ -21,6 +21,7 @@ import com.yourorg.sample.node.results.DecryptMsgResult;
 import com.yourorg.sample.node.results.EncryptFileResult;
 import com.yourorg.sample.node.results.PgpKeyInfo;
 import com.yourorg.sample.node.results.RawNodeResult;
+import com.yourorg.sample.node.results.TestNodeResult;
 
 import okhttp3.ResponseBody;
 import retrofit2.Response;
@@ -90,6 +91,10 @@ public class RequestsManager {
         time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis();
         if (response.body() != null) {
           switch (nodeRequest.getRequestCode()) {
+            case R.id.req_id_get_version:
+              rawNodeResult = new TestNodeResult(null, response.body().byteStream(), time);
+              break;
+
             case R.id.req_id_decrypt_msg_ecc:
             case R.id.req_id_decrypt_msg_rsa_2048:
             case R.id.req_id_decrypt_msg_rsa_4096:
