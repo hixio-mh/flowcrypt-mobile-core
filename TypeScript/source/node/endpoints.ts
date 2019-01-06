@@ -7,6 +7,7 @@
 import { PgpMsg } from '../core/pgp';
 import { Validate } from './validate';
 import { fmtRes, Buffers } from './fmt';
+import { Buf } from '../core/buf';
 
 export class Debug {
   public static printChunk = (name: string, data: Buffer | Uint8Array) => {
@@ -39,12 +40,12 @@ export class Endpoints {
    */
   public decryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
     const { keys, passphrases, msgPwd } = Validate.decryptMsg(uncheckedReq);
-    const decrypted = await PgpMsg.decrypt({ keys, passphrases }, Buffer.concat(data), msgPwd, false);
+    const decrypted = await PgpMsg.decrypt({ keys, passphrases }, Buffer.concat(data), msgPwd);
     if (!decrypted.success) {
       decrypted.message = undefined;
       return fmtRes(decrypted);
     }
-    const blocks = await PgpMsg.fmtDecrypted(decrypted.content.text!);
+    const blocks = await PgpMsg.fmtDecrypted(decrypted.content.uint8);
     const blockMetas = blocks.map(b => ({ type: b.type, length: b.content.length }));
     // first line is a blockMetas JSON. Data below represent one JSON-stringified block per line. This is so that it can be read as a stream
     return fmtRes({ success: true, blockMetas }, Buffer.from(blocks.map(b => JSON.stringify(b)).join('\n')));
@@ -53,13 +54,13 @@ export class Endpoints {
   public decryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
     const { keys, passphrases, msgPwd } = Validate.decryptFile(uncheckedReq);
     // Debug.printChunk("decryptFile.data", data);
-    const decryptedMeta = await PgpMsg.decrypt({ keys, passphrases }, Buffer.concat(data), msgPwd, true);
+    const decryptedMeta = await PgpMsg.decrypt({ keys, passphrases }, Buffer.concat(data), msgPwd);
     if (!decryptedMeta.success) {
       decryptedMeta.message = undefined;
       return fmtRes(decryptedMeta);
     }
     const decryptedData = Buffer.from(decryptedMeta.content.uint8!);
-    decryptedMeta.content.uint8 = undefined;
+    decryptedMeta.content.uint8 = new Buf(0);
     // Debug.printChunk("decryptFile.decryptedData", decryptedData);
     return fmtRes({ success: true, name: decryptedMeta.content.filename || '' }, decryptedData);
   }
