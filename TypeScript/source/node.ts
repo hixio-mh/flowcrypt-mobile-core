@@ -17,9 +17,9 @@ import { setGlobals } from './platform/util';
 
 setGlobals();
 
-declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, NODE_AUTH_HEADER: string, NODE_PORT: string, NODE_DEBUG: string | boolean;
+declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, NODE_AUTH_HEADER: string, NODE_PORT: string, NODE_DEBUG: string;
 
-const doPrintDebug = NODE_DEBUG === 'true' || NODE_DEBUG === true;
+const doPrintDebug = Boolean(NODE_DEBUG === 'true');
 
 const endpoints = new Endpoints();
 

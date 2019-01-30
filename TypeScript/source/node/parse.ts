@@ -51,10 +51,11 @@ export const parseReq = (r: IncomingMessage, debug: boolean): Promise<ParseRes> 
       }
     }
     if (initBuffers.length && data.length) {
-
       const [endpointLine, requestLine] = Buffer.concat(initBuffers).toString().split(Buffer.from(NEWLINE).toString());
-      Debug.printChunk('endpointLine', Buffer.from(endpointLine));
-      Debug.printChunk('requestLine', Buffer.from(requestLine));
+      if (debug) {
+        Debug.printChunk('endpointLine', Buffer.from(endpointLine));
+        Debug.printChunk('requestLine', Buffer.from(requestLine));
+      }
       try {
         const request = JSON.parse(requestLine.trim());
         const endpoint = endpointLine.trim();
