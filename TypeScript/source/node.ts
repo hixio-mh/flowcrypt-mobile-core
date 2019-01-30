@@ -17,7 +17,9 @@ import { setGlobals } from './platform/util';
 
 setGlobals();
 
-declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, NODE_AUTH_HEADER: string, NODE_PORT: string;
+declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, NODE_AUTH_HEADER: string, NODE_PORT: string, NODE_DEBUG: string | boolean;
+
+const doPrintDebug = NODE_DEBUG === 'true' || NODE_DEBUG === true;
 
 const endpoints = new Endpoints();
 
@@ -41,10 +43,11 @@ const handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<Buf
     return [indexHtml];
   }
   if (req.url === '/' && req.method === 'POST') {
-    const { endpoint, request, data } = await parseReq(req);
-    // console.log(endpoint);
-    // console.log(request);
-    // console.log(`LEN: ${Buffer.concat(data).toString().length}`);
+    const { endpoint, request, data } = await parseReq(req, doPrintDebug);
+    if (doPrintDebug) {
+      console.log(`parsed endpoint:`, endpoint);
+      console.log(`parsed request:`, request);
+    }
     return await delegateReqToEndpoint(endpoint, request, data);
   }
   throw new HttpClientErr(`unknown path ${req.url}`);
