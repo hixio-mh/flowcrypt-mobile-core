@@ -27,7 +27,7 @@ export const parseReq = (r: IncomingMessage, debug: boolean): Promise<ParseRes> 
       // console.log(`nextNewlineIndex: ${nextNewlineIndex}`)
       if (nextNewlineIndex === -1) {
         // console.log(`pushing -1`);
-        initBuffers.push(chunk);
+        initBuffers.push(chunk.subarray(byteOffset));
         return;
       }
       const beginNextLine = nextNewlineIndex + NEWLINE.length;
