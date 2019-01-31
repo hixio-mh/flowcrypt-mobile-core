@@ -16,7 +16,7 @@ const fixedImportsSrc = wipSrc
 const finalSrc = `
 try {
 /* final flowcrypt-android bundle starts here */
-${fixedImportsSrc}
+${fixedImportsSrc.replace("'[BUILD_REPLACEABLE_VERSION]'", 'APP_VERSION')}
 /* final flowcrypt-android bundle ends here */
 } catch(e) {
   console.error(e);
