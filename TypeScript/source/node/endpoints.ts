@@ -7,7 +7,6 @@
 import { PgpMsg } from '../core/pgp';
 import { Validate } from './validate';
 import { fmtRes, Buffers } from './fmt';
-import { Buf } from '../core/buf';
 
 export class Debug {
 
@@ -52,13 +51,13 @@ export class Endpoints {
 
   public encryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
     const req = Validate.encryptMsg(uncheckedReq);
-    const encrypted = await PgpMsg.encrypt(req.pubKeys, undefined, undefined, Buffer.concat(data), undefined, true) as OpenPGP.EncryptArmorResult;
+    const encrypted = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buffer.concat(data), armor: true }) as OpenPGP.EncryptArmorResult;
     return fmtRes({}, Buffer.from(encrypted.data));
   }
 
   public encryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
     const req = Validate.encryptFile(uncheckedReq);
-    const encrypted = await PgpMsg.encrypt(req.pubKeys, undefined, undefined, Buffer.concat(data), req.name, false) as OpenPGP.EncryptBinaryResult;
+    const encrypted = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buffer.concat(data), filename: req.name, armor: false }) as OpenPGP.EncryptBinaryResult;
     return fmtRes({}, encrypted.message.packets.write());
   }
 
@@ -67,12 +66,13 @@ export class Endpoints {
    */
   public decryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
     const { keys, passphrases, msgPwd } = Validate.decryptMsg(uncheckedReq);
-    const decrypted = await PgpMsg.decrypt({ keys, passphrases }, Buffer.concat(data), msgPwd);
+    // { keys, passphrases }, Buffer.concat(data), msgPwd
+    const decrypted = await PgpMsg.decrypt({ kisWithPp: { keys, passphrases }, encryptedData: Buffer.concat(data), msgPwd });
     if (!decrypted.success) {
       decrypted.message = undefined;
       return fmtRes(decrypted);
     }
-    const blocks = await PgpMsg.fmtDecrypted(decrypted.content.uint8);
+    const blocks = await PgpMsg.fmtDecrypted(decrypted.content);
     const blockMetas = blocks.map(b => ({ type: b.type, length: b.content.length }));
     // first line is a blockMetas JSON. Data below represent one JSON-stringified block per line. This is so that it can be read as a stream
     return fmtRes({ success: true, blockMetas }, Buffer.from(blocks.map(b => JSON.stringify(b)).join('\n')));
@@ -81,15 +81,13 @@ export class Endpoints {
   public decryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
     const { keys, passphrases, msgPwd } = Validate.decryptFile(uncheckedReq);
     // Debug.printChunk("decryptFile.data", data);
-    const decryptedMeta = await PgpMsg.decrypt({ keys, passphrases }, Buffer.concat(data), msgPwd);
+    const decryptedMeta = await PgpMsg.decrypt({ kisWithPp: { keys, passphrases }, encryptedData: Buffer.concat(data), msgPwd });
     if (!decryptedMeta.success) {
       decryptedMeta.message = undefined;
       return fmtRes(decryptedMeta);
     }
-    const decryptedData = Buffer.from(decryptedMeta.content.uint8!);
-    decryptedMeta.content.uint8 = new Buf(0);
     // Debug.printChunk("decryptFile.decryptedData", decryptedData);
-    return fmtRes({ success: true, name: decryptedMeta.content.filename || '' }, decryptedData);
+    return fmtRes({ success: true, name: decryptedMeta.filename || '' }, decryptedMeta.content);
   }
 
 }
