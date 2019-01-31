@@ -70,16 +70,13 @@ const sendRes = (res: ServerResponse, buffers: Buffers) => {
   res.end(Buffer.concat(buffers));
 }
 
-const server = https.createServer(serverOptins, (request, res) => {
-  handleReq(request, res).then(buffers => sendRes(res, buffers)).catch((e) => {
+const server = https.createServer(serverOptins, (request, res) => { // all responses are status code 200, error status is parsed from body
+  handleReq(request, res).then(buffers => sendRes(res, buffers)).catch(e => {
+    res.statusCode = 200;
     if (e instanceof HttpAuthErr) {
-      res.statusCode = 401;
       res.setHeader('WWW-Authenticate', 'Basic realm="flowcrypt-android-node"');
-    } else if (e instanceof HttpClientErr) {
-      res.statusCode = 400;
-    } else {
+    } else if (!(e instanceof HttpClientErr)) {
       console.error(e);
-      res.statusCode = 500;
     }
     res.end(fmtErr(e));
   });
