@@ -11,6 +11,7 @@ export namespace NodeRequest {
   export type encryptFile = { pubKeys: string[], name: string };
   export type decryptMsg = { keys: PrvKeyInfo[], passphrases: string[], msgPwd?: string };
   export type decryptFile = { keys: PrvKeyInfo[], passphrases: string[], msgPwd?: string };
+  export type dateStrParse = { dateStr: string };
 
 }
 
@@ -42,6 +43,13 @@ export class Validate {
       return v as NodeRequest.decryptFile;
     }
     throw new Error('Wrong request structure for NodeRequest.decryptFile');
+  }
+
+  public static dateStrParse = (v: any): NodeRequest.dateStrParse => {
+    if (isObj(v) && hasProp(v, 'dateStr', 'string')) {
+      return v as NodeRequest.dateStrParse;
+    }
+    throw new Error('Wrong request structure for NodeRequest.dateStrParse');
   }
 
 }

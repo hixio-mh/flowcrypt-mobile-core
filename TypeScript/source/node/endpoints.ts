@@ -90,4 +90,9 @@ export class Endpoints {
     return fmtRes({ success: true, name: decryptedMeta.filename || '' }, decryptedMeta.content);
   }
 
+  public dateStrParse = async (uncheckedReq: any, data: Buffers) => {
+    const { dateStr } = Validate.dateStrParse(uncheckedReq);
+    return fmtRes({ timestamp: String(Date.parse(dateStr) || -1) });
+  }
+
 }
