@@ -9,6 +9,7 @@ import { Validate } from './validate';
 import { fmtRes, Buffers } from './fmt';
 import { gmailBackupSearchQuery } from '../core/const';
 import { requireOpenpgp } from '../platform/require';
+import { Str } from '../core/common';
 
 const openpgp = requireOpenpgp();
 
@@ -126,6 +127,11 @@ export class Endpoints {
       keyDetails.push(await Pgp.key.serialize(openPgpKey))
     }
     return fmtRes({ format: 'binary', keyDetails });
+  }
+
+  public isEmailValid = async (uncheckedReq: any, data: Buffers) => {
+    const { email } = Validate.isEmailValid(uncheckedReq);
+    return fmtRes({ valid: Str.isEmailValid(email) });
   }
 
 }

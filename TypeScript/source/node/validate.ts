@@ -13,6 +13,7 @@ export namespace NodeRequest {
   export type decryptFile = { keys: PrvKeyInfo[], passphrases: string[], msgPwd?: string };
   export type parseDateStr = { dateStr: string };
   export type gmailBackupSearch = { acctEmail: string };
+  export type isEmailValid = { email: string };
 
 }
 
@@ -58,6 +59,13 @@ export class Validate {
       return v as NodeRequest.gmailBackupSearch;
     }
     throw new Error('Wrong request structure for NodeRequest.gmailBackupSearchQuery');
+  }
+
+  public static isEmailValid = (v: any): NodeRequest.isEmailValid => {
+    if (isObj(v) && hasProp(v, 'email', 'string')) {
+      return v as NodeRequest.isEmailValid;
+    }
+    throw new Error('Wrong request structure for NodeRequest.isEmailValid');
   }
 
 }
