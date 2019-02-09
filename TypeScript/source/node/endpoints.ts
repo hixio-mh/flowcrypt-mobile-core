@@ -4,10 +4,13 @@
 
 'use strict';
 
-import { PgpMsg } from '../core/pgp';
+import { PgpMsg, Pgp, KeyDetails } from '../core/pgp';
 import { Validate } from './validate';
 import { fmtRes, Buffers } from './fmt';
 import { gmailBackupSearchQuery } from '../core/const';
+import { requireOpenpgp } from '../platform/require';
+
+const openpgp = requireOpenpgp();
 
 export class Debug {
 
@@ -99,6 +102,30 @@ export class Endpoints {
   public gmailBackupSearch = async (uncheckedReq: any, data: Buffers) => {
     const { acctEmail } = Validate.gmailBackupSearch(uncheckedReq);
     return fmtRes({ query: gmailBackupSearchQuery(acctEmail) });
+  }
+
+  public parseKeys = async (uncheckedReq: any, data: Buffers) => {
+    const keyDetails: KeyDetails[] = [];
+    const allData = Buffer.concat(data);
+    const pgpType = await PgpMsg.type({ data: allData });
+    if (!pgpType) {
+      return fmtRes({ format: 'unknown', keyDetails, error: { message: `Cannot parse key: could not determine pgpType` } });
+    }
+    if (pgpType.armored) {
+      // armored
+      const { blocks } = Pgp.armor.detectBlocks(allData.toString());
+      for (const block of blocks) {
+        const { keys } = await Pgp.key.parse(block.content);
+        keyDetails.push(...keys);
+      }
+      return fmtRes({ format: 'armored', keyDetails });
+    }
+    // binary
+    const { keys: openPgpKeys } = await openpgp.key.read(allData);
+    for (const openPgpKey of openPgpKeys) {
+      keyDetails.push(await Pgp.key.serialize(openPgpKey))
+    }
+    return fmtRes({ format: 'binary', keyDetails });
   }
 
 }
