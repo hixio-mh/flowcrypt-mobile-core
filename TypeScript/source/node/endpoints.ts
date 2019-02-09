@@ -7,6 +7,7 @@
 import { PgpMsg } from '../core/pgp';
 import { Validate } from './validate';
 import { fmtRes, Buffers } from './fmt';
+import { gmailBackupSearchQuery } from '../core/const';
 
 export class Debug {
 
@@ -93,6 +94,11 @@ export class Endpoints {
   public dateStrParse = async (uncheckedReq: any, data: Buffers) => {
     const { dateStr } = Validate.dateStrParse(uncheckedReq);
     return fmtRes({ timestamp: String(Date.parse(dateStr) || -1) });
+  }
+
+  public gmailBackupSearch = async (uncheckedReq: any, data: Buffers) => {
+    const { acctEmail } = Validate.gmailBackupSearch(uncheckedReq);
+    return fmtRes({ query: gmailBackupSearchQuery(acctEmail) });
   }
 
 }
