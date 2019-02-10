@@ -6,7 +6,7 @@ module.exports = {
   externals: [nodeExternals()],
   mode: 'none',
   entry: {
-    'flowcrypt': './build/ts/node.js',
+    'flowcrypt': './build/ts/flowcrypt-android-node/TypeScript/source/node.js',
     'asn1': './node_modules/asn1.js/lib/asn1.js',
     'bn': './node_modules/bn.js/lib/bn.js',
     'minimalistic-assert': './node_modules/minimalistic-assert/index.js',

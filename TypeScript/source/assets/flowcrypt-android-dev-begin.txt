@@ -69,6 +69,8 @@ const NODE_AUTH_HEADER = `Basic OmRldi1wYXNzd29yZA==`;
 
 const NODE_PORT = `3000`;
 
-const NODE_DEBUG = 'true';
+const NODE_DEBUG = 'false';
 
 const APP_VERSION = '0.0.1-dev';
+
+const APP_ENV = 'dev';

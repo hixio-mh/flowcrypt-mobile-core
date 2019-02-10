@@ -1,6 +1,6 @@
 /* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
 
-/// <reference path="../node_modules/@types/node/index.d.ts" />
+/// <reference path="../../../flowcrypt-node-modules/node_modules/@types/node/index.d.ts" />
 /// <reference path="../node_modules/@types/chrome/index.d.ts" />
 /// <reference path="./types/jquery.d.ts" />
 /// <reference path="./types/openpgp.d.ts" />
@@ -17,7 +17,7 @@ import { setGlobals } from './platform/util';
 
 setGlobals();
 
-declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, NODE_AUTH_HEADER: string, NODE_PORT: string, NODE_DEBUG: string;
+declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, NODE_AUTH_HEADER: string, NODE_PORT: string, NODE_DEBUG: string, APP_ENV: 'dev' | 'prod';
 
 const doPrintDebug = Boolean(NODE_DEBUG === 'true');
 
@@ -86,7 +86,7 @@ server.listen(LISTEN_PORT, 'localhost');
 
 server.on('listening', () => {
   const address = server.address();
-  const msg = `listening on ${typeof address === 'object' ? address.port : address}`;
+  const msg = `listening on ${typeof address === 'object' ? address.port : address} APP_ENV:${APP_ENV}`;
   console.info(msg);
   sendNativeMessageToJava(msg);
 });

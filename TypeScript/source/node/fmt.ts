@@ -17,14 +17,12 @@ export const fmtRes = (response: {}, data?: Buffer | Uint8Array): Buffers => {
   return buffers;
 }
 
-export const fmtErr = (e: any): string => {
-  return JSON.stringify({
-    error: {
-      message: String(e),
-      stack: e && typeof e === 'object' ? e.stack || '' : ''
-    }
-  });
-};
+export const fmtErr = (e: any) => Buffer.concat(fmtRes({
+  error: {
+    message: String(e),
+    stack: e && typeof e === 'object' ? e.stack || '' : ''
+  }
+}));
 
 export const indexHtml = Buffer.from(`
 <html><head></head><body>

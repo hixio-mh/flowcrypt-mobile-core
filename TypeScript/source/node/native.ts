@@ -4,8 +4,14 @@
 
 import * as EventEmitter from 'events';
 
+declare const APP_ENV: 'dev' | 'prod';
+
 let send = (msg: string) => {
-  console.error(`-------------------- native bridge not present for message --------------------\n${msg}\n--------------------`);
+  if (APP_ENV === 'prod') {
+    console.error(`-------------------- native bridge not present for message --------------------\n${msg}\n--------------------`);
+  } else {
+    console.log(`dev:rn-bridge:${msg}`);
+  }
 };
 
 try {

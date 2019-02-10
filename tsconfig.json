@@ -18,13 +18,14 @@
     "sourceMap": false,
     "checkJs": false,
     "outDir": "./TypeScript/build/ts",
-    "baseUrl": "./TypeScript/source",
+    "baseUrl": "..",
     "typeRoots": [
       "./TypeScript/source/types/*.d.ts"
     ]
   },
   "include": [
-    "./TypeScript/source/node.ts"
+    "./TypeScript/source/node.ts",
+    "./TypeScript/source/test.ts"
   ],
   "exclude": [
     "**/build/**",
