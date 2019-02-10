@@ -10,6 +10,7 @@ module.exports = {
     'asn1': './node_modules/asn1.js/lib/asn1.js',
     'bn': './node_modules/bn.js/lib/bn.js',
     'minimalistic-assert': './node_modules/minimalistic-assert/index.js',
+    // 'emailjs-mime-parser': './node_modules/emailjs-mime-parser/dist/mimeparser.js' // this works with latest version from Node - can use later
   },
   output: {
     path: __dirname + '/build/bundles/raw',

@@ -143,6 +143,8 @@ export class Mime {
               mimeContent.html = (mimeContent.html || '') + Mime.getNodeContentAsUtfStr(node);
             } else if (Mime.getNodeType(node) === 'text/plain' && !Mime.getNodeFilename(node)) {
               mimeContent.text = Mime.getNodeContentAsUtfStr(node);
+            } else if (Mime.getNodeType(node) === 'text/rfc822-headers') {
+              // todo - surface and render encrypted headers
             } else {
               mimeContent.atts.push(new Att({
                 name: Mime.getNodeFilename(node),
