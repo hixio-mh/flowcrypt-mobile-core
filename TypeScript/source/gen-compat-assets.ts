@@ -58,16 +58,12 @@ Content-Language: en-US
 This is a multi-part message in MIME format.
 --------------F396B399B1F808CB5EF04F7C
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
 
 ${text.toString()}
-
 --------------F396B399B1F808CB5EF04F7C
 Content-Type: text/html; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
 
 ${text.toString().replace(/\n/g, '<br>')}
-
 --------------F396B399B1F808CB5EF04F7C--
 
 --PpujspXwR9sayhr0t4sBaTxoXX6dlYhLU--
