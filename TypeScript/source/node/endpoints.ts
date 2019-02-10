@@ -71,7 +71,6 @@ export class Endpoints {
    */
   public decryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
     const { keys, passphrases, msgPwd } = Validate.decryptMsg(uncheckedReq);
-    // { keys, passphrases }, Buffer.concat(data), msgPwd
     const decrypted = await PgpMsg.decrypt({ kisWithPp: { keys, passphrases }, encryptedData: Buffer.concat(data), msgPwd });
     if (!decrypted.success) {
       decrypted.message = undefined;
