@@ -32,6 +32,12 @@
       "script": "donateCore",
       "path": "TypeScript/",
       "problemMatcher": []
+    },
+    {
+      "type": "npm",
+      "script": "genCompatAssets",
+      "path": "TypeScript/",
+      "problemMatcher": []
     }
   ]
 }

@@ -1,0 +1,107 @@
+/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+
+/// <reference path="./types/openpgp.d.ts" />
+
+'use strict';
+
+// @ts-ignore - it cannot figure out the types, because we don't want to install them from npm
+// nodejs-mobile expects it as global, but this test runs as standard Nodejs
+global.openpgp = require('openpgp'); // remove it and you'll see what I mean
+
+import * as ava from 'ava';
+import { PgpMsg } from './core/pgp';
+import { util } from './test/flowcrypt-node-modules';
+import { AvaContext } from './test/test-utils';
+
+const text = Buffer.from('some\n汉\ntxt');
+
+const pubkeys = ['-----BEGIN PGP PUBLIC KEY BLOCK-----\nVersion: FlowCrypt 6.3.5 Gmail Encryption\nComment: Seamlessly send and receive encrypted email\n\nxsBNBFwBWOEBB/9uIqBYIPDQbBqHMvGXhgnm+b2i5rNLXrrGoalrp7wYQ654\nZln/+ffxzttRLRiwRQAOG0z78aMDXAHRfI9d3GaRKTkhTqVY+C02E8NxgB3+\nmbSsF0Ui+oh1//LT1ic6ZnISCA7Q2h2U/DSAPNxDZUMu9kjh9TjkKlR81fiA\nlxuD05ivRxCnmZnzqZtHoUvvCqsENgRjO9a5oWpMwtdItjdRFF7UFKYpfeA+\nct0uUNMRVdPK7MXBEr2FdWiKN1K21dQ1pWiAwj/5cTA8hu5Jue2RcF8FcPfs\nniRihQkNqtLDsfY5no1B3xeSnyO2SES1bAHw8ObXZn/C/6jxFztkn4NbABEB\nAAHNEFRlc3QgPHRAZXN0LmNvbT7CwHUEEAEIACkFAlwBWOEGCwkHCAMCCRA6\nMPTMCpqPEAQVCAoCAxYCAQIZAQIbAwIeAQAA1pMH/R9oEVHaTdEzs/jbsfJk\n6xm2oQ/G7KewtSqawAC6nou0+GKvgICxvkNK+BivMLylut+MJqh2gHuExdzx\nHFNtKH69BzlK7hDBjyyrLuHIxc4YZaxHGe5ny3wF4QkEgfI+C5chH7Bi+jV6\n94L40zEeFO2OhIif8Ti9bRb2Pk6UV5MrsdM0K6J0gTQeTaRecQSg07vO3E8/\nGwfP2Dnq4yHICF/eaop+9QWj8UstEE6nEs7SSTrjIAxwAeZzpkjkXPXTLjz6\nEcS/9EU7B+5v1qwXk1YeW1qerKJn6Qd6hqJ5gkVzq3sy3eODyrEwpNQoAR4J\n8e3VQkKOn9oiAlFTglFeBhfOwE0EXAFY4QEH/2dyWbH3y9+hKk9RxwFzO+5n\nGaqT6Njoh368GEEWgSG11NKlrD8k2y1/R1Nc3xEIWMHSUe1rnWWVONKhupwX\nABTnj8coM5beoxVu9p1oYgum4IwLF0yAtaWll1hjsECm/U33Ok36JDa0iu+d\nRDfXbEo5cX9bzc1QnWdM5tBg2mxRkssbY3eTPXUe4FLcT0WAQ5hjLW0tPneG\nzlu2q9DkmngjDlwGgGhMCa/508wMpgGugE/C4V41EiiTAtOtVzGtdqPGVdoZ\neaYZLc9nTQderaDu8oipaWIwsshYWX4uVVvo7xsx5c5PWXRdI70aUs5IwMRz\nuljbq+SYCNta/uJRYc0AEQEAAcLAXwQYAQgAEwUCXAFY4QkQOjD0zAqajxAC\nGwwAAI03B/9aWF8l1v66Qaw4O8P3VyQn0/PkVWJYVt5KjMW4nexAfM4BlUw6\n97rP5IvfYXNh47Cm8VKqxgcXodzJrouzgwiPFxXmJe5Ug24FOpmeSeIl83Uf\nCzaiIm+B6K5cf2NuHTrr4pElDaQ7RQGH2m2cMcimv4oWU9a0tRjt1e7XQAfQ\nSWoCalUbLBeYORgVAF97MUNqeth6FMT5STjq+AGgnNZ2vdsUnASS/HbQQUUO\naVGVjo29lB6fS+UHT2gV/E/WQInjok5UrUMaFHwpO0VNP057DNyqhZwxaAs5\nBsSgJlOC5hrT+PKlfr9ic75fqnJqmLircB+hVnfhGR9OzH3RCIky\n=VKq5\n-----END PGP PUBLIC KEY BLOCK-----\n'];
+
+const subject = (t: AvaContext) => t.title.replace(/\.txt$/, '').replace(/-/g, ' ');
+
+const mimeEmail = (t: AvaContext, text: Buffer | string) => Buffer.from(`
+Delivered-To: flowcrypt.compatibility@gmail.com
+Return-Path: <cryptup.tester@gmail.com>
+Openpgp: id=6D24791A5B106262B06217C606CA553EC2455D70
+From: cryptup.tester@gmail.com
+MIME-Version: 1.0
+Date: Thu, 2 Nov 2017 17:54:14 -0700
+Message-ID: <CANzaQHU9A@mail.gmail.com>
+Subject: ${subject(t)}
+To: flowcrypt.compatibility@gmail.com
+Content-Type: text/plain; charset="UTF-8"
+
+${text.toString()}
+`.replace(/^\n/, ''));
+
+const mimePgp = (t: AvaContext, text: string | Buffer) => Buffer.from(`
+Content-Type: multipart/mixed; boundary="PpujspXwR9sayhr0t4sBaTxoXX6dlYhLU";
+ protected-headers="v1"
+From: Henry Electrum <henry.electrum@gmail.com>
+To: flowcrypt.compatibility@gmail.com
+Message-ID: <3ef6c5d8-e319-09e2-9c86-cda192a083ef@gmail.com>
+Subject: ${subject(t)}
+
+--PpujspXwR9sayhr0t4sBaTxoXX6dlYhLU
+Content-Type: text/rfc822-headers; protected-headers="v1"
+Content-Disposition: inline
+
+From: Henry Electrum <henry.electrum@gmail.com>
+To: flowcrypt.compatibility@gmail.com
+Subject: ${subject(t)}
+
+--PpujspXwR9sayhr0t4sBaTxoXX6dlYhLU
+Content-Type: multipart/alternative;
+ boundary="------------F396B399B1F808CB5EF04F7C"
+Content-Language: en-US
+
+This is a multi-part message in MIME format.
+--------------F396B399B1F808CB5EF04F7C
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+${text.toString()}
+
+--------------F396B399B1F808CB5EF04F7C
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+${text.toString().replace(/\n/g, '<br>')}
+
+--------------F396B399B1F808CB5EF04F7C--
+
+--PpujspXwR9sayhr0t4sBaTxoXX6dlYhLU--
+`.replace(/^\n/, ''));
+
+const write = async (t: AvaContext, fileContent: Buffer | string) => {
+  await util.writeFile(`./source/assets/compat/${t.title}`, fileContent instanceof Buffer ? fileContent : Buffer.from(fileContent));
+}
+
+ava.test('direct-encrypted-text.txt', async t => {
+  const { data } = await PgpMsg.encrypt({ data: text, pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
+  await write(t, data);
+  t.pass();
+});
+
+ava.test('direct-encrypted-pgpmime.txt', async t => {
+  const { data } = await PgpMsg.encrypt({ data: mimePgp(t, text), pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
+  await write(t, data);
+  t.pass();
+});
+
+ava.test('mime-email-plain.txt', async t => {
+  await write(t, mimeEmail(t, text));
+  t.pass();
+});
+
+ava.test('mime-email-encrypted-inline-text.txt', async t => {
+  const { data } = await PgpMsg.encrypt({ data: text, pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
+  await write(t, mimeEmail(t, data));
+  t.pass();
+});
+
+ava.test('mime-email-encrypted-inline-pgpmime.txt', async t => {
+  const { data } = await PgpMsg.encrypt({ data: mimePgp(t, text), pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
+  await write(t, mimeEmail(t, data));
+  t.pass();
+});

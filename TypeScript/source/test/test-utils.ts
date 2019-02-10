@@ -10,7 +10,7 @@ import { util } from '../../../../flowcrypt-node-modules/source';
 import { expect, config } from 'chai';
 config.truncateThreshold = 0
 
-type AvaContext = ava.ExecutionContext<{}>;
+export type AvaContext = ava.ExecutionContext<{}>;
 type JsonDict = { [k: string]: any };
 type TestKey = { pubKey: string, private: string, passphrase: string, longid: string };
 

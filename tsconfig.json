@@ -25,7 +25,8 @@
   },
   "include": [
     "./TypeScript/source/node.ts",
-    "./TypeScript/source/test.ts"
+    "./TypeScript/source/test.ts",
+    "./TypeScript/source/gen-compat-assets.ts"
   ],
   "exclude": [
     "**/build/**",
