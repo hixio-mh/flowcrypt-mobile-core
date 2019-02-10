@@ -82,7 +82,7 @@ export const expectNoData = (data: Buffer) => {
   expect(data).to.have.property('length').that.equals(0);
 }
 
-export const expectSomeData = (data: Buffer, type?: 'armoredMsg' | 'msgBlocks', details?: any[]) => {
+export const expectData = (data: Buffer, type?: 'armoredMsg' | 'msgBlocks' | 'binary', details?: any[] | Buffer) => {
   expect(data).to.be.instanceof(Buffer);
   expect(data).to.have.property('length').that.does.not.equal(0);
   const dataStr = data.toString();
@@ -92,10 +92,15 @@ export const expectSomeData = (data: Buffer, type?: 'armoredMsg' | 'msgBlocks', 
   } else if (type === 'msgBlocks') {
     const blocks = data.toString().split('\n').map(block => JSON.parse(block));
     expect(details).to.be.instanceOf(Array);
-    expect(details!.length).to.equal(blocks.length);
+    const expectedBlocks = details as any[];
+    expect(expectedBlocks.length).to.equal(blocks.length);
     for (let i = 0; i < blocks.length; i++) {
-      expect(blocks[i]).to.deep.equal(details![i], `block ${i} failed cmp check`);
+      expect(blocks[i]).to.deep.equal(expectedBlocks[i], `block ${i} failed cmp check`);
     }
+  } else if (type === "binary") {
+    expect(details).to.be.instanceOf(Buffer);
+    const expectedBuffer = details as Buffer;
+    expect(data).to.deep.equal(expectedBuffer);
   }
 }
 

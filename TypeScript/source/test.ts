@@ -5,7 +5,7 @@
 // todo: add APP_ENV prod to android
 
 import * as ava from 'ava';
-import { startNodeCoreInstance, request, expectNoData, getKeypairs, expectSomeData, expectEmptyJson } from './test/test-utils';
+import { startNodeCoreInstance, request, expectNoData, getKeypairs, expectData, expectEmptyJson } from './test/test-utils';
 import { expect } from 'chai';
 import { ChildProcess } from './test/flowcrypt-node-modules';
 
@@ -34,10 +34,23 @@ ava.test('encryptMsg - decryptMsg', async t => {
   const { pubKeys, keys, passphrases } = getKeypairs('rsa1');
   const { data: encryptedMsg, json: encryptJson } = await request('encryptMsg', { pubKeys }, 'hello\nwrld');
   expectEmptyJson(encryptJson);
-  expectSomeData(encryptedMsg, 'armoredMsg');
+  expectData(encryptedMsg, 'armoredMsg');
   const { data: blocks, json: decryptJson } = await request('decryptMsg', { keys, passphrases }, encryptedMsg);
   expect(decryptJson).to.deep.equal({ success: true, blockMetas: [{ type: 'html', length: 13 }] });
-  expectSomeData(blocks, 'msgBlocks', [{ "type": "html", "content": 'hello<br>wrld', "complete": true }]);
+  expectData(blocks, 'msgBlocks', [{ type: "html", content: 'hello<br>wrld', complete: true }]);
+  t.pass();
+});
+
+ava.test('encryptFile - decryptFile', async t => {
+  const { pubKeys, keys, passphrases } = getKeypairs('rsa1');
+  const name = 'myfile.txt';
+  const content = Buffer.from([10, 20, 40, 80, 160, 0, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250]);
+  const { data: encryptedFile, json: encryptJson } = await request('encryptFile', { pubKeys, name }, content);
+  expectEmptyJson(encryptJson);
+  expectData(encryptedFile);
+  const { data: decryptedContent, json: decryptJson } = await request('decryptFile', { keys, passphrases }, encryptedFile);
+  expect(decryptJson).to.deep.equal({ success: true, name });
+  expectData(decryptedContent, 'binary', content);
   t.pass();
 });
 

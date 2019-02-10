@@ -26,6 +26,13 @@ export class Validate {
     throw new Error('Wrong request structure for NodeRequest.encryptMsg');
   }
 
+  public static decryptMsg = (v: any): NodeRequest.decryptMsg => {
+    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?')) {
+      return v as NodeRequest.decryptFile;
+    }
+    throw new Error('Wrong request structure for NodeRequest.decryptMsg');
+  }
+
   public static encryptFile = (v: any): NodeRequest.encryptFile => {
     if (isObj(v) && hasProp(v, 'pubKeys', 'string[]') && hasProp(v, 'name', 'string')) {
       return v as NodeRequest.encryptFile;
@@ -38,13 +45,6 @@ export class Validate {
       return v as NodeRequest.decryptFile;
     }
     throw new Error('Wrong request structure for NodeRequest.decryptFile');
-  }
-
-  public static decryptMsg = (v: any): NodeRequest.decryptMsg => {
-    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?')) {
-      return v as NodeRequest.decryptFile;
-    }
-    throw new Error('Wrong request structure for NodeRequest.decryptMsg');
   }
 
   public static parseDateStr = (v: any): NodeRequest.parseDateStr => {
