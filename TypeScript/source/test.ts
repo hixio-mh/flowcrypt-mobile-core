@@ -5,9 +5,12 @@
 // todo: add APP_ENV prod to android
 
 import * as ava from 'ava';
-import { startNodeCoreInstance, request, expectNoData, getKeypairs, expectData, expectEmptyJson } from './test/test-utils';
+import { startNodeCoreInstance, request, expectNoData, getKeypairs, expectData, expectEmptyJson, getCompatAsset } from './test/test-utils';
 import { expect } from 'chai';
 import { ChildProcess } from './test/flowcrypt-node-modules';
+
+const compatText = 'some\n汉\ntxt';
+const compatHtml = compatText.replace(/\n/g, '<br>');
 
 let nodeProcess: ChildProcess;
 
@@ -109,6 +112,30 @@ ava.test('parseKeys', async t => {
   expectNoData(data);
   t.pass();
 });
+
+ava.test('decryptMsg compat direct-encrypted-text', async t => {
+  const { keys, passphrases } = getKeypairs('rsa1');
+  const { data: blocks, json: decryptJson } = await request('decryptMsg', { keys, passphrases }, await getCompatAsset('direct-encrypted-text'));
+  expect(decryptJson).to.deep.equal({ success: true, blockMetas: [{ type: 'html', length: 16 }] });
+  expectData(blocks, 'msgBlocks', [{ type: "html", content: compatHtml, complete: true }]);
+  t.pass();
+});
+
+// ava.test.only('decryptMsg compat mime-email-plain', async t => {
+//   const { keys, passphrases } = getKeypairs('rsa1');
+//   const { data: blocks, json: decryptJson } = await request('decryptMsg', { keys, passphrases }, await getCompatAsset('mime-email-plain'));
+//   expect(decryptJson).to.deep.equal({ success: true, blockMetas: [{ type: 'html', length: compatHtml.length }] });
+//   expectData(blocks, 'msgBlocks', [{ type: "html", content: compatHtml, complete: true }]);
+//   t.pass();
+// });
+
+// ava.test.only('decryptMsg compat mime-email-plain', async t => {
+//   const { keys, passphrases } = getKeypairs('rsa1');
+//   const { data: blocks, json: decryptJson } = await request('decryptMsg', { keys, passphrases }, await getCompatAsset('mime-email-plain'));
+//   expect(decryptJson).to.deep.equal({ success: true, blockMetas: [{ type: 'html', length: compatHtml.length }] });
+//   expectData(blocks, 'msgBlocks', [{ type: "html", content: compatHtml, complete: true }]);
+//   t.pass();
+// });
 
 ava.test.after(async t => {
   nodeProcess.kill();

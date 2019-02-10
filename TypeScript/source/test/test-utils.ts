@@ -133,3 +133,7 @@ export const getKeypairs = (...names: ('rsa1' | 'rsa2' | 'ecc')[]) => {
     longids: names.map(name => TEST_KEYS[name].longid),
   };
 }
+
+export const getCompatAsset = async (name: string) => {
+  return await util.readFile(`source/assets/compat/${name}.txt`);
+}
