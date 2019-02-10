@@ -44,7 +44,7 @@ export class Validate {
     if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?')) {
       return v as NodeRequest.decryptFile;
     }
-    throw new Error('Wrong request structure for NodeRequest.decryptFile');
+    throw new Error('Wrong request structure for NodeRequest.decryptMsg');
   }
 
   public static parseDateStr = (v: any): NodeRequest.parseDateStr => {

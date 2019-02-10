@@ -5,7 +5,7 @@
 // todo: add APP_ENV prod to android
 
 import * as ava from 'ava';
-import { startNodeCoreInstance, request, expectNoData } from './test/test-utils';
+import { startNodeCoreInstance, request, expectNoData, getKeypairs, expectSomeData, expectEmptyJson } from './test/test-utils';
 import { expect } from 'chai';
 import { ChildProcess } from './test/flowcrypt-node-modules';
 
@@ -27,6 +27,17 @@ ava.test('doesnotexist', async t => {
   const { data, err } = await request('doesnotexist', {}, [], false);
   expect(err).to.equal('Error: unknown endpoint: doesnotexist');
   expectNoData(data);
+  t.pass();
+});
+
+ava.test('encryptMsg - decryptMsg', async t => {
+  const { pubKeys, keys, passphrases } = getKeypairs('rsa1');
+  const { data: encryptedMsg, json: encryptJson } = await request('encryptMsg', { pubKeys }, 'hello\nwrld');
+  expectEmptyJson(encryptJson);
+  expectSomeData(encryptedMsg, 'armoredMsg');
+  const { data: blocks, json: decryptJson } = await request('decryptMsg', { keys, passphrases }, encryptedMsg);
+  expect(decryptJson).to.deep.equal({ success: true, blockMetas: [{ type: 'html', length: 13 }] });
+  expectSomeData(blocks, 'msgBlocks', [{ "type": "html", "content": 'hello<br>wrld', "complete": true }]);
   t.pass();
 });
 
