@@ -54,6 +54,34 @@ ava.test('encryptFile - decryptFile', async t => {
   t.pass();
 });
 
+ava.test('parseDateStr', async t => {
+  const { data, json } = await request('parseDateStr', { dateStr: 'Sun, 10 Feb 2019 07:08:20 -0800' }, []);
+  expect(json).to.deep.equal({ timestamp: '1549811300000' });
+  expectNoData(data);
+  t.pass();
+});
+
+ava.test('gmailBackupSearch', async t => {
+  const { data, json } = await request('gmailBackupSearch', { acctEmail: 'test@acct.com' }, []);
+  expect(json).to.deep.equal({ query: 'from:test@acct.com to:test@acct.com (subject:"Your FlowCrypt Backup" OR subject: "Your CryptUp Backup" OR subject: "All you need to know about CryptUP (contains a backup)" OR subject: "CryptUP Account Backup") -is:spam' });
+  expectNoData(data);
+  t.pass();
+});
+
+ava.test('isEmailValid - true', async t => {
+  const { data, json } = await request('isEmailValid', { email: 'test@acct.com' }, []);
+  expect(json).to.deep.equal({ valid: true });
+  expectNoData(data);
+  t.pass();
+});
+
+ava.test('isEmailValid - false', async t => {
+  const { data, json } = await request('isEmailValid', { email: 'testacct.com' }, []);
+  expect(json).to.deep.equal({ valid: false });
+  expectNoData(data);
+  t.pass();
+});
+
 ava.test.after(async t => {
   nodeProcess.kill();
   t.pass();
