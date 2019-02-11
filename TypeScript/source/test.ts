@@ -2,8 +2,6 @@
 
 'use strict';
 
-// todo: add APP_ENV prod to android
-
 import * as ava from 'ava';
 import { startNodeCoreInstance, request, expectNoData, getKeypairs, expectData, expectEmptyJson, getCompatAsset } from './test/test-utils';
 import { expect } from 'chai';
