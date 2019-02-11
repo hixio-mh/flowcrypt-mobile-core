@@ -40,7 +40,7 @@ export type ReplaceableMsgBlockType = KeyBlockType | 'attestPacket' | 'cryptupVe
 export type MsgBlockType = 'text' | 'html' | 'attachment' | ReplaceableMsgBlockType;
 export type MsgBlock = {
   type: MsgBlockType;
-  content: string;
+  content: string | Buf;
   complete: boolean;
   signature?: string;
   keyDetails?: KeyDetails;

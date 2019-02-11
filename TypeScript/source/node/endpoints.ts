@@ -10,8 +10,109 @@ import { fmtRes, Buffers } from './fmt';
 import { gmailBackupSearchQuery } from '../core/const';
 import { requireOpenpgp } from '../platform/require';
 import { Str } from '../core/common';
+import { Mime, MsgBlock } from '../core/mime';
+import { Buf } from '../core/buf';
 
 const openpgp = requireOpenpgp();
+
+export class Endpoints {
+
+  [endpoint: string]: ((uncheckedReq: any, data: Buffers) => Promise<Buffers>) | undefined;
+
+  public version = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
+    return fmtRes(process.versions);
+  }
+
+  public encryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
+    const req = Validate.encryptMsg(uncheckedReq);
+    const encrypted = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buffer.concat(data), armor: true }) as OpenPGP.EncryptArmorResult;
+    return fmtRes({}, Buffer.from(encrypted.data));
+  }
+
+  public encryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
+    const req = Validate.encryptFile(uncheckedReq);
+    const encrypted = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buffer.concat(data), filename: req.name, armor: false }) as OpenPGP.EncryptBinaryResult;
+    return fmtRes({}, encrypted.message.packets.write());
+  }
+
+  public decryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
+    const { keys, passphrases, msgPwd, isEmail } = Validate.decryptMsg(uncheckedReq);
+    const kisWithPp = { keys, passphrases };
+    const rawBlocks: MsgBlock[] = [];
+    if (isEmail) {
+      const { blocks } = await Mime.process(Buffer.concat(data));
+      rawBlocks.push(...blocks);
+    } else {
+      rawBlocks.push(Pgp.internal.msgBlockObj('message', new Buf(Buffer.concat(data))));
+    }
+    const blocks: MsgBlock[] = []; // contains decrypted or otherwise formatted data
+    for (const rawBlock of rawBlocks) {
+      if (rawBlock.type === 'message') {
+        const decrypted = await PgpMsg.decrypt({ kisWithPp, msgPwd, encryptedData: rawBlock.content instanceof Uint8Array ? rawBlock.content : Buffer.from(rawBlock.content) });
+        if (!decrypted.success) {
+          decrypted.message = undefined;
+          return fmtRes(decrypted); // not ideal. If decryption of one block fails, no other blocks will make it to the client
+        }
+        blocks.push(... await PgpMsg.fmtDecrypted(decrypted.content));
+      } else {
+        blocks.push(rawBlock);
+      }
+    }
+    const blockMetas = blocks.map(b => ({ type: b.type, length: b.content.length }));
+    // first line is a blockMetas JSON. Data below represent one JSON-stringified block per line. This is so that it can be read as a stream later
+    return fmtRes({ success: true, blockMetas }, Buffer.from(blocks.map(b => JSON.stringify(b)).join('\n')));
+  }
+
+  public decryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
+    const { keys, passphrases, msgPwd } = Validate.decryptFile(uncheckedReq);
+    const decryptedMeta = await PgpMsg.decrypt({ kisWithPp: { keys, passphrases }, encryptedData: Buffer.concat(data), msgPwd });
+    if (!decryptedMeta.success) {
+      decryptedMeta.message = undefined;
+      return fmtRes(decryptedMeta);
+    }
+    return fmtRes({ success: true, name: decryptedMeta.filename || '' }, decryptedMeta.content);
+  }
+
+  public parseDateStr = async (uncheckedReq: any, data: Buffers) => {
+    const { dateStr } = Validate.parseDateStr(uncheckedReq);
+    return fmtRes({ timestamp: String(Date.parse(dateStr) || -1) });
+  }
+
+  public gmailBackupSearch = async (uncheckedReq: any, data: Buffers) => {
+    const { acctEmail } = Validate.gmailBackupSearch(uncheckedReq);
+    return fmtRes({ query: gmailBackupSearchQuery(acctEmail) });
+  }
+
+  public parseKeys = async (uncheckedReq: any, data: Buffers) => {
+    const keyDetails: KeyDetails[] = [];
+    const allData = Buffer.concat(data);
+    const pgpType = await PgpMsg.type({ data: allData });
+    if (!pgpType) {
+      return fmtRes({ format: 'unknown', keyDetails, error: { message: `Cannot parse key: could not determine pgpType` } });
+    }
+    if (pgpType.armored) {
+      // armored
+      const { blocks } = Pgp.armor.detectBlocks(allData.toString());
+      for (const block of blocks) {
+        const { keys } = await Pgp.key.parse(block.content.toString());
+        keyDetails.push(...keys);
+      }
+      return fmtRes({ format: 'armored', keyDetails });
+    }
+    // binary
+    const { keys: openPgpKeys } = await openpgp.key.read(allData);
+    for (const openPgpKey of openPgpKeys) {
+      keyDetails.push(await Pgp.key.serialize(openPgpKey))
+    }
+    return fmtRes({ format: 'binary', keyDetails });
+  }
+
+  public isEmailValid = async (uncheckedReq: any, data: Buffers) => {
+    const { email } = Validate.isEmailValid(uncheckedReq);
+    return fmtRes({ valid: Str.isEmailValid(email) });
+  }
+
+}
 
 export class Debug {
 
@@ -44,93 +145,4 @@ export class Debug {
     }
     return char;
   }
-}
-
-export class Endpoints {
-
-  [endpoint: string]: ((uncheckedReq: any, data: Buffers) => Promise<Buffers>) | undefined;
-
-  public version = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
-    return fmtRes(process.versions);
-  }
-
-  public encryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
-    const req = Validate.encryptMsg(uncheckedReq);
-    const encrypted = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buffer.concat(data), armor: true }) as OpenPGP.EncryptArmorResult;
-    return fmtRes({}, Buffer.from(encrypted.data));
-  }
-
-  public encryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
-    const req = Validate.encryptFile(uncheckedReq);
-    const encrypted = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buffer.concat(data), filename: req.name, armor: false }) as OpenPGP.EncryptBinaryResult;
-    return fmtRes({}, encrypted.message.packets.write());
-  }
-
-  /**
-   * Todo - this will fail when it receives a Mime message, because emailjs mime libraries are not loaded, see platform/require.ts
-   */
-  public decryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
-    const { keys, passphrases, msgPwd } = Validate.decryptMsg(uncheckedReq);
-    const decrypted = await PgpMsg.decrypt({ kisWithPp: { keys, passphrases }, encryptedData: Buffer.concat(data), msgPwd });
-    if (!decrypted.success) {
-      decrypted.message = undefined;
-      return fmtRes(decrypted);
-    }
-    const blocks = await PgpMsg.fmtDecrypted(decrypted.content);
-    const blockMetas = blocks.map(b => ({ type: b.type, length: b.content.length }));
-    // first line is a blockMetas JSON. Data below represent one JSON-stringified block per line. This is so that it can be read as a stream
-    return fmtRes({ success: true, blockMetas }, Buffer.from(blocks.map(b => JSON.stringify(b)).join('\n')));
-  }
-
-  public decryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
-    const { keys, passphrases, msgPwd } = Validate.decryptFile(uncheckedReq);
-    // Debug.printChunk("decryptFile.data", data);
-    const decryptedMeta = await PgpMsg.decrypt({ kisWithPp: { keys, passphrases }, encryptedData: Buffer.concat(data), msgPwd });
-    if (!decryptedMeta.success) {
-      decryptedMeta.message = undefined;
-      return fmtRes(decryptedMeta);
-    }
-    // Debug.printChunk("decryptFile.decryptedData", decryptedData);
-    return fmtRes({ success: true, name: decryptedMeta.filename || '' }, decryptedMeta.content);
-  }
-
-  public parseDateStr = async (uncheckedReq: any, data: Buffers) => {
-    const { dateStr } = Validate.parseDateStr(uncheckedReq);
-    return fmtRes({ timestamp: String(Date.parse(dateStr) || -1) });
-  }
-
-  public gmailBackupSearch = async (uncheckedReq: any, data: Buffers) => {
-    const { acctEmail } = Validate.gmailBackupSearch(uncheckedReq);
-    return fmtRes({ query: gmailBackupSearchQuery(acctEmail) });
-  }
-
-  public parseKeys = async (uncheckedReq: any, data: Buffers) => {
-    const keyDetails: KeyDetails[] = [];
-    const allData = Buffer.concat(data);
-    const pgpType = await PgpMsg.type({ data: allData });
-    if (!pgpType) {
-      return fmtRes({ format: 'unknown', keyDetails, error: { message: `Cannot parse key: could not determine pgpType` } });
-    }
-    if (pgpType.armored) {
-      // armored
-      const { blocks } = Pgp.armor.detectBlocks(allData.toString());
-      for (const block of blocks) {
-        const { keys } = await Pgp.key.parse(block.content);
-        keyDetails.push(...keys);
-      }
-      return fmtRes({ format: 'armored', keyDetails });
-    }
-    // binary
-    const { keys: openPgpKeys } = await openpgp.key.read(allData);
-    for (const openPgpKey of openPgpKeys) {
-      keyDetails.push(await Pgp.key.serialize(openPgpKey))
-    }
-    return fmtRes({ format: 'binary', keyDetails });
-  }
-
-  public isEmailValid = async (uncheckedReq: any, data: Buffers) => {
-    const { email } = Validate.isEmailValid(uncheckedReq);
-    return fmtRes({ valid: Str.isEmailValid(email) });
-  }
-
 }

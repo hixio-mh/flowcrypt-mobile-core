@@ -412,7 +412,7 @@ export class Pgp {
   };
 
   public static internal = {
-    msgBlockObj: (type: MsgBlockType, content: string, missingEnd = false): MsgBlock => ({ type, content, complete: !missingEnd }),
+    msgBlockObj: (type: MsgBlockType, content: string | Buf, missingEnd = false): MsgBlock => ({ type, content, complete: !missingEnd }),
     msgBlockAttObj: (type: MsgBlockType, content: string, attMeta: AttMeta): MsgBlock => ({ type, content, complete: true, attMeta }),
     msgBlockKeyObj: (type: MsgBlockType, content: string, keyDetails: KeyDetails): MsgBlock => ({ type, content, complete: true, keyDetails }),
     detectBlockNext: (origText: string, startAt: number) => {
@@ -803,8 +803,9 @@ export class PgpMsg {
     let { blocks, normalized } = Pgp.armor.detectBlocks(decryptedContent); // tslint:disable-line:prefer-const
     for (const block of blocks) {
       if (block.type === 'publicKey') {
-        foundPublicKeys.push(block.content);
-        normalized = normalized.replace(block.content, '');
+        const armored = block.content.toString();
+        foundPublicKeys.push(armored);
+        normalized = normalized.replace(armored, '');
       }
     }
     return normalized;

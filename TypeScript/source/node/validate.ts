@@ -9,7 +9,7 @@ export namespace NodeRequest {
   type PrvKeyInfo = { private: string; longid: string };
   export type encryptMsg = { pubKeys: string[] };
   export type encryptFile = { pubKeys: string[], name: string };
-  export type decryptMsg = { keys: PrvKeyInfo[], passphrases: string[], msgPwd?: string };
+  export type decryptMsg = { keys: PrvKeyInfo[], passphrases: string[], msgPwd?: string, isEmail?: boolean };
   export type decryptFile = { keys: PrvKeyInfo[], passphrases: string[], msgPwd?: string };
   export type parseDateStr = { dateStr: string };
   export type gmailBackupSearch = { acctEmail: string };
@@ -27,8 +27,8 @@ export class Validate {
   }
 
   public static decryptMsg = (v: any): NodeRequest.decryptMsg => {
-    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?')) {
-      return v as NodeRequest.decryptFile;
+    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'isEmail', 'boolean?')) {
+      return v as NodeRequest.decryptMsg;
     }
     throw new Error('Wrong request structure for NodeRequest.decryptMsg');
   }
@@ -74,13 +74,16 @@ const isObj = (v: any): v is Obj => {
   return v && typeof v === 'object';
 }
 
-const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 'number' | 'string?' | 'PrvKeyInfo[]'): boolean => {
+const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 'number' | 'string?' | 'boolean?' | 'PrvKeyInfo[]'): boolean => {
   if (!isObj(v)) {
     return false;
   }
   const value = v[name];
   if (type === 'number' || type === 'string') {
     return typeof value === type;
+  }
+  if (type === 'boolean?') {
+    return typeof value === 'boolean' || typeof value === 'undefined';
   }
   if (type === 'string?') {
     return typeof value === 'string' || typeof value === 'undefined';
