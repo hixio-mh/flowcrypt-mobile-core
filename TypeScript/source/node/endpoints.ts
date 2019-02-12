@@ -112,6 +112,36 @@ export class Endpoints {
     return fmtRes({ valid: Str.isEmailValid(email) });
   }
 
+  public decryptKey = async (uncheckedReq: any, data: Buffers) => {
+    const { armored, passphrases } = Validate.decryptKey(uncheckedReq);
+    const key = await readArmoredKeyOrThrow(armored);
+    if (await Pgp.key.decrypt(key, passphrases)) {
+      return fmtRes({ decryptedKey: key.armor() });
+    }
+    return fmtRes({ decryptedKey: null });
+  }
+
+  public encryptKey = async (uncheckedReq: any, data: Buffers) => {
+    const { armored, passphrase } = Validate.encryptKey(uncheckedReq);
+    const key = await readArmoredKeyOrThrow(armored);
+    if (!passphrase || passphrase.length < 10) { // last resort check, this should never happen
+      throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
+    }
+    await key.encrypt(passphrase);
+    return fmtRes({ encryptedKey: key.armor() });
+  }
+
+}
+
+const readArmoredKeyOrThrow = async (armored: string) => {
+  const { keys: [key], err } = await openpgp.key.readArmored(armored);
+  if (err && err.length && err[0] instanceof Error) {
+    throw err[0];
+  }
+  if (!key) {
+    throw new Error('No key found');
+  }
+  return key;
 }
 
 export class Debug {

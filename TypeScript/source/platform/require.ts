@@ -6,7 +6,11 @@
 
 export const requireOpenpgp = (): typeof OpenPGP => {
   // @ts-ignore;
-  return openpgp;
+  if (typeof openpgp !== 'undefined') {
+    // @ts-ignore;
+    return openpgp; // self-contained node-mobile
+  }
+  return require('openpgp'); // normal desktop node, eg when running tests
 };
 
 export const requireMimeParser = (): any => {

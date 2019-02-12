@@ -69,6 +69,7 @@ type KeyDetails$ids = {
 export interface KeyDetails {
   private?: string;
   public: string;
+  isDecrypted: boolean | null;
   ids: KeyDetails$ids[];
   users: string[];
   created: number;
@@ -379,6 +380,7 @@ export class Pgp {
       }
       return {
         private: k.isPrivate() ? k.armor() : undefined,
+        isDecrypted: k.isDecrypted(),
         public: k.toPublic().armor(),
         users: k.getUserIds(),
         ids,

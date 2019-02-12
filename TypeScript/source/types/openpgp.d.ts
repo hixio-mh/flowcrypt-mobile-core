@@ -798,7 +798,7 @@ declare namespace OpenPGP {
       getEncryptionKey(keyid?: Keyid | null, date?: Date, userid?: UserId | null): Promise<packet.PublicSubkey | packet.SecretSubkey | packet.SecretKey | packet.PublicKey | null>;
       getSigningKey(): Promise<packet.PublicSubkey | packet.SecretSubkey | packet.SecretKey | packet.PublicKey | null>;
       getKeys(): packet.List<packet.AnyKeyPacket>;
-      isDecrypted(): boolean;
+      isDecrypted(): boolean | null; // null for pubkeys
       getFingerprint(): string;
       getCreationTime(): Date;
       getAlgorithmInfo(): AlgorithmInfo;

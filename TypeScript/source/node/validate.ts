@@ -14,6 +14,8 @@ export namespace NodeRequest {
   export type parseDateStr = { dateStr: string };
   export type gmailBackupSearch = { acctEmail: string };
   export type isEmailValid = { email: string };
+  export type decryptKey = { armored: string, passphrases: string[] };
+  export type encryptKey = { armored: string, passphrase: string };
 
 }
 
@@ -66,6 +68,20 @@ export class Validate {
       return v as NodeRequest.isEmailValid;
     }
     throw new Error('Wrong request structure for NodeRequest.isEmailValid');
+  }
+
+  public static decryptKey = (v: any): NodeRequest.decryptKey => {
+    if (isObj(v) && hasProp(v, 'armored', 'string') && hasProp(v, 'passphrases', 'string[]')) {
+      return v as NodeRequest.decryptKey;
+    }
+    throw new Error('Wrong request structure for NodeRequest.decryptKey');
+  }
+
+  public static encryptKey = (v: any): NodeRequest.encryptKey => {
+    if (isObj(v) && hasProp(v, 'armored', 'string') && hasProp(v, 'passphrase', 'string')) {
+      return v as NodeRequest.encryptKey;
+    }
+    throw new Error('Wrong request structure for NodeRequest.encryptKey');
   }
 
 }
