@@ -125,6 +125,14 @@ ava.test('decryptKey', async t => {
   t.pass();
 });
 
+// ava.test.only('decryptKey made by OpenPGP.js v2', async t => { // OpenPGP.js bug https://github.com/openpgpjs/openpgpjs/issues/862
+//   const { data, json } = await request('decryptKey', { "passphrases": ["android"], "armored": "-----BEGIN PGP PRIVATE KEY BLOCK-----\r\nVersion: FlowCrypt 0.7.2 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\n\r\nxcB+BFqZSq0BB/95WmstkZtb8Dr8OYKkuHNqJQCP8ZGs8Zl9nZf4e1bqUsq7\r\nMGtTp+WeTzlipd04qCHc/8ef9myMDXwM68rBQKw3w6+5o7sWa7OjRtmftooE\r\n7TZQsFsxun4LKR3PeII9ihF1sEwPm0lE1s/vi4AKDj4qTV5rnzRSxoheh4YC\r\nPVsTof7NxAw35p1ywM63HHW7sjMwqYz7dB06OX8V27GD2NScNMKtQOTy0qZc\r\nZZoXCLWYtmy6VZbS4zhxhH2IG1El1vPPWa73TIJ01c72BRgIt2kAMVc9EyrU\r\nac1qPZcWgPpPETYoyYXuq4473x2lWhNtpPgvfBXCEuH0pt5UQp+8yBGdABEB\r\nAAH+CQMIGW2aBpoZ4HVgPrEhgZegbLABsdaqfFvEbo1tfhkBKT7WqeP3MS4+\r\ne51SgsvpzStkZWZhdWx0QGRlbmJvbmQ3LmNvbSA8ZGVmYXVsdEBkZW5ib25k\r\nNy5jb20+wsB/BBABCAApBQJamUq3BgsJBwgDAgkQHLCWPTPkOEsEFQgKAgMW\r\nAgECGQECGwMCHgEACgkQHLCWPTPkOEu7pQf/c0z1fxSuX3RIVFCvAovjo5Vr\r\nSSBspADigqMw7KnD7gRNl+5benDdrdAxMaEhRjXifozwJCYnBEXYPkmGyOhu\r\nNynmFXo89KGwVD3VEDqFzXPiKmBWL7C0IIgxWHxHhBBgQmOZdAXOLGQcuErI\r\n4PiEaKmO5mp5hANaCZ2T3Efj/xfVsd7toKouU73QpzW1Xoyg5KiViO5oMyug\r\nFxgplFL6QirE3Q+RXVMK1JadQLqLrTBbBSUdscJN+SnnL5ymLdYbRtGHcYbU\r\nRQDbmYHn+RfgJUPHzpcU85VPqrzxJN4jH3YdexK4yzcyFb9QN3038TPUvUck\r\nXHnNv6Wr6HDy1ayrMsfAfgRamUq0AQgAmYn6ieg0c37aqZLaQ9B/tObBjrHo\r\nLmAZKzIHXc5jYfiS981qTdVo3u6uui+RYwn7IWA5pX8yidY72/C3nUh/YDj1\r\nIq5SC0XpXVLX0f2R2WwA3RqvZ5HrydwSvm2hS+kQ/L4KjyuGOdsQBeK8Pg29\r\nuR/UIVArsJumWTS4hHyy0SsPw4BqW/R1X0/NHS+RVN1WbR8nGMRNfTRxhSDR\r\nxxZgcLCB4eOYbQAgmqWre+X1xjOgJticGwTh0eSpftCKhOswp2PIpSDfOwav\r\nXTIIhlplDe2+2Try3QEh5f13p5O3/yIfs/5LJ0vLe81obpFi1rnPPa4luIGj\r\n7ESY9VTikVc4GwARAQAB/gkDCGEKUQcWOHjPYD8H95MFfV9Q7V6+lzkTrIme\r\nm0kUHCph+ioFQ3bBhF01xpfJhMLAaQQYAQgAEwUCWplKtwkQHLCWPTPkOEsC\r\nGwwACgkQHLCWPTPkOEvt8gf7B2ZIHX0mRXT2COl5vbZvZ3d6H5KgZE6yWbyw\r\nUx+6MviugArFCyesLbUdrw31fFhLFDYY2xmt2CODhdkwCdLO+rSJDOT2JPWp\r\nDHqZOtlIWQ8KYXOqugnZUjsGQ78uhJ0zxjeZ2mZKFwTeJIdVsIAQa6GiCEeO\r\nNRlw/W6Pmk8QOoRA1YIOZxi3gdsPVaPKBhGnB+qMbR8wzWNcO7Ub+MU4LxPD\r\naDxbCQgqcKKYjTxMfH5bMTRhewmFmwYIvht8YOy2p0wZdyExTOnY2PgIOMBw\r\n67mnbuZ7Je4inipfF+NonLXjfsLOydj0TKDXN+NrpL/Jkm87bBKrZdl56GCl\r\nI70U5g==\r\n=KcbL\r\n-----END PGP PRIVATE KEY BLOCK-----\r\n" }, Buffer.from([]));
+//   const { keys: [decryptedKey] } = await openpgp.key.readArmored(json.decryptedKey);
+//   expect(decryptedKey.isDecrypted()).to.be.true;
+//   expectNoData(data);
+//   t.pass();
+// });
+
 ava.test('encryptKey', async t => {
   const passphrase = 'this is some pass phrase';
   const { decrypted: [decryptedKey] } = getKeypairs('rsa1');
