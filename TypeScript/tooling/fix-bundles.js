@@ -39,9 +39,9 @@ fs.copyFileSync(`${bundleRawDir}/flowcrypt.js`, `${bundleDir}/flowcrypt-bundle.j
 const emailjsRaw = [
   `${libsDir}/iso-8859-2.js`,
   `${libsDir}/emailjs/punycode.js`,
+  `${libsDir}/emailjs/emailjs-stringencoding.js`,
   `${libsDir}/emailjs/emailjs-mime-types.js`,
   `${libsDir}/emailjs/emailjs-mime-codec.js`,
-  `${libsDir}/emailjs/emailjs-stringencoding.js`,
   `${libsDir}/emailjs/emailjs-addressparser.js`,
   `${libsDir}/emailjs/emailjs-mime-parser.js`,
   `${libsDir}/emailjs/emailjs-mime-builder.js`,
