@@ -19,6 +19,41 @@ const pubkeys = ['-----BEGIN PGP PUBLIC KEY BLOCK-----\nVersion: FlowCrypt 6.3.5
 
 const subject = (t: AvaContext) => t.title.replace(/\.txt$/, '').replace(/-/g, ' ');
 
+// particular email that tended to cause mimejs-textencoder errors
+const textEncoderMimeEmail = (t: AvaContext, text: Buffer | string) => Buffer.from(`
+Return-Path: <denbond7@denbond7.com>
+Delivered-To: default@denbond7.com
+Receivefrom mail.denbond7.com (localhost [127.0.0.1])
+	by mail.denbond7.com (Postfix) with ESMTP id 35CBC202F1
+	for <default@denbond7.com>; Fri, 15 Mar 2019 14:52:10 +0000 (UTC)
+X-Virus-ScanneDebian amavisd-new at mail.denbond7.com
+Receivefrom mail.denbond7.com ([127.0.0.1])
+	by mail.denbond7.com (mail.denbond7.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id EstQPjUmZ4Hn for <default@denbond7.com>;
+	Fri, 15 Mar 2019 14:52:01 +0000 (UTC)
+Receivefrom localhost (MiA1 [192.168.3.6])
+	by mail.denbond7.com (Postfix) with ESMTP id E17EF202E9
+	for <default@denbond7.com>; Fri, 15 Mar 2019 14:52:00 +0000 (UTC)
+Content-Type: multipart/mixed;
+ boundary="----sinikael-?=_1-15526615192100.5959024994440685"
+In-Reply-To: <>
+References: <>
+To: default@denbond7.com
+From: denbond7@denbond7.com
+Subject: ${subject(t)}
+Date: Fri, 15 Mar 2019 14:51:59 +0000
+Message-I<1552661519275-40db11d3-834101fe-9096ab5d@denbond7.com>
+MIME-Version: 1.0
+
+------sinikael-?=_1-15526615192100.5959024994440685
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+${text.toString()}
+
+------sinikael-?=_1-15526615192100.5959024994440685--
+`.replace(/^\n/, ''));
+
 const mimeEmail = (t: AvaContext, text: Buffer | string) => Buffer.from(`
 Delivered-To: flowcrypt.compatibility@gmail.com
 Return-Path: <cryptup.tester@gmail.com>
@@ -99,5 +134,11 @@ ava.test('mime-email-encrypted-inline-text.txt', async t => {
 ava.test('mime-email-encrypted-inline-pgpmime.txt', async t => {
   const { data } = await PgpMsg.encrypt({ data: mimePgp(t, text), pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
   await write(t, mimeEmail(t, data));
+  t.pass();
+});
+
+ava.test('mime-email-encrytped-inline-text-2.txt', async t => {
+  const { data } = await PgpMsg.encrypt({ data: text, pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
+  await write(t, textEncoderMimeEmail(t, data));
   t.pass();
 });
