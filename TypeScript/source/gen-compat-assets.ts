@@ -137,7 +137,7 @@ ava.test('mime-email-encrypted-inline-pgpmime.txt', async t => {
   t.pass();
 });
 
-ava.test('mime-email-encrytped-inline-text-2.txt', async t => {
+ava.test('mime-email-encrypted-inline-text-2.txt', async t => {
   const { data } = await PgpMsg.encrypt({ data: text, pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
   await write(t, textEncoderMimeEmail(t, data));
   t.pass();
