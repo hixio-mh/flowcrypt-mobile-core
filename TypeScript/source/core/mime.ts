@@ -161,7 +161,7 @@ export class Mime {
         };
         parser.write(mimeMsg); // tslint:disable-line:no-unsafe-any
         parser.end(); // tslint:disable-line:no-unsafe-any
-      } catch (e) {
+      } catch (e) { // todo - on Android we may want to fail when this happens, evaluate effect on browser extension
         Catch.handleErr(e);
         resolve(mimeContent);
       }
