@@ -37,7 +37,8 @@ export type RichHeaders = Dict<string | string[]>;
 export type SendableMsgBody = { [key: string]: string | undefined; 'text/plain'?: string; 'text/html'?: string; };
 export type KeyBlockType = 'publicKey' | 'privateKey';
 export type ReplaceableMsgBlockType = KeyBlockType | 'attestPacket' | 'cryptupVerification' | 'signedMsg' | 'encryptedMsg' | 'encryptedMsgLink';
-export type MsgBlockType = 'text' | 'html' | 'attachment' | ReplaceableMsgBlockType;
+export type MsgBlockType = 'plainText' | 'decryptedText' | 'plainHtml' | 'decryptedHtml' | 'plainAtt' | 'encryptedAtt' | 'decryptedAtt' | 'encryptedAttLink'
+  | 'decryptErr' | ReplaceableMsgBlockType;
 export type MsgBlock = {
   type: MsgBlockType;
   content: string | Buf;
@@ -71,7 +72,7 @@ export class Mime {
     }
     if (decoded.signature) {
       for (const block of blocks) {
-        if (block.type === 'text') {
+        if (block.type === 'plainText') {
           block.type = 'signedMsg';
           block.signature = decoded.signature;
         }

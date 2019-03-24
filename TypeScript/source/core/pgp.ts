@@ -431,7 +431,7 @@ export class Pgp {
               if (begin > startAt) {
                 const potentialTextBeforeBlockBegun = origText.substring(startAt, begin).trim();
                 if (potentialTextBeforeBlockBegun) {
-                  result.found.push(Pgp.internal.msgBlockObj('text', potentialTextBeforeBlockBegun));
+                  result.found.push(Pgp.internal.msgBlockObj('plainText', potentialTextBeforeBlockBegun));
                 }
               }
               let endIndex: number = -1;
@@ -456,7 +456,7 @@ export class Pgp {
                   if (pwdMsgShortIdMatch) {
                     result.found.push(Pgp.internal.msgBlockObj(type, pwdMsgShortIdMatch[0]));
                   } else {
-                    result.found.push(Pgp.internal.msgBlockObj('text', pwdMsgFullText));
+                    result.found.push(Pgp.internal.msgBlockObj('plainText', pwdMsgFullText));
                   }
                 }
                 result.continueAt = endIndex + foundBlockEndHeaderLength;
@@ -471,7 +471,7 @@ export class Pgp {
       if (origText && !result.found.length) { // didn't find any blocks, but input is non-empty
         const potentialText = origText.substr(startAt).trim();
         if (potentialText) {
-          result.found.push(Pgp.internal.msgBlockObj('text', potentialText));
+          result.found.push(Pgp.internal.msgBlockObj('plainText', potentialText));
         }
       }
       return result;
@@ -763,22 +763,22 @@ export class PgpMsg {
       utf = PgpMsg.stripFcTeplyToken(utf);
       const armoredPubKeys: string[] = [];
       utf = PgpMsg.stripPublicKeys(utf, armoredPubKeys);
-      blocks.push(Pgp.internal.msgBlockObj('html', Str.asEscapedHtml(utf)));
+      blocks.push(Pgp.internal.msgBlockObj('decryptedHtml', Str.asEscapedHtml(utf)));
       await PgpMsg.pushArmoredPubkeysToBlocks(armoredPubKeys, blocks);
     } else {
       const decoded = await Mime.decode(decryptedContent);
       if (typeof decoded.html !== 'undefined') {
-        blocks.push(Pgp.internal.msgBlockObj('html', decoded.html));
+        blocks.push(Pgp.internal.msgBlockObj('decryptedHtml', decoded.html));
       } else if (typeof decoded.text !== 'undefined') {
-        blocks.push(Pgp.internal.msgBlockObj('html', Str.asEscapedHtml(decoded.text)));
+        blocks.push(Pgp.internal.msgBlockObj('decryptedHtml', Str.asEscapedHtml(decoded.text)));
       } else {
-        blocks.push(Pgp.internal.msgBlockObj('html', Str.asEscapedHtml(Buf.fromUint8(decryptedContent).toUtfStr())));
+        blocks.push(Pgp.internal.msgBlockObj('decryptedHtml', Str.asEscapedHtml(Buf.fromUint8(decryptedContent).toUtfStr())));
       }
       for (const att of decoded.atts) {
         if (att.treatAs() === 'publicKey') {
           await PgpMsg.pushArmoredPubkeysToBlocks([att.getData().toUtfStr()], blocks);
         } else {
-          blocks.push(Pgp.internal.msgBlockAttObj('attachment', '', { name: att.name, data: att.getData() }));
+          blocks.push(Pgp.internal.msgBlockAttObj('decryptedAtt', '', { name: att.name, data: att.getData() }));
         }
       }
     }
@@ -793,7 +793,7 @@ export class PgpMsg {
       decryptedContent = decryptedContent.replace(/<a\s+href="([^"]+)"\s+class="cryptup_file"\s+cryptup-data="([^"]+)"\s*>[^<]+<\/a>\n?/gm, (_, url, fcData) => {
         const a = Str.htmlAttrDecode(String(fcData));
         if (PgpMsg.isFcAttLinkData(a)) {
-          blocks.push(Pgp.internal.msgBlockAttObj('attachment', '', { type: a.type, name: a.name, length: a.size, url: String(url) }));
+          blocks.push(Pgp.internal.msgBlockAttObj('encryptedAttLink', '', { type: a.type, name: a.name, length: a.size, url: String(url) }));
         }
         return '';
       });
