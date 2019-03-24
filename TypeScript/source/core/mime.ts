@@ -36,7 +36,7 @@ type MimeParserNode = {
 export type RichHeaders = Dict<string | string[]>;
 export type SendableMsgBody = { [key: string]: string | undefined; 'text/plain'?: string; 'text/html'?: string; };
 export type KeyBlockType = 'publicKey' | 'privateKey';
-export type ReplaceableMsgBlockType = KeyBlockType | 'attestPacket' | 'cryptupVerification' | 'signedMsg' | 'message' | 'passwordMsg';
+export type ReplaceableMsgBlockType = KeyBlockType | 'attestPacket' | 'cryptupVerification' | 'signedMsg' | 'encryptedMsg' | 'encryptedMsgLink';
 export type MsgBlockType = 'text' | 'html' | 'attachment' | ReplaceableMsgBlockType;
 export type MsgBlock = {
   type: MsgBlockType;
@@ -58,10 +58,10 @@ export class Mime {
     }
     for (const file of decoded.atts) {
       const treatAs = file.treatAs();
-      if (treatAs === 'message') {
+      if (treatAs === 'encryptedMsg') {
         const armored = Pgp.armor.clip(file.getData().toUtfStr());
         if (armored) {
-          blocks.push(Pgp.internal.msgBlockObj('message', armored));
+          blocks.push(Pgp.internal.msgBlockObj('encryptedMsg', armored));
         }
       } else if (treatAs === 'signature') {
         decoded.signature = decoded.signature || file.getData().toUtfStr();

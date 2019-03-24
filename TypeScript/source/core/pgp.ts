@@ -140,8 +140,8 @@ export class Pgp {
     cryptupVerification: { begin: '-----BEGIN CRYPTUP VERIFICATION-----', end: '-----END CRYPTUP VERIFICATION-----', replace: true },
     signedMsg: { begin: '-----BEGIN PGP SIGNED MESSAGE-----', middle: '-----BEGIN PGP SIGNATURE-----', end: '-----END PGP SIGNATURE-----', replace: true },
     signature: { begin: '-----BEGIN PGP SIGNATURE-----', end: '-----END PGP SIGNATURE-----', replace: false },
-    message: { begin: '-----BEGIN PGP MESSAGE-----', end: '-----END PGP MESSAGE-----', replace: true },
-    passwordMsg: { begin: 'This message is encrypted: Open Message', end: /https:(\/|&#x2F;){2}(cryptup\.org|flowcrypt\.com)(\/|&#x2F;)[a-zA-Z0-9]{10}(\n|$)/, replace: true },
+    encryptedMsg: { begin: '-----BEGIN PGP MESSAGE-----', end: '-----END PGP MESSAGE-----', replace: true },
+    encryptedMsgLink: { begin: 'This message is encrypted: Open Message', end: /https:(\/|&#x2F;){2}(cryptup\.org|flowcrypt\.com)(\/|&#x2F;)[a-zA-Z0-9]{10}(\n|$)/, replace: true },
   };
   // (10k pc)*(2 core p/pc)*(4k guess p/core) httpshttps://www.abuse.ch/?p=3294://threatpost.com/how-much-does-botnet-cost-022813/77573/ https://www.abuse.ch/?p=3294
   private static PASSWORD_GUESSES_PER_SECOND = 10000 * 2 * 4000;
@@ -192,7 +192,7 @@ export class Pgp {
     },
     normalize: (armored: string, type: ReplaceableMsgBlockType | 'key') => {
       armored = Str.normalize(armored);
-      if (Value.is(type).in(['message', 'publicKey', 'privateKey', 'key'])) {
+      if (Value.is(type).in(['encryptedMsg', 'publicKey', 'privateKey', 'key'])) {
         armored = armored.replace(/\r?\n/g, '\n').trim();
         const nl2 = armored.match(/\n\n/g);
         const nl3 = armored.match(/\n\n\n/g);
@@ -265,7 +265,7 @@ export class Pgp {
           keys = (await openpgp.key.readArmored(armored)).keys;
         } else if (RegExp(Pgp.armor.headers('privateKey', 're').begin).test(armored)) {
           keys = (await openpgp.key.readArmored(armored)).keys;
-        } else if (RegExp(Pgp.armor.headers('message', 're').begin).test(armored)) {
+        } else if (RegExp(Pgp.armor.headers('encryptedMsg', 're').begin).test(armored)) {
           keys = [new openpgp.key.Key((await openpgp.message.readArmored(armored)).packets)];
         }
         for (const k of keys) {
@@ -427,7 +427,7 @@ export class Pgp {
           const blockHeaderDef = Pgp.ARMOR_HEADER_DICT[type];
           if (blockHeaderDef.replace) {
             const indexOfConfirmedBegin = potentialBeginHeader.indexOf(blockHeaderDef.begin);
-            if (indexOfConfirmedBegin === 0 || (type === 'passwordMsg' && indexOfConfirmedBegin >= 0 && indexOfConfirmedBegin < 15)) { // identified beginning of a specific block
+            if (indexOfConfirmedBegin === 0 || (type === 'encryptedMsgLink' && indexOfConfirmedBegin >= 0 && indexOfConfirmedBegin < 15)) { // identified beginning of a specific block
               if (begin > startAt) {
                 const potentialTextBeforeBlockBegun = origText.substring(startAt, begin).trim();
                 if (potentialTextBeforeBlockBegun) {
@@ -448,7 +448,7 @@ export class Pgp {
                 }
               }
               if (endIndex !== -1) { // identified end of the same block
-                if (type !== 'passwordMsg') {
+                if (type !== 'encryptedMsgLink') {
                   result.found.push(Pgp.internal.msgBlockObj(type, origText.substring(begin, endIndex + foundBlockEndHeaderLength).trim()));
                 } else {
                   const pwdMsgFullText = origText.substring(begin, endIndex + foundBlockEndHeaderLength).trim();
@@ -487,7 +487,7 @@ export class Pgp {
         throw new Error('Encrypted message could not be parsed because no data was provided');
       }
       const utfChunk = new Buf(encrypted.slice(0, 100)).toUtfStr('ignore'); // ignore errors - this may not be utf string, just testing
-      const isArmoredEncrypted = Value.is(Pgp.armor.headers('message').begin).in(utfChunk);
+      const isArmoredEncrypted = Value.is(Pgp.armor.headers('encryptedMsg').begin).in(utfChunk);
       const isArmoredSignedOnly = Value.is(Pgp.armor.headers('signedMsg').begin).in(utfChunk);
       const isArmored = isArmoredEncrypted || isArmoredSignedOnly;
       if (isArmoredEncrypted) {
@@ -622,11 +622,11 @@ export class PgpMsg {
         // But it's a good indication that it may
         const t = openpgp.enums.packet;
         const msgTpes = [t.symEncryptedIntegrityProtected, t.modificationDetectionCode, t.symEncryptedAEADProtected, t.symmetricallyEncrypted, t.compressed];
-        return { armored: false, type: Value.is(tagNumber).in(msgTpes) ? 'message' : 'publicKey' };
+        return { armored: false, type: Value.is(tagNumber).in(msgTpes) ? 'encryptedMsg' : 'publicKey' };
       }
     }
     const { blocks } = Pgp.armor.detectBlocks(new Buf(data.slice(0, 50)).toUtfStr().trim()); // only interested in first 50 bytes
-    if (blocks.length === 1 && blocks[0].complete === false && Value.is(blocks[0].type).in(['message', 'privateKey', 'publicKey', 'signedMsg'])) {
+    if (blocks.length === 1 && blocks[0].complete === false && Value.is(blocks[0].type).in(['encryptedMsg', 'privateKey', 'publicKey', 'signedMsg'])) {
       return { armored: true, type: blocks[0].type };
     }
     return undefined;

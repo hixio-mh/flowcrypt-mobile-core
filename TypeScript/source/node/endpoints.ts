@@ -43,11 +43,11 @@ export class Endpoints {
       const { blocks } = await Mime.process(Buffer.concat(data));
       rawBlocks.push(...blocks);
     } else {
-      rawBlocks.push(Pgp.internal.msgBlockObj('message', new Buf(Buffer.concat(data))));
+      rawBlocks.push(Pgp.internal.msgBlockObj('encryptedMsg', new Buf(Buffer.concat(data))));
     }
     const blocks: MsgBlock[] = []; // contains decrypted or otherwise formatted data
     for (const rawBlock of rawBlocks) {
-      if (rawBlock.type === 'message') {
+      if (rawBlock.type === 'encryptedMsg') {
         const decrypted = await PgpMsg.decrypt({ kisWithPp, msgPwd, encryptedData: rawBlock.content instanceof Uint8Array ? rawBlock.content : Buffer.from(rawBlock.content) });
         if (!decrypted.success) {
           decrypted.message = undefined;
