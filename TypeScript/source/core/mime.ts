@@ -44,7 +44,7 @@ export type MsgBlock = {
   content: string | Buf;
   complete: boolean;
   signature?: string;
-  keyDetails?: KeyDetails; // only in publicKey, privateKey (not sure if always)
+  keyDetails?: KeyDetails; // only in publicKey when returned to Android (could eventually be made mandatory, done straight in detectBlocks?)
   attMeta?: AttMeta; // only in plainAtt, encryptedAtt, decryptedAtt, encryptedAttLink (not sure if always)
   decryptErr?: DecryptError; // only in decryptErr block, always
 };

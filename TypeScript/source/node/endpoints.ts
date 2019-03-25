@@ -67,6 +67,9 @@ export class Endpoints {
           block.content = block.content.toRawBytesStr();
         }
       }
+      if (block.type === 'publicKey' && !block.keyDetails) { // this could eventually be moved into detectBlocks, which would make it async
+        block.keyDetails = await Pgp.key.serialize(await Pgp.key.read(block.content));
+      }
     }
     // data represent one JSON-stringified block per line. This is so that it can be read as a stream later
     return fmtRes({}, Buffer.from(blocks.map(b => JSON.stringify(b)).join('\n')));

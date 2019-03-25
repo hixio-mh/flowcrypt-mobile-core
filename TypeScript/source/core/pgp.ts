@@ -359,7 +359,7 @@ export class Pgp {
       const { normalized, keys } = await Pgp.key.normalize(armored);
       return { original: armored, normalized, keys: await Promise.all(keys.map(Pgp.key.serialize)) };
     },
-    serialize: async (k: OpenPGP.key.Key): Promise<KeyDetails> => {
+    serialize: async (k: OpenPGP.key.Key): Promise<KeyDetails> => { // todo - `Pgp.key.serialize` should be renamed to `Pgp.key.details`
       const keyPackets: OpenPGP.packet.AnyKeyPacket[] = [];
       for (const keyPacket of k.getKeys()) {
         keyPackets.push(keyPacket);
