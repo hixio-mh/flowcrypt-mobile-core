@@ -54,6 +54,21 @@ ${text.toString()}
 ------sinikael-?=_1-15526615192100.5959024994440685--
 `.replace(/^\n/, ''));
 
+const plainHtmlMimeEmail = (t: AvaContext) => Buffer.from(`
+Delivered-To: flowcrypt.compatibility@gmail.com
+Message-ID: <1760895073.1552049750035.JavaMail.dets@ny-dets-001>
+Date: Fri, 8 Mar 2019 07:55:50 -0500 (EST)
+From: cryptup.tester@gmail.com
+To: flowcrypt.compatibility@gmail.com
+Subject: ${subject(t)}
+Mime-Version: 1.0
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html><body><p>paragraph 1</p><p>paragraph 2 with <b>bold</b></p><p>par=
+agraph 3 with <em style=3D"color:red">red i</em></p></body></html>
+`.replace(/^\n/, ''));
+
 const mimeEmail = (t: AvaContext, text: Buffer | string) => Buffer.from(`
 Delivered-To: flowcrypt.compatibility@gmail.com
 Return-Path: <cryptup.tester@gmail.com>
@@ -140,5 +155,10 @@ ava.test('mime-email-encrypted-inline-pgpmime.txt', async t => {
 ava.test('mime-email-encrypted-inline-text-2.txt', async t => {
   const { data } = await PgpMsg.encrypt({ data: text, pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
   await write(t, textEncoderMimeEmail(t, data));
+  t.pass();
+});
+
+ava.test('mime-email-plain-html.txt', async t => {
+  await write(t, plainHtmlMimeEmail(t));
   t.pass();
 });

@@ -57,6 +57,8 @@ export class Mime {
     const blocks: MsgBlock[] = [];
     if (decoded.text) {  // may be undefined or empty
       blocks.push(...Pgp.armor.detectBlocks(decoded.text).blocks);
+    } else if (decoded.html) {
+      blocks.push(Pgp.internal.msgBlockObj('plainHtml', decoded.html));
     }
     for (const file of decoded.atts) {
       const treatAs = file.treatAs();

@@ -219,6 +219,14 @@ ava.test('parseDecryptMsg - decryptErr', async t => {
   t.pass();
 });
 
+ava.test('parseDecryptMsg compat mime-email-plain-html', async t => {
+  const { keys, passphrases } = getKeypairs('rsa1');
+  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, passphrases, isEmail: true }, await getCompatAsset('mime-email-plain-html'));
+  expectData(blocks, 'msgBlocks', [{ "type": "plainHtml", "content": "<html><body><p>paragraph 1</p><p>paragraph 2 with <b>bold</b></p><p>paragraph 3 with <em style=\"color:red\">red i</em></p></body></html>\n", "complete": true }]);
+  expect(decryptJson).to.deep.equal({});
+  t.pass();
+});
+
 ava.test.after(async t => {
   nodeProcess.kill();
   t.pass();
