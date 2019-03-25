@@ -38,7 +38,7 @@ export class Endpoints {
   public parseDecryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
     const { keys, passphrases, msgPwd, isEmail } = Validate.parseDecryptMsg(uncheckedReq);
     const kisWithPp = { keys, passphrases };
-    const rawBlocks: MsgBlock[] = [];
+    const rawBlocks: MsgBlock[] = []; // contains parsed, unprocessed / possibly encrypted data
     if (isEmail) {
       const { blocks } = await Mime.process(Buffer.concat(data));
       rawBlocks.push(...blocks);
@@ -48,14 +48,24 @@ export class Endpoints {
     const blocks: MsgBlock[] = []; // contains decrypted or otherwise formatted data
     for (const rawBlock of rawBlocks) {
       if (rawBlock.type === 'encryptedMsg') {
-        const decrypted = await PgpMsg.decrypt({ kisWithPp, msgPwd, encryptedData: rawBlock.content instanceof Uint8Array ? rawBlock.content : Buffer.from(rawBlock.content) });
-        if (!decrypted.success) {
-          decrypted.message = undefined;
-          return fmtRes(decrypted); // not ideal. If decryption of one block fails, no other blocks will make it to the client
+        const decryptRes = await PgpMsg.decrypt({ kisWithPp, msgPwd, encryptedData: rawBlock.content instanceof Uint8Array ? rawBlock.content : Buffer.from(rawBlock.content) });
+        if (decryptRes.success) {
+          blocks.push(... await PgpMsg.fmtDecrypted(decryptRes.content));
+        } else {
+          decryptRes.message = undefined;
+          blocks.push(Pgp.internal.msgBlockDecryptErrObj(rawBlock.content, decryptRes));
         }
-        blocks.push(... await PgpMsg.fmtDecrypted(decrypted.content));
       } else {
         blocks.push(rawBlock);
+      }
+    }
+    for (const block of blocks) {
+      if (block.content instanceof Buf) { // cannot JSON-serialize Buf
+        if (block.type === 'plainText' || block.type === 'decryptedText' || block.type === 'plainHtml' || block.type === 'decryptedHtml' || block.type === 'signedMsg') {
+          block.content = block.content.toUtfStr();
+        } else {
+          block.content = block.content.toRawBytesStr();
+        }
       }
     }
     // data represent one JSON-stringified block per line. This is so that it can be read as a stream later

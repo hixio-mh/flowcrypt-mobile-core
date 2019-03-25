@@ -192,6 +192,32 @@ ava.test('parseDecryptMsg compat mime-email-encrypted-inline-text-2 Mime-TextEnc
   t.pass();
 });
 
+ava.test('parseDecryptMsg - decryptErr', async t => {
+  const { keys, passphrases } = getKeypairs('rsa2'); // intentional key mismatch
+  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, passphrases }, await getCompatAsset('direct-encrypted-text'), false);
+  expectData(blocks, 'msgBlocks', [{
+    "type": "decryptErr",
+    "content": "-----BEGIN PGP MESSAGE-----\nVersion: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption\nComment: Seamlessly send and receive encrypted email\n\nwcBMAwurnAGLJl0iAQf+I2exIah3XL/zfPozDmVFSLJk4tBFIlIyFfGYcw5W\n+ebOL3Gu/+/oCIIlXrdP0FxIVEYnSEaevmB9p0FfXGpcw4Wr8PBnSubCkn2s\n+V//k6W1Uu915GmiwCgDkLTCP7vEHvwUglNvgAatDtNdJ3xrf2gjOOFiYQnn\n4JSI1msMfL5tmdFCyXm1g4mUe9MdVXfphrXIyvGu1Sufhv+T5FgteDW0c6lM\ng7G6jgX4q5xiT8r2LTxKlxHVlQSqvGlnx/yRXwqBs3PAMiS4u5JlKJX4aKVy\nFyN+gq++tWZC1XCSFzXfAf0rXcoDZ7nEkxdkKQqXgA6LCsFD79FMCtuenvzU\nU9JEAdvmmpGlextZcfCUmGgclQXgowDnjaXy5Uc6Bzmi8AlY/4MFo0Q3bOU4\nkNhLCiXTGNJlFDd0HLz8Cy7YXzLWZ94IuGk=\n=Bvit\n-----END PGP MESSAGE-----\n",
+    "decryptErr": {
+      "success": false,
+      "error": {
+        "type": "key_mismatch",
+        "message": "Session key decryption failed."
+      },
+      "longids": {
+        "message": ["0BAB9C018B265D22"],
+        "matching": ["7C307E6F2092962D"],
+        "chosen": ["7C307E6F2092962D"],
+        "needPassphrase": []
+      },
+      "isEncrypted": true
+    },
+    "complete": true
+  }]);
+  expect(decryptJson).to.deep.equal({});
+  t.pass();
+});
+
 ava.test.after(async t => {
   nodeProcess.kill();
   t.pass();

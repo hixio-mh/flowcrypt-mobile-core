@@ -3,7 +3,7 @@
 'use strict';
 
 import { Str, Value, Dict } from './common.js';
-import { Pgp, KeyDetails } from './pgp.js';
+import { Pgp, KeyDetails, DecryptError } from './pgp.js';
 import { Att, AttMeta } from './att.js';
 import { Catch } from '../platform/catch.js';
 import { requireMimeParser, requireMimeBuilder, requireIso88592 } from '../platform/require.js';
@@ -44,8 +44,9 @@ export type MsgBlock = {
   content: string | Buf;
   complete: boolean;
   signature?: string;
-  keyDetails?: KeyDetails;
-  attMeta?: AttMeta;
+  keyDetails?: KeyDetails; // only in publicKey, privateKey (not sure if always)
+  attMeta?: AttMeta; // only in plainAtt, encryptedAtt, decryptedAtt, encryptedAttLink (not sure if always)
+  decryptErr?: DecryptError; // only in decryptErr block, always
 };
 type MimeParseSignedRes = { full: string, signed?: string, signature?: string };
 

@@ -95,7 +95,7 @@ type SortedKeysForDecrypt = {
 type DecryptSuccess = { success: true; signature?: MsgVerifyResult; isEncrypted?: boolean, filename?: string, content: Buf };
 type DecryptError$error = { type: DecryptErrTypes; message: string; };
 type DecryptError$longids = { message: string[]; matching: string[]; chosen: string[]; needPassphrase: string[]; };
-type DecryptError = {
+export type DecryptError = {
   success: false; error: DecryptError$error; longids: DecryptError$longids;
   isEncrypted?: boolean; message?: OpenPGP.message.Message | OpenPGP.cleartext.CleartextMessage;
 };
@@ -415,6 +415,7 @@ export class Pgp {
 
   public static internal = {
     msgBlockObj: (type: MsgBlockType, content: string | Buf, missingEnd = false): MsgBlock => ({ type, content, complete: !missingEnd }),
+    msgBlockDecryptErrObj: (encryptedContent: string | Buf, decryptErr: DecryptError): MsgBlock => ({ type: 'decryptErr', content: encryptedContent, decryptErr, complete: true }),
     msgBlockAttObj: (type: MsgBlockType, content: string, attMeta: AttMeta): MsgBlock => ({ type, content, complete: true, attMeta }),
     msgBlockKeyObj: (type: MsgBlockType, content: string, keyDetails: KeyDetails): MsgBlock => ({ type, content, complete: true, keyDetails }),
     detectBlockNext: (origText: string, startAt: number) => {
