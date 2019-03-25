@@ -58,9 +58,8 @@ export class Endpoints {
         blocks.push(rawBlock);
       }
     }
-    const blockMetas = blocks.map(b => ({ type: b.type, length: b.content.length }));
-    // first line is a blockMetas JSON. Data below represent one JSON-stringified block per line. This is so that it can be read as a stream later
-    return fmtRes({ success: true, blockMetas }, Buffer.from(blocks.map(b => JSON.stringify(b)).join('\n')));
+    // data represent one JSON-stringified block per line. This is so that it can be read as a stream later
+    return fmtRes({}, Buffer.from(blocks.map(b => JSON.stringify(b)).join('\n')));
   }
 
   public decryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
