@@ -50,7 +50,7 @@ export class Endpoints {
       if (rawBlock.type === 'encryptedMsg') {
         const decryptRes = await PgpMsg.decrypt({ kisWithPp, msgPwd, encryptedData: rawBlock.content instanceof Uint8Array ? rawBlock.content : Buffer.from(rawBlock.content) });
         if (decryptRes.success) {
-          blocks.push(... await PgpMsg.fmtDecrypted(decryptRes.content));
+          blocks.push(... await PgpMsg.fmtDecrypted(decryptRes.content, 'decryptedText'));
         } else {
           decryptRes.message = undefined;
           blocks.push(Pgp.internal.msgBlockDecryptErrObj(rawBlock.content, decryptRes));
