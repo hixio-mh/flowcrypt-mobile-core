@@ -35,7 +35,7 @@ ava.test('doesnotexist', async t => {
   t.pass();
 });
 
-ava.test('encryptMsg - parseDecryptMsg', async t => {
+ava.test('encryptMsg -> parseDecryptMsg', async t => {
   const content = 'hello\nwrld';
   const { pubKeys, keys, passphrases } = getKeypairs('rsa1');
   const { data: encryptedMsg, json: encryptJson } = await request('encryptMsg', { pubKeys }, content);
@@ -47,7 +47,67 @@ ava.test('encryptMsg - parseDecryptMsg', async t => {
   t.pass();
 });
 
-ava.test('encryptFile - decryptFile', async t => {
+ava.test('composeEmail format:plain -> parseDecryptMsg', async t => {
+  const content = 'hello\nwrld';
+  const { keys, passphrases } = getKeypairs('rsa1');
+  const req = { format: 'plain', text: content, to: ['some@to.com'], cc: ['some@cc.com'], bcc: [], from: 'some@from.com', subject: 'a subj' };
+  const { data: plainMimeMsg, json: composeEmailJson } = await request('composeEmail', req, []);
+  expectEmptyJson(composeEmailJson);
+  const plainMimeStr = plainMimeMsg.toString();
+  expect(plainMimeStr).contains('To: some@to.com');
+  expect(plainMimeStr).contains('From: some@from.com');
+  expect(plainMimeStr).contains('Subject: a subj');
+  expect(plainMimeStr).contains('Cc: some@cc.com');
+  expect(plainMimeStr).contains('Date: ');
+  expect(plainMimeStr).contains('MIME-Version: 1.0');
+  const { data: blocks, json: parseJson } = await request('parseDecryptMsg', { keys, passphrases, isEmail: true }, plainMimeMsg);
+  expect(parseJson).to.deep.equal({});
+  expectData(blocks, 'msgBlocks', [{ type: "plainText", content, complete: true }]);
+  t.pass();
+});
+
+ava.test('composeEmail format:plain (reply)', async t => {
+  const replyToMimeMsg = `Content-Type: multipart/mixed;
+ boundary="----sinikael-?=_1-15535259519270.930031460416217"
+To: some@to.com
+From: some@from.com
+Subject: Re: original
+Date: Mon, 25 Mar 2019 14:59:11 +0000
+Message-Id: <originalmsg@from.com>
+MIME-Version: 1.0
+
+------sinikael-?=_1-15535259519270.930031460416217
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+orig message
+------sinikael-?=_1-15535259519270.930031460416217--`
+  const req = { format: 'plain', text: 'replying', to: ['some@to.com'], cc: [], bcc: [], from: 'some@from.com', subject: 'Re: original', replyToMimeMsg };
+  const { data: mimeMsgReply, json } = await request('composeEmail', req, []);
+  expectEmptyJson(json);
+  const mimeMsgReplyStr = mimeMsgReply.toString();
+  expect(mimeMsgReplyStr).contains('In-Reply-To: <originalmsg@from.com>');
+  expect(mimeMsgReplyStr).contains('References: <originalmsg@from.com>');
+  t.pass();
+});
+
+ava.test('composeEmail format:encrypt-inline -> parseDecryptMsg', async t => {
+  const content = 'hello\nwrld';
+  const { pubKeys, keys, passphrases } = getKeypairs('rsa1');
+  const req = { pubKeys, format: 'encrypt-inline', text: content, to: ['encrypted@to.com'], cc: [], bcc: [], from: 'encr@from.com', subject: 'encr subj' };
+  const { data: encryptedMimeMsg, json: encryptJson } = await request('composeEmail', req, []);
+  expectEmptyJson(encryptJson);
+  const encryptedMimeStr = encryptedMimeMsg.toString();
+  expect(encryptedMimeStr).contains('To: encrypted@to.com');
+  expect(encryptedMimeStr).contains('MIME-Version: 1.0');
+  expectData(encryptedMimeMsg, 'armoredMsg'); // armored msg block should be contained in the mime message
+  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, passphrases, isEmail: true }, encryptedMimeMsg);
+  expectEmptyJson(decryptJson);
+  expectData(blocks, 'msgBlocks', [{ type: "decryptedText", content, complete: true }]);
+  t.pass();
+});
+
+ava.test('encryptFile -> decryptFile', async t => {
   const { pubKeys, keys, passphrases } = getKeypairs('rsa1');
   const name = 'myfile.txt';
   const content = Buffer.from([10, 20, 40, 80, 160, 0, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250]);
@@ -255,7 +315,8 @@ ava.test('parseDecryptMsg compat mime-email-plain-with-pubkey', async t => {
   ]);
   expect(decryptJson).to.deep.equal({});
   t.pass();
-})
+});
+
 
 ava.test.after(async t => {
   nodeProcess.kill();

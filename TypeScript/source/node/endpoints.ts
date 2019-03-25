@@ -10,7 +10,7 @@ import { fmtRes, Buffers } from './fmt';
 import { gmailBackupSearchQuery } from '../core/const';
 import { requireOpenpgp } from '../platform/require';
 import { Str } from '../core/common';
-import { Mime, MsgBlock } from '../core/mime';
+import { Mime, MsgBlock, RichHeaders } from '../core/mime';
 import { Buf } from '../core/buf';
 
 const openpgp = requireOpenpgp();
@@ -27,6 +27,25 @@ export class Endpoints {
     const req = Validate.encryptMsg(uncheckedReq);
     const encrypted = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buffer.concat(data), armor: true }) as OpenPGP.EncryptArmorResult;
     return fmtRes({}, Buffer.from(encrypted.data));
+  }
+
+  public composeEmail = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
+    const req = Validate.composeEmail(uncheckedReq);
+    const mimeHeaders: RichHeaders = { to: req.to, from: req.from, subject: req.subject, cc: req.cc, bcc: req.bcc };
+    if (req.replyToMimeMsg) {
+      const previousMsg = await Mime.decode(Buf.fromUtfStr((req.replyToMimeMsg.substr(0, 10000).split('\n\n')[0] || '') + `\n\nno content`));
+      const replyHeaders = Mime.replyHeaders(previousMsg);
+      mimeHeaders['in-reply-to'] = replyHeaders['in-reply-to'];
+      mimeHeaders['references'] = replyHeaders['references'];
+    }
+    if (req.format === 'plain') {
+      return fmtRes({}, Buf.fromUtfStr(await Mime.encode(req.text, mimeHeaders)));
+    } else if (req.format === 'encrypt-inline') {
+      const encrypted = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buf.fromUtfStr(req.text), armor: true }) as OpenPGP.EncryptArmorResult;
+      return fmtRes({}, Buf.fromUtfStr(await Mime.encode(encrypted.data, mimeHeaders)));
+    } else {
+      throw new Error(`Unknown format: ${req.format}`);
+    }
   }
 
   public encryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {

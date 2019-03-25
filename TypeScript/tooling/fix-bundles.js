@@ -46,11 +46,11 @@ const emailjsRaw = [
   `${libsDir}/emailjs/emailjs-mime-parser.js`,
   `${libsDir}/emailjs/emailjs-mime-builder.js`,
 ].map(path => fs.readFileSync(path).toString()).join('\n');
-const emailjsFixed = emailjsRaw
+const emailjsFixed = emailjsRaw // these replacements fix imports and exports of modules for use in nodejs-mobile
   .replace(/require\(['"]buffer['"]\)\.Buffer/g, 'Buffer')
   .replace(/require\(['"](punycode|emailjs-[a-z\-]+)['"]\)/g, found => found.replace('require(', 'global[').replace(')', ']'))
   .replace(/typeof define === 'function' && define\.amd/g, 'false')
-  .replace(/typeof exports === 'object'/g, 'false');
+  .replace(/typeof exports ===? 'object'/g, 'false');
 fs.writeFileSync(
   `${bundleDir}/emailjs-bundle.js`,
   `\n(function(){\n// begin emailjs\n${emailjsFixed}\n// end emailjs\n})();\n`

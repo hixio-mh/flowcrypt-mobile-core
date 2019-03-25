@@ -101,8 +101,8 @@ export class Mime {
   }
 
   public static replyHeaders = (parsedMimeMsg: MimeContent) => {
-    const msgId = parsedMimeMsg.headers['message-id'] || '';
-    const refs = parsedMimeMsg.headers['in-reply-to'] || '';
+    const msgId = String(parsedMimeMsg.headers['message-id'] || '');
+    const refs = String(parsedMimeMsg.headers['in-reply-to'] || '');
     return { 'in-reply-to': msgId, 'references': refs + ' ' + msgId };
   }
 

@@ -5,8 +5,12 @@
 type Obj = { [k: string]: any };
 
 export namespace NodeRequest {
-
   type PrvKeyInfo = { private: string; longid: string };
+  interface composeEmailBase { text: string, to: string[], cc: string[], bcc: string[], from: string, subject: string, replyToMimeMsg: string };
+  export interface composeEmailPlain extends composeEmailBase { format: 'plain' };
+  export interface composeEmailEncrypted extends composeEmailBase { format: 'encrypt-inline' | 'encrypt-pgpmime', pubKeys: string[] };
+
+  export type composeEmail = composeEmailPlain | composeEmailEncrypted;
   export type encryptMsg = { pubKeys: string[] };
   export type encryptFile = { pubKeys: string[], name: string };
   export type parseDecryptMsg = { keys: PrvKeyInfo[], passphrases: string[], msgPwd?: string, isEmail?: boolean };
@@ -26,6 +30,19 @@ export class Validate {
       return v as NodeRequest.encryptMsg;
     }
     throw new Error('Wrong request structure for NodeRequest.encryptMsg');
+  }
+
+  public static composeEmail = (v: any): NodeRequest.composeEmail => {
+    if (!(isObj(v) && hasProp(v, 'text', 'string') && hasProp(v, 'from', 'string') && hasProp(v, 'subject', 'string') && hasProp(v, 'to', 'string[]') && hasProp(v, 'cc', 'string[]') && hasProp(v, 'bcc', 'string[]'))) {
+      throw new Error('Wrong request structure for NodeRequest.composeEmail, need: text,from,subject,to,cc,bcc (can use empty arr for cc/bcc)');
+    }
+    if (hasProp(v, 'pubKeys', 'string[]') && v.pubKeys.length && (v.format === 'encrypt-inline' || v.format === 'encrypt-pgpmime')) {
+      return v as NodeRequest.composeEmailEncrypted;
+    }
+    if (!v.pubKeys && v.format === 'plain') {
+      return v as NodeRequest.composeEmailPlain;
+    }
+    throw new Error('Wrong choice of pubKeys and format. Either pubKeys:[..]+format:encrypt-inline OR format:plain allowed');
   }
 
   public static parseDecryptMsg = (v: any): NodeRequest.parseDecryptMsg => {
