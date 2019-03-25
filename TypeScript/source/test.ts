@@ -35,12 +35,12 @@ ava.test('doesnotexist', async t => {
   t.pass();
 });
 
-ava.test('encryptMsg - decryptMsg', async t => {
+ava.test('encryptMsg - parseDecryptMsg', async t => {
   const { pubKeys, keys, passphrases } = getKeypairs('rsa1');
   const { data: encryptedMsg, json: encryptJson } = await request('encryptMsg', { pubKeys }, 'hello\nwrld');
   expectEmptyJson(encryptJson);
   expectData(encryptedMsg, 'armoredMsg');
-  const { data: blocks, json: decryptJson } = await request('decryptMsg', { keys, passphrases }, encryptedMsg);
+  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, passphrases }, encryptedMsg);
   expect(decryptJson).to.deep.equal({ success: true, blockMetas: [{ type: 'decryptedHtml', length: 13 }] });
   expectData(blocks, 'msgBlocks', [{ type: "decryptedHtml", content: 'hello<br>wrld', complete: true }]);
   t.pass();
@@ -144,49 +144,49 @@ ava.test('encryptKey', async t => {
   t.pass();
 });
 
-ava.test('decryptMsg compat direct-encrypted-text', async t => {
+ava.test('parseDecryptMsg compat direct-encrypted-text', async t => {
   const { keys, passphrases } = getKeypairs('rsa1');
-  const { data: blocks, json: decryptJson } = await request('decryptMsg', { keys, passphrases }, await getCompatAsset('direct-encrypted-text'));
+  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, passphrases }, await getCompatAsset('direct-encrypted-text'));
   expectData(blocks, 'msgBlocks', [{ type: "decryptedHtml", content: compatHtml, complete: true }]);
   expect(decryptJson).to.deep.equal({ success: true, blockMetas: [{ type: 'decryptedHtml', length: 16 }] });
   t.pass();
 });
 
-ava.test('decryptMsg compat direct-encrypted-pgpmime', async t => {
+ava.test('parseDecryptMsg compat direct-encrypted-pgpmime', async t => {
   const { keys, passphrases } = getKeypairs('rsa1');
-  const { data: blocks, json: decryptJson } = await request('decryptMsg', { keys, passphrases }, await getCompatAsset('direct-encrypted-pgpmime'));
+  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, passphrases }, await getCompatAsset('direct-encrypted-pgpmime'));
   expectData(blocks, 'msgBlocks', [{ type: "decryptedHtml", content: compatHtml, complete: true }]);
   expect(decryptJson).to.deep.equal({ success: true, blockMetas: [{ type: 'decryptedHtml', length: 16 }] });
   t.pass();
 });
 
-ava.test('decryptMsg compat mime-email-plain', async t => {
+ava.test('parseDecryptMsg compat mime-email-plain', async t => {
   const { keys, passphrases } = getKeypairs('rsa1');
-  const { data: blocks, json: decryptJson } = await request('decryptMsg', { keys, passphrases, isEmail: true }, await getCompatAsset('mime-email-plain'));
+  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, passphrases, isEmail: true }, await getCompatAsset('mime-email-plain'));
   expectData(blocks, 'msgBlocks', [{ type: "plainText", content: compatText, complete: true }]);
   expect(decryptJson).to.deep.equal({ success: true, blockMetas: [{ type: 'plainText', length: compatText.length }] });
   t.pass();
 });
 
-ava.test('decryptMsg compat mime-email-encrypted-inline-text', async t => {
+ava.test('parseDecryptMsg compat mime-email-encrypted-inline-text', async t => {
   const { keys, passphrases } = getKeypairs('rsa1');
-  const { data: blocks, json: decryptJson } = await request('decryptMsg', { keys, passphrases, isEmail: true }, await getCompatAsset('mime-email-encrypted-inline-text'));
+  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, passphrases, isEmail: true }, await getCompatAsset('mime-email-encrypted-inline-text'));
   expectData(blocks, 'msgBlocks', [{ type: "decryptedHtml", content: compatHtml, complete: true }]);
   expect(decryptJson).to.deep.equal({ success: true, blockMetas: [{ type: 'decryptedHtml', length: compatHtml.length }] });
   t.pass();
 });
 
-ava.test('decryptMsg compat mime-email-encrypted-inline-pgpmime', async t => {
+ava.test('parseDecryptMsg compat mime-email-encrypted-inline-pgpmime', async t => {
   const { keys, passphrases } = getKeypairs('rsa1');
-  const { data: blocks, json: decryptJson } = await request('decryptMsg', { keys, passphrases, isEmail: true }, await getCompatAsset('mime-email-encrypted-inline-pgpmime'));
+  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, passphrases, isEmail: true }, await getCompatAsset('mime-email-encrypted-inline-pgpmime'));
   expectData(blocks, 'msgBlocks', [{ type: "decryptedHtml", content: compatHtml, complete: true }]);
   expect(decryptJson).to.deep.equal({ success: true, blockMetas: [{ type: 'decryptedHtml', length: compatHtml.length }] });
   t.pass();
 });
 
-ava.test('decryptMsg compat mime-email-encrypted-inline-text-2 Mime-TextEncoder', async t => {
+ava.test('parseDecryptMsg compat mime-email-encrypted-inline-text-2 Mime-TextEncoder', async t => {
   const { keys, passphrases } = getKeypairs('rsa1');
-  const { data: blocks, json: decryptJson } = await request('decryptMsg', { keys, passphrases, isEmail: true }, await getCompatAsset('mime-email-encrypted-inline-text-2'));
+  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, passphrases, isEmail: true }, await getCompatAsset('mime-email-encrypted-inline-text-2'));
   expectData(blocks, 'msgBlocks', [{ type: "decryptedHtml", content: compatHtml, complete: true }]);
   expect(decryptJson).to.deep.equal({ success: true, blockMetas: [{ type: 'decryptedHtml', length: compatHtml.length }] });
   t.pass();

@@ -9,7 +9,7 @@ export namespace NodeRequest {
   type PrvKeyInfo = { private: string; longid: string };
   export type encryptMsg = { pubKeys: string[] };
   export type encryptFile = { pubKeys: string[], name: string };
-  export type decryptMsg = { keys: PrvKeyInfo[], passphrases: string[], msgPwd?: string, isEmail?: boolean };
+  export type parseDecryptMsg = { keys: PrvKeyInfo[], passphrases: string[], msgPwd?: string, isEmail?: boolean };
   export type decryptFile = { keys: PrvKeyInfo[], passphrases: string[], msgPwd?: string };
   export type parseDateStr = { dateStr: string };
   export type gmailBackupSearch = { acctEmail: string };
@@ -28,11 +28,11 @@ export class Validate {
     throw new Error('Wrong request structure for NodeRequest.encryptMsg');
   }
 
-  public static decryptMsg = (v: any): NodeRequest.decryptMsg => {
+  public static parseDecryptMsg = (v: any): NodeRequest.parseDecryptMsg => {
     if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'isEmail', 'boolean?')) {
-      return v as NodeRequest.decryptMsg;
+      return v as NodeRequest.parseDecryptMsg;
     }
-    throw new Error('Wrong request structure for NodeRequest.decryptMsg');
+    throw new Error('Wrong request structure for NodeRequest.parseDecryptMsg');
   }
 
   public static encryptFile = (v: any): NodeRequest.encryptFile => {

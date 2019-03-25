@@ -35,8 +35,8 @@ export class Endpoints {
     return fmtRes({}, encrypted.message.packets.write());
   }
 
-  public decryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
-    const { keys, passphrases, msgPwd, isEmail } = Validate.decryptMsg(uncheckedReq);
+  public parseDecryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
+    const { keys, passphrases, msgPwd, isEmail } = Validate.parseDecryptMsg(uncheckedReq);
     const kisWithPp = { keys, passphrases };
     const rawBlocks: MsgBlock[] = [];
     if (isEmail) {
