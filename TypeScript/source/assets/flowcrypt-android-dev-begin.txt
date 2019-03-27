@@ -74,3 +74,5 @@ const NODE_DEBUG = 'false';
 const APP_VERSION = '0.0.1-dev';
 
 const APP_ENV = 'dev';
+
+const APP_PROFILE = 'false';

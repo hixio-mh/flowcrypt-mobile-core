@@ -17,9 +17,11 @@ import { setGlobals } from './platform/util';
 
 setGlobals();
 
-declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, NODE_AUTH_HEADER: string, NODE_PORT: string, NODE_DEBUG: string, APP_ENV: 'dev' | 'prod';
+declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, NODE_AUTH_HEADER: string, NODE_PORT: string, NODE_DEBUG: string;
+declare const APP_ENV: 'dev' | 'prod', APP_PROFILE: string;
 
 const doPrintDebug = Boolean(NODE_DEBUG === 'true');
+const doProfile = Boolean(APP_PROFILE === 'true');
 
 const endpoints = new Endpoints();
 
@@ -31,7 +33,10 @@ const delegateReqToEndpoint = async (endpointName: string, uncheckedReq: any, da
   throw new HttpClientErr(`unknown endpoint: ${endpointName}`);
 }
 
-const handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<Buffers> => {
+const handleReq = async (req: IncomingMessage, res: ServerResponse, receivedAt: number): Promise<Buffers> => {
+  if (doProfile) {
+    console.debug(`PROFILE[${Date.now() - receivedAt}ms] new request ${req.url}`);
+  }
   if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT || !NODE_SSL_CA) {
     throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_CA, NODE_SSL_KEY or NODE_SSL_CRT');
   }
@@ -44,11 +49,18 @@ const handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<Buf
   }
   if (req.url === '/' && req.method === 'POST') {
     const { endpoint, request, data } = await parseReq(req, doPrintDebug);
-    if (doPrintDebug) {
-      console.log(`parsed endpoint:`, endpoint);
-      console.log(`parsed request:`, request);
+    if (doProfile) {
+      console.debug(`PROFILE[${Date.now() - receivedAt}ms] finished receiving and parsing request+data`);
     }
-    return await delegateReqToEndpoint(endpoint, request, data);
+    if (doPrintDebug) {
+      console.debug(`parsed endpoint:`, endpoint);
+      console.debug(`parsed request:`, request);
+    }
+    const res = await delegateReqToEndpoint(endpoint, request, data);
+    if (doProfile) {
+      console.debug(`PROFILE[${Date.now() - receivedAt}ms] finished processing request`);
+    }
+    return res;
   }
   throw new HttpClientErr(`unknown path ${req.url}`);
 }
@@ -71,7 +83,16 @@ const sendRes = (res: ServerResponse, buffers: Buffers) => {
 }
 
 const server = https.createServer(serverOptins, (request, res) => { // all responses are status code 200, error status is parsed from body
-  handleReq(request, res).then(buffers => sendRes(res, buffers)).catch(e => {
+  const receivedAt = Date.now();
+  handleReq(request, res, receivedAt).then(buffers => {
+    if (doProfile) {
+      console.debug(`PROFILE[${Date.now() - receivedAt}ms] begin sending response`);
+    }
+    sendRes(res, buffers)
+    if (doProfile) {
+      console.debug(`PROFILE[${Date.now() - receivedAt}ms] response sent, DONE`);
+    }
+  }).catch(e => {
     res.statusCode = 200;
     if (e instanceof HttpAuthErr) {
       res.setHeader('WWW-Authenticate', 'Basic realm="flowcrypt-android-node"');
