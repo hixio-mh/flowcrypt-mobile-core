@@ -56,11 +56,11 @@ const handleReq = async (req: IncomingMessage, res: ServerResponse, receivedAt: 
       console.debug(`parsed endpoint:`, endpoint);
       console.debug(`parsed request:`, request);
     }
-    const res = await delegateReqToEndpoint(endpoint, request, data);
+    const endpointResponse = await delegateReqToEndpoint(endpoint, request, data);
     if (doProfile) {
       console.debug(`PROFILE[${Date.now() - receivedAt}ms] finished processing request`);
     }
-    return res;
+    return endpointResponse;
   }
   throw new HttpClientErr(`unknown path ${req.url}`);
 }

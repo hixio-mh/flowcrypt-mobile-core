@@ -10,6 +10,7 @@ export namespace NodeRequest {
   export interface composeEmailPlain extends composeEmailBase { format: 'plain' };
   export interface composeEmailEncrypted extends composeEmailBase { format: 'encrypt-inline' | 'encrypt-pgpmime', pubKeys: string[] };
 
+  export type generateKey = { passphrase: string, variant: 'rsa2048', userIds: { name: string, email: string }[] };
   export type composeEmail = composeEmailPlain | composeEmailEncrypted;
   export type encryptMsg = { pubKeys: string[] };
   export type encryptFile = { pubKeys: string[], name: string };
@@ -20,10 +21,16 @@ export namespace NodeRequest {
   export type isEmailValid = { email: string };
   export type decryptKey = { armored: string, passphrases: string[] };
   export type encryptKey = { armored: string, passphrase: string };
-
 }
 
 export class Validate {
+
+  public static generateKey = (v: any): NodeRequest.generateKey => {
+    if (isObj(v) && hasProp(v, 'userIds', 'Userid[]') && v.userIds.length && v.variant === 'rsa2048' && hasProp(v, 'passphrase', 'string')) {
+      return v as NodeRequest.generateKey;
+    }
+    throw new Error('Wrong request structure for NodeRequest.generateKey');
+  }
 
   public static encryptMsg = (v: any): NodeRequest.encryptMsg => {
     if (isObj(v) && hasProp(v, 'pubKeys', 'string[]')) {
@@ -107,7 +114,7 @@ const isObj = (v: any): v is Obj => {
   return v && typeof v === 'object';
 }
 
-const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 'number' | 'string?' | 'boolean?' | 'PrvKeyInfo[]'): boolean => {
+const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 'number' | 'string?' | 'boolean?' | 'PrvKeyInfo[]' | 'Userid[]'): boolean => {
   if (!isObj(v)) {
     return false;
   }
@@ -126,6 +133,9 @@ const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 
   }
   if (type === 'PrvKeyInfo[]') {
     return Array.isArray(value) && value.filter((ki: any) => hasProp(ki, 'private', 'string') && hasProp(ki, 'longid', 'string')).length === value.length;
+  }
+  if (type === 'Userid[]') {
+    return Array.isArray(value) && value.filter((ui: any) => hasProp(ui, 'name', 'string') && hasProp(ui, 'email', 'string')).length === value.length;
   }
   if (type === 'object') {
     return isObj(value);

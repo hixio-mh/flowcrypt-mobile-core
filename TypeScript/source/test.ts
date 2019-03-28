@@ -35,6 +35,16 @@ ava.test('doesnotexist', async t => {
   t.pass();
 });
 
+ava.test('generateKey', async t => {
+  const { json, data } = await request('generateKey', { variant: 'rsa2048', passphrase: 'riruekfhydekdmdbsyd', userIds: [{ email: 'a@b.com', name: 'Him' }] }, []);
+  expect(json.private).to.contain('-----BEGIN PGP PRIVATE KEY BLOCK-----');
+  expect(json.public).to.contain('-----BEGIN PGP PUBLIC KEY BLOCK-----');
+  expect(json.isDecrypted).to.be.false;
+  expect(json.algo.bits).to.equal(2048);
+  expectNoData(data);
+  t.pass();
+});
+
 ava.test('encryptMsg -> parseDecryptMsg', async t => {
   const content = 'hello\nwrld';
   const { pubKeys, keys, passphrases } = getKeypairs('rsa1');

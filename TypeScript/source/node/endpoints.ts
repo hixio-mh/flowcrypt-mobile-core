@@ -29,6 +29,20 @@ export class Endpoints {
     return fmtRes({}, Buffer.from(encrypted.data));
   }
 
+  public generateKey = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
+    const { passphrase, userIds, variant } = Validate.generateKey(uncheckedReq);
+    if (passphrase.length < 12) {
+      throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
+    }
+    let k: { private: string };
+    if (variant === 'rsa2048') {
+      k = await Pgp.key.create(userIds, 2048, passphrase);
+    } else {
+      throw new Error(`Unknown generateKey variant: ${variant}`);
+    }
+    return fmtRes(await Pgp.key.serialize(await Pgp.key.read(k.private)));
+  }
+
   public composeEmail = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
     const req = Validate.composeEmail(uncheckedReq);
     const mimeHeaders: RichHeaders = { to: req.to, from: req.from, subject: req.subject, cc: req.cc, bcc: req.bcc };
@@ -155,7 +169,7 @@ export class Endpoints {
   public encryptKey = async (uncheckedReq: any, data: Buffers) => {
     const { armored, passphrase } = Validate.encryptKey(uncheckedReq);
     const key = await readArmoredKeyOrThrow(armored);
-    if (!passphrase || passphrase.length < 10) { // last resort check, this should never happen
+    if (!passphrase || passphrase.length < 12) { // last resort check, this should never happen
       throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
     }
     await key.encrypt(passphrase);

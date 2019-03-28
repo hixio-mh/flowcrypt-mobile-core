@@ -239,7 +239,7 @@ export class Pgp {
   };
 
   public static key = {
-    create: async (userIds: { name: string, email: string }[], numBits: 4096, passphrase: string): Promise<{ private: string, public: string }> => {
+    create: async (userIds: { name: string, email: string }[], numBits: 4096 | 2048, passphrase: string): Promise<{ private: string, public: string }> => {
       const k = await openpgp.generateKey({ numBits, userIds, passphrase });
       return { public: k.publicKeyArmored, private: k.privateKeyArmored };
     },
