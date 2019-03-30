@@ -17,6 +17,7 @@ export namespace NodeRequest {
   export type parseDecryptMsg = { keys: PrvKeyInfo[], passphrases: string[], msgPwd?: string, isEmail?: boolean };
   export type decryptFile = { keys: PrvKeyInfo[], passphrases: string[], msgPwd?: string };
   export type parseDateStr = { dateStr: string };
+  export type zxcvbnStrengthBar = { guesses: number, purpose: 'passphrase' };
   export type gmailBackupSearch = { acctEmail: string };
   export type isEmailValid = { email: string };
   export type decryptKey = { armored: string, passphrases: string[] };
@@ -78,6 +79,13 @@ export class Validate {
       return v as NodeRequest.parseDateStr;
     }
     throw new Error('Wrong request structure for NodeRequest.dateStrParse');
+  }
+
+  public static zxcvbnStrengthBar = (v: any): NodeRequest.zxcvbnStrengthBar => {
+    if (isObj(v) && hasProp(v, 'guesses', 'number') && hasProp(v, 'purpose', 'string') && v.purpose === 'passphrase') {
+      return v as NodeRequest.zxcvbnStrengthBar;
+    }
+    throw new Error('Wrong request structure for NodeRequest.zxcvbnStrengthBar');
   }
 
   public static gmailBackupSearch = (v: any): NodeRequest.gmailBackupSearch => {

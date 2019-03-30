@@ -255,6 +255,23 @@ ava.test('parseDecryptMsg compat mime-email-encrypted-inline-pgpmime', async t =
   t.pass();
 });
 
+ava.test('zxcvbnStrengthBar', async t => {
+  const { data, json } = await request('zxcvbnStrengthBar', { guesses: 88946283684265, purpose: 'passphrase' }, []);
+  expectNoData(data);
+  expect(json).to.deep.equal({
+    word: {
+      match: 'day',
+      word: 'poor',
+      bar: 20,
+      color: 'darkred',
+      pass: false
+    },
+    seconds: 1111829,
+    time: '13 days',
+  });
+  t.pass();
+});
+
 ava.test('parseDecryptMsg compat mime-email-encrypted-inline-text-2 Mime-TextEncoder', async t => {
   const { keys, passphrases } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, passphrases, isEmail: true }, await getCompatAsset('mime-email-encrypted-inline-text-2'));

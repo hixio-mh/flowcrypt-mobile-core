@@ -123,6 +123,15 @@ export class Endpoints {
     return fmtRes({ timestamp: String(Date.parse(dateStr) || -1) });
   }
 
+  public zxcvbnStrengthBar = async (uncheckedReq: any, data: Buffers) => {
+    const { guesses, purpose } = Validate.zxcvbnStrengthBar(uncheckedReq);
+    if (purpose === 'passphrase') {
+      return fmtRes(Pgp.password.estimateStrength(guesses));
+    } else {
+      throw new Error(`Unknown purpose: ${purpose}`);
+    }
+  }
+
   public gmailBackupSearch = async (uncheckedReq: any, data: Buffers) => {
     const { acctEmail } = Validate.gmailBackupSearch(uncheckedReq);
     return fmtRes({ query: gmailBackupSearchQuery(acctEmail) });
