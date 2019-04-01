@@ -40,7 +40,7 @@ export class Endpoints {
     } else {
       throw new Error(`Unknown generateKey variant: ${variant}`);
     }
-    return fmtRes(await Pgp.key.serialize(await Pgp.key.read(k.private)));
+    return fmtRes({ key: await Pgp.key.serialize(await Pgp.key.read(k.private)) });
   }
 
   public composeEmail = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
