@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { PgpMsg, Pgp, KeyDetails } from '../core/pgp';
+import { PgpMsg, Pgp, KeyDetails, DecryptErrTypes } from '../core/pgp';
 import { Validate } from './validate';
 import { fmtRes, Buffers } from './fmt';
 import { gmailBackupSearchQuery } from '../core/const';
@@ -86,7 +86,7 @@ export class Endpoints {
           blocks.push(... await PgpMsg.fmtDecrypted(decryptRes.content, 'decryptedText'));
         } else {
           decryptRes.message = undefined;
-          blocks.push(Pgp.internal.msgBlockDecryptErrObj(rawBlock.content, decryptRes));
+          blocks.push(Pgp.internal.msgBlockDecryptErrObj(decryptRes.error.type === DecryptErrTypes.noMdc ? decryptRes.content! : rawBlock.content, decryptRes));
         }
       } else {
         blocks.push(rawBlock);
