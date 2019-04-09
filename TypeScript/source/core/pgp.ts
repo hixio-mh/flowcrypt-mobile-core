@@ -192,7 +192,7 @@ export class Pgp {
       }
     },
     normalize: (armored: string, type: ReplaceableMsgBlockType | 'key') => {
-      armored = Str.normalize(armored);
+      armored = Str.normalize(armored).replace(/\n /g, '\n');
       if (Value.is(type).in(['encryptedMsg', 'publicKey', 'privateKey', 'key'])) {
         armored = armored.replace(/\r?\n/g, '\n').trim();
         const nl2 = armored.match(/\n\n/g);
@@ -276,7 +276,7 @@ export class Pgp {
         }
         return { normalized: keys.map(k => k.armor()).join('\n'), keys };
       } catch (error) {
-        Catch.handleErr(error);
+        Catch.reportErr(error);
         return { normalized: '', keys: [] };
       }
     },
@@ -302,7 +302,7 @@ export class Pgp {
           return await Pgp.key.fingerprint(await Pgp.key.read(key), formatting);
         } catch (e) {
           if (e instanceof Error && e.message === 'openpgp is not defined') {
-            Catch.handleErr(e);
+            Catch.reportErr(e);
           }
           console.error(e);
           return undefined;
@@ -673,7 +673,7 @@ export class PgpMsg {
         sig.error = 'FlowCrypt is not equipped to verify this message (err 101)';
       } else {
         sig.error = `FlowCrypt had trouble verifying this message (${String(verifyErr)})`;
-        Catch.handleErr(verifyErr);
+        Catch.reportErr(verifyErr);
       }
     }
     return sig;

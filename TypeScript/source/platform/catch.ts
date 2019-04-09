@@ -4,7 +4,7 @@
 
 export class Catch {
 
-  public static handleErr = (e: any) => {
+  public static reportErr = (e: any) => {
     console.error(e); // core errors that were not re-thrown are not so interesting as of 2018
   }
 
