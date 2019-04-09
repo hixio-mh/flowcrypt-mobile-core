@@ -40,7 +40,7 @@ export class Endpoints {
     } else {
       throw new Error(`Unknown generateKey variant: ${variant}`);
     }
-    return fmtRes({ key: await Pgp.key.serialize(await Pgp.key.read(k.private)) });
+    return fmtRes({ key: await Pgp.key.details(await Pgp.key.read(k.private)) });
   }
 
   public composeEmail = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
@@ -101,7 +101,7 @@ export class Endpoints {
         }
       }
       if (block.type === 'publicKey' && !block.keyDetails) { // this could eventually be moved into detectBlocks, which would make it async
-        block.keyDetails = await Pgp.key.serialize(await Pgp.key.read(block.content));
+        block.keyDetails = await Pgp.key.details(await Pgp.key.read(block.content));
       }
     }
     // data represent one JSON-stringified block per line. This is so that it can be read as a stream later
@@ -156,7 +156,7 @@ export class Endpoints {
     // binary
     const { keys: openPgpKeys } = await openpgp.key.read(allData);
     for (const openPgpKey of openPgpKeys) {
-      keyDetails.push(await Pgp.key.serialize(openPgpKey))
+      keyDetails.push(await Pgp.key.details(openPgpKey))
     }
     return fmtRes({ format: 'binary', keyDetails });
   }
