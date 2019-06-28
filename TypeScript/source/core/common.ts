@@ -9,12 +9,18 @@ export type Dict<T> = { [key: string]: T; };
 export class Str {
 
   public static parseEmail = (full: string) => {
-    if (Value.is('<').in(full) && Value.is('>').in(full)) {
-      const email = full.substr(full.indexOf('<') + 1, full.indexOf('>') - full.indexOf('<') - 1).replace(/["']/g, '').trim().toLowerCase();
-      const name = full.substr(0, full.indexOf('<')).replace(/["']/g, '').trim();
-      return { email, name, full };
+    let email: string | undefined;
+    let name: string | undefined;
+    if (full.includes('<') && full.includes('>')) {
+      email = full.substr(full.indexOf('<') + 1, full.indexOf('>') - full.indexOf('<') - 1).replace(/["']/g, '').trim().toLowerCase();
+      name = full.substr(0, full.indexOf('<')).replace(/["']/g, '').trim();
+    } else {
+      email = full.replace(/["']/g, '').trim().toLowerCase();
     }
-    return { email: full.replace(/["']/g, '').trim().toLowerCase(), name: undefined, full };
+    if (!Str.isEmailValid(email)) {
+      email = undefined;
+    }
+    return { email, name, full };
   }
 
   public static prettyPrint = (obj: any) => (typeof obj === 'object') ? JSON.stringify(obj, undefined, 2).replace(/ /g, '&nbsp;').replace(/\n/g, '<br>') : String(obj);
@@ -105,7 +111,7 @@ export class Value {
     unique: <T>(array: T[]): T[] => {
       const unique: T[] = [];
       for (const v of array) {
-        if (!Value.is(v).in(unique)) {
+        if (!unique.includes(v)) {
           unique.push(v);
         }
       }
@@ -124,7 +130,7 @@ export class Value {
     contains: <T>(arr: T[] | string, value: T): boolean => Boolean(arr && typeof arr.indexOf === 'function' && (arr as any[]).indexOf(value) !== -1),
     sum: (arr: number[]) => arr.reduce((a, b) => a + b, 0),
     average: (arr: number[]) => Value.arr.sum(arr) / arr.length,
-    zeroes: (length: number): number[] => new Array(length).map(() => 0),
+    zeroes: (length: number): number[] => new Array(length).map(() => 0)
   };
 
   public static obj = {
@@ -145,7 +151,5 @@ export class Value {
   };
 
   public static noop = (): void => undefined;
-
-  public static is = <T>(v: T) => ({ in: (arrayOrStr: T[] | string): boolean => Value.arr.contains(arrayOrStr, v) });  // Value.this(v).in(array_or_string)
 
 }

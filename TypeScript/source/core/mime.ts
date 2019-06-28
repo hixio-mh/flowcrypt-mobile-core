@@ -2,12 +2,13 @@
 
 'use strict';
 
-import { Str, Value, Dict } from './common.js';
+import { Str, Dict } from './common.js';
 import { Pgp, KeyDetails, DecryptError } from './pgp.js';
 import { Att, AttMeta } from './att.js';
 import { Catch } from '../platform/catch.js';
 import { requireMimeParser, requireMimeBuilder, requireIso88592 } from '../platform/require.js';
 import { Buf } from './buf.js';
+import { MimeParserNode } from '../types/emailjs.js';
 
 const MimeParser = requireMimeParser();  // tslint:disable-line:variable-name
 const MimeBuilder = requireMimeBuilder();  // tslint:disable-line:variable-name
@@ -18,27 +19,19 @@ type MimeContent = {
   headers: Dict<MimeContentHeader>;
   atts: Att[];
   signature?: string;
+  rawSignedContent?: string;
   html?: string;
   text?: string;
   from?: string;
   to: string[];
 };
-type MimeParserNode = {
-  path: string[];
-  headers: { [key: string]: { value: string; initial: string; params?: { charset?: string, filename?: string, name?: string } }[]; };
-  rawContent: string;
-  content: Uint8Array;
-  appendChild: (child: MimeParserNode) => void;
-  contentTransferEncoding: { value: string }; charset?: string;
-  addHeader: (name: string, value: string) => void;
-};
 
 export type RichHeaders = Dict<string | string[]>;
 export type SendableMsgBody = { [key: string]: string | undefined; 'text/plain'?: string; 'text/html'?: string; };
 export type KeyBlockType = 'publicKey' | 'privateKey';
-export type ReplaceableMsgBlockType = KeyBlockType | 'attestPacket' | 'cryptupVerification' | 'signedMsg' | 'encryptedMsg' | 'encryptedMsgLink';
-export type MsgBlockType = 'plainText' | 'decryptedText' | 'plainHtml' | 'decryptedHtml' | 'plainAtt' | 'encryptedAtt' | 'decryptedAtt' | 'encryptedAttLink'
-  | 'decryptErr' | ReplaceableMsgBlockType;
+export type ReplaceableMsgBlockType = KeyBlockType | 'cryptupVerification' | 'signedMsg' | 'encryptedMsg' | 'encryptedMsgLink';
+export type MsgBlockType = ReplaceableMsgBlockType | 'plainText' | 'decryptedText' | 'plainHtml' | 'decryptedHtml' | 'plainAtt' | 'encryptedAtt'
+  | 'decryptedAtt' | 'encryptedAttLink' | 'decryptErr';
 export type MsgBlock = {
   type: MsgBlockType;
   content: string | Buf;
@@ -48,7 +41,6 @@ export type MsgBlock = {
   attMeta?: AttMeta; // only in plainAtt, encryptedAtt, decryptedAtt, encryptedAttLink (not sure if always)
   decryptErr?: DecryptError; // only in decryptErr block, always
 };
-type MimeParseSignedRes = { full: string, signed?: string, signature?: string };
 
 export class Mime {
 
@@ -70,6 +62,8 @@ export class Mime {
       } else if (treatAs === 'signature') {
         decoded.signature = decoded.signature || file.getData().toUtfStr();
       } else if (treatAs === 'publicKey') {
+        blocks.push(...Pgp.armor.detectBlocks(file.getData().toUtfStr()).blocks);
+      } else if (treatAs === 'privateKey') {
         blocks.push(...Pgp.armor.detectBlocks(file.getData().toUtfStr()).blocks);
       }
     }
@@ -118,27 +112,41 @@ export class Mime {
     return Boolean(contentType.index === 0 && utf8.match(/boundary=/));
   }
 
+  private static retrieveRawSignedContent = (nodes: MimeParserNode[]): string | undefined => {
+    for (const node of nodes) {
+      if (node._isMultipart === 'signed' && node._childNodes && node._childNodes[0]) {
+        // PGP/MIME signed content uses <CR><LF> as in // use CR-LF https://tools.ietf.org/html/rfc3156#section-5
+        // however emailjs parser will replace it to <LF>, so we fix it here
+        let rawSignedContent = node._childNodes[0].raw.replace(/\r?\n/g, '\r\n');
+        if (/--$/.test(rawSignedContent)) { // end of boundary without a mandatory newline
+          rawSignedContent += '\r\n'; // emailjs wrongly leaves out the last newline, fix it here
+        }
+        return rawSignedContent;
+      } else if (node._childNodes) {
+        return Mime.retrieveRawSignedContent(node._childNodes);
+      }
+    }
+    return undefined;
+  }
+
   public static decode = (mimeMsg: Uint8Array): Promise<MimeContent> => {
     return new Promise(async resolve => {
       const mimeContent: MimeContent = { atts: [], headers: {}, text: undefined, html: undefined, signature: undefined, from: undefined, to: [] };
       try {
-        const parser = new MimeParser(); // tslint:disable-line:no-unsafe-any
-        const parsed: { [key: string]: MimeParserNode } = {};
-        parser.onheader = (node: MimeParserNode) => { // tslint:disable-line:no-unsafe-any
-          if (!String(node.path.join('.'))) { // root node headers
-            for (const name of Object.keys(node.headers)) {
-              mimeContent.headers[name] = node.headers[name][0].value;
-            }
-          }
-        };
-        parser.onbody = (node: MimeParserNode) => { // tslint:disable-line:no-unsafe-any
+        const parser = new MimeParser();
+        const leafNodes: { [key: string]: MimeParserNode } = {};
+        parser.onbody = (node: MimeParserNode) => {
           const path = String(node.path.join('.'));
-          if (typeof parsed[path] === 'undefined') {
-            parsed[path] = node;
+          if (typeof leafNodes[path] === 'undefined') {
+            leafNodes[path] = node;
           }
         };
-        parser.onend = () => { // tslint:disable-line:no-unsafe-any
-          for (const node of Object.values(parsed)) {
+        parser.onend = () => {
+          for (const name of Object.keys(parser.node.headers)) {
+            mimeContent.headers[name] = parser.node.headers[name][0].value;
+          }
+          mimeContent.rawSignedContent = Mime.retrieveRawSignedContent([parser.node]);
+          for (const node of Object.values(leafNodes)) {
             if (Mime.getNodeType(node) === 'application/pgp-signature') {
               mimeContent.signature = node.rawContent;
             } else if (Mime.getNodeType(node) === 'text/html' && !Mime.getNodeFilename(node)) {
@@ -150,12 +158,7 @@ export class Mime {
             } else if (Mime.getNodeType(node) === 'text/rfc822-headers') {
               // todo - surface and render encrypted headers
             } else {
-              mimeContent.atts.push(new Att({
-                name: Mime.getNodeFilename(node),
-                type: Mime.getNodeType(node),
-                data: node.content,
-                cid: Mime.getNodeContentId(node),
-              }));
+              mimeContent.atts.push(Mime.getNodeAsAtt(node));
             }
           }
           const { from, to } = Mime.headersToFrom(mimeContent);
@@ -163,8 +166,8 @@ export class Mime {
           mimeContent.to = to;
           resolve(mimeContent);
         };
-        parser.write(mimeMsg); // tslint:disable-line:no-unsafe-any
-        parser.end(); // tslint:disable-line:no-unsafe-any
+        parser.write(mimeMsg);
+        parser.end();
       } catch (e) { // todo - on Android we may want to fail when this happens, evaluate effect on browser extension
         Catch.reportErr(e);
         resolve(mimeContent);
@@ -199,72 +202,6 @@ export class Mime {
     return rootNode.build(); // tslint:disable-line:no-unsafe-any
   }
 
-  public static signed = (mimeMsgBytes: Buf) => {
-    /*
-      Trying to grab the full signed content that may look like this in its entirety (it's a signed mime message. May also be signed plain text)
-      Unfortunately, emailjs-mime-parser was not able to do this, or I wasn't able to use it properly
-
-      --eSmP07Gus5SkSc9vNmF4C0AutMibfplSQ
-      Content-Type: multipart/mixed; boundary="XKKJ27hlkua53SDqH7d1IqvElFHJROQA1"
-      From: Henry Electrum <henry.electrum@gmail.com>
-      To: human@flowcrypt.com
-      Message-ID: <abd68ba1-35c3-ee8a-0d60-0319c608d56b@gmail.com>
-      Subject: compatibility - simples signed email
-
-      --XKKJ27hlkua53SDqH7d1IqvElFHJROQA1
-      Content-Type: text/plain; charset=utf-8
-      Content-Transfer-Encoding: quoted-printable
-
-      content
-
-      --XKKJ27hlkua53SDqH7d1IqvElFHJROQA1--
-      */
-    let mimeMsg = mimeMsgBytes.toUtfStr();
-    const signedHeaderIndex = mimeMsg.substr(0, 100000).toLowerCase().indexOf('content-type: multipart/signed');
-    if (signedHeaderIndex !== -1) {
-      mimeMsg = mimeMsg.substr(signedHeaderIndex);
-      const firstBoundaryIndex = mimeMsg.substr(0, 1000).toLowerCase().indexOf('boundary=');
-      if (firstBoundaryIndex) {
-        let boundary = mimeMsg.substr(firstBoundaryIndex, 100);
-        boundary = (boundary.match(/boundary="[^"]{1,70}"/gi) || boundary.match(/boundary=[a-z0-9][a-z0-9 ]{0,68}[a-z0-9]/gi) || [])[0];
-        if (boundary) {
-          boundary = boundary.replace(/^boundary="?|"$/gi, '');
-          const boundaryBegin = '\r\n--' + boundary + '\r\n';
-          const boundaryEnd = '--' + boundary + '--';
-          const endIndex = mimeMsg.indexOf(boundaryEnd);
-          if (endIndex !== -1) {
-            mimeMsg = mimeMsg.substr(0, endIndex + boundaryEnd.length);
-            if (mimeMsg) {
-              const res: MimeParseSignedRes = { full: mimeMsg };
-              let firstPartStartIndex = mimeMsg.indexOf(boundaryBegin);
-              if (firstPartStartIndex !== -1) {
-                firstPartStartIndex += boundaryBegin.length;
-                const firstPartEndIndex = mimeMsg.indexOf(boundaryBegin, firstPartStartIndex);
-                const secondPartStartIndex = firstPartEndIndex + boundaryBegin.length;
-                const secondPartEndIndex = mimeMsg.indexOf(boundaryEnd, secondPartStartIndex);
-                if (secondPartEndIndex !== -1) {
-                  const firstPart = mimeMsg.substr(firstPartStartIndex, firstPartEndIndex - firstPartStartIndex);
-                  const secondPart = mimeMsg.substr(secondPartStartIndex, secondPartEndIndex - secondPartStartIndex);
-                  const beginSignature = Pgp.armor.headers('signedMsg').middle;
-                  const endSignature = String(Pgp.armor.headers('signedMsg').end);
-                  if (firstPart.match(/^content-type: application\/pgp-signature/gi) && Value.is(beginSignature).in(firstPart) && Value.is(endSignature).in(firstPart)) {
-                    res.signature = Pgp.armor.clip(firstPart);
-                    res.signed = secondPart;
-                  } else {
-                    res.signature = Pgp.armor.clip(secondPart);
-                    res.signed = firstPart;
-                  }
-                  return res;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    return undefined;
-  }
-
   private static getNodeType = (node: MimeParserNode) => {
     if (node.headers['content-type'] && node.headers['content-type'][0]) {
       return node.headers['content-type'][0].value;
@@ -295,10 +232,19 @@ export class Mime {
     return;
   }
 
-  private static fromEqualSignNotationAsUtf = (str: string): string => {
-    return str.replace(/(=[A-F0-9]{2})+/g, equalSignUtfPart => {
+  private static fromEqualSignNotationAsBuf = (str: string): Buf => {
+    return Buf.fromRawBytesStr(str.replace(/(=[A-F0-9]{2})+/g, equalSignUtfPart => {
       const bytes = equalSignUtfPart.replace(/^=/, '').split('=').map(twoHexDigits => parseInt(twoHexDigits, 16));
-      return new Buf(bytes).toUtfStr();
+      return new Buf(bytes).toRawBytesStr();
+    }));
+  }
+
+  private static getNodeAsAtt = (node: MimeParserNode): Att => {
+    return new Att({
+      name: Mime.getNodeFilename(node),
+      type: Mime.getNodeType(node),
+      data: node.contentTransferEncoding.value === 'quoted-printable' ? Mime.fromEqualSignNotationAsBuf(node.rawContent!) : node.content,
+      cid: Mime.getNodeContentId(node),
     });
   }
 
@@ -307,12 +253,12 @@ export class Mime {
       return Buf.fromUint8(node.content).toUtfStr();
     }
     if (node.charset === 'utf-8' && node.contentTransferEncoding.value === 'quoted-printable') {
-      return Mime.fromEqualSignNotationAsUtf(node.rawContent);
+      return Mime.fromEqualSignNotationAsBuf(node.rawContent!).toUtfStr();
     }
     if (node.charset && Iso88592.labels.includes(node.charset)) {
-      return Iso88592.decode(node.rawContent); // tslint:disable-line:no-unsafe-any
+      return Iso88592.decode(node.rawContent!); // tslint:disable-line:no-unsafe-any
     }
-    return Buf.fromRawBytesStr(node.rawContent).toUtfStr();
+    return Buf.fromRawBytesStr(node.rawContent!).toUtfStr();
   }
 
   // tslint:disable-next-line:variable-name

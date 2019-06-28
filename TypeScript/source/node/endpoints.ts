@@ -19,7 +19,7 @@ export class Endpoints {
 
   [endpoint: string]: ((uncheckedReq: any, data: Buffers) => Promise<Buffers>) | undefined;
 
-  public version = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
+  public version = async (): Promise<Buffers> => {
     return fmtRes(process.versions);
   }
 
@@ -29,7 +29,7 @@ export class Endpoints {
     return fmtRes({}, Buffer.from(encrypted.data));
   }
 
-  public generateKey = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
+  public generateKey = async (uncheckedReq: any): Promise<Buffers> => {
     const { passphrase, userIds, variant } = Validate.generateKey(uncheckedReq);
     if (passphrase.length < 12) {
       throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
@@ -43,7 +43,7 @@ export class Endpoints {
     return fmtRes({ key: await Pgp.key.details(await Pgp.key.read(k.private)) });
   }
 
-  public composeEmail = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
+  public composeEmail = async (uncheckedReq: any): Promise<Buffers> => {
     const req = Validate.composeEmail(uncheckedReq);
     const mimeHeaders: RichHeaders = { to: req.to, from: req.from, subject: req.subject, cc: req.cc, bcc: req.bcc };
     if (req.replyToMimeMsg) {
@@ -118,12 +118,12 @@ export class Endpoints {
     return fmtRes({ success: true, name: decryptedMeta.filename || '' }, decryptedMeta.content);
   }
 
-  public parseDateStr = async (uncheckedReq: any, data: Buffers) => {
+  public parseDateStr = async (uncheckedReq: any) => {
     const { dateStr } = Validate.parseDateStr(uncheckedReq);
     return fmtRes({ timestamp: String(Date.parse(dateStr) || -1) });
   }
 
-  public zxcvbnStrengthBar = async (uncheckedReq: any, data: Buffers) => {
+  public zxcvbnStrengthBar = async (uncheckedReq: any) => {
     const { guesses, purpose } = Validate.zxcvbnStrengthBar(uncheckedReq);
     if (purpose === 'passphrase') {
       return fmtRes(Pgp.password.estimateStrength(guesses));
@@ -132,12 +132,12 @@ export class Endpoints {
     }
   }
 
-  public gmailBackupSearch = async (uncheckedReq: any, data: Buffers) => {
+  public gmailBackupSearch = async (uncheckedReq: any) => {
     const { acctEmail } = Validate.gmailBackupSearch(uncheckedReq);
     return fmtRes({ query: gmailBackupSearchQuery(acctEmail) });
   }
 
-  public parseKeys = async (uncheckedReq: any, data: Buffers) => {
+  public parseKeys = async (_uncheckedReq: any, data: Buffers) => {
     const keyDetails: KeyDetails[] = [];
     const allData = Buffer.concat(data);
     const pgpType = await PgpMsg.type({ data: allData });
@@ -161,12 +161,12 @@ export class Endpoints {
     return fmtRes({ format: 'binary', keyDetails });
   }
 
-  public isEmailValid = async (uncheckedReq: any, data: Buffers) => {
+  public isEmailValid = async (uncheckedReq: any) => {
     const { email } = Validate.isEmailValid(uncheckedReq);
     return fmtRes({ valid: Str.isEmailValid(email) });
   }
 
-  public decryptKey = async (uncheckedReq: any, data: Buffers) => {
+  public decryptKey = async (uncheckedReq: any) => {
     const { armored, passphrases } = Validate.decryptKey(uncheckedReq);
     const key = await readArmoredKeyOrThrow(armored);
     if (await Pgp.key.decrypt(key, passphrases)) {
@@ -175,7 +175,7 @@ export class Endpoints {
     return fmtRes({ decryptedKey: null });
   }
 
-  public encryptKey = async (uncheckedReq: any, data: Buffers) => {
+  public encryptKey = async (uncheckedReq: any) => {
     const { armored, passphrase } = Validate.encryptKey(uncheckedReq);
     const key = await readArmoredKeyOrThrow(armored);
     if (!passphrase || passphrase.length < 12) { // last resort check, this should never happen
@@ -204,7 +204,7 @@ export class Debug {
     const header1 = `Debug.printChunk[${name}, ${data.length}B]: `;
     const header2 = ' '.repeat(header1.length);
     const chunk = Array.from(data.subarray(0, 30));
-    const chunkIndices = chunk.map((v, i) => i);
+    const chunkIndices = chunk.map((_, i) => i);
     console.log(`-\n${header1}-+-[${chunk.map(Debug.pad).join(' ')} ]\n${header2} |-[${chunk.map(Debug.char).map(Debug.pad).join(' ')} ]\n${header2} \`-[${chunkIndices.map(Debug.pad).join(' ')} ]`);
   }
 
