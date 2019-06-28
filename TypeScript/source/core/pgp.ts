@@ -931,7 +931,7 @@ export class PgpMsg {
         if (att.treatAs() === 'publicKey') {
           await PgpMsg.pushArmoredPubkeysToBlocks([att.getData().toUtfStr()], blocks);
         } else {
-          blocks.push(Pgp.internal.msgBlockAttObj('decryptedAtt', '', { name: att.name, data: att.getData() }));
+          blocks.push(Pgp.internal.msgBlockAttObj('decryptedAtt', '', { name: att.name, data: att.getData(), length: att.length, type: att.type }));
         }
       }
     }

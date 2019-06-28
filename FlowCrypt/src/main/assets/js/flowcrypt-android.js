@@ -70547,7 +70547,9 @@ PgpMsg.fmtDecrypted = async (decryptedContent, textBlockType = 'decryptedHtml') 
       } else {
         blocks.push(Pgp.internal.msgBlockAttObj('decryptedAtt', '', {
           name: att.name,
-          data: att.getData()
+          data: att.getData(),
+          length: att.length,
+          type: att.type
         }));
       }
     }
@@ -71607,6 +71609,11 @@ class Endpoints {
         if (block.content instanceof buf_1.Buf) {
           // cannot JSON-serialize Buf
           block.content = fmt_1.isContentBlock(block.type) ? block.content.toUtfStr() : block.content.toRawBytesStr();
+        } else if (block.attMeta && block.attMeta.data instanceof Uint8Array) {
+          // converting to base64-encoded string instead of uint8 for JSON serilization
+          // value actually replaced to a string, but type remains Uint8Array type set to satisfy TS
+          // no longer used below, only gets passed to be serialized so be safe
+          block.attMeta.data = buf_1.Buf.fromUint8(block.attMeta.data).toBase64Str();
         }
 
         if (block.type === 'publicKey' && !block.keyDetails) {

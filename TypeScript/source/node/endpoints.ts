@@ -98,6 +98,11 @@ export class Endpoints {
     for (const block of sequentialProcessedBlocks) {
       if (block.content instanceof Buf) { // cannot JSON-serialize Buf
         block.content = isContentBlock(block.type) ? block.content.toUtfStr() : block.content.toRawBytesStr();
+      } else if (block.attMeta && block.attMeta.data instanceof Uint8Array) {
+        // converting to base64-encoded string instead of uint8 for JSON serilization
+        // value actually replaced to a string, but type remains Uint8Array type set to satisfy TS
+        // no longer used below, only gets passed to be serialized so be safe
+        block.attMeta.data = Buf.fromUint8(block.attMeta.data).toBase64Str() as any as Uint8Array;
       }
       if (block.type === 'publicKey' && !block.keyDetails) { // this could eventually be moved into detectBlocks, which would make it async
         block.keyDetails = await Pgp.key.details(await Pgp.key.read(block.content.toString()));
