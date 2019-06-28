@@ -6,7 +6,7 @@
 
 import { PgpMsg, Pgp, KeyDetails, DecryptErrTypes } from '../core/pgp';
 import { Validate } from './validate';
-import { fmtRes, Buffers } from './fmt';
+import { fmtRes, Buffers, isContentBlock, fmtContentBlock } from './fmt';
 import { gmailBackupSearchQuery } from '../core/const';
 import { requireOpenpgp } from '../platform/require';
 import { Str } from '../core/common';
@@ -78,34 +78,40 @@ export class Endpoints {
     } else {
       rawBlocks.push(Pgp.internal.msgBlockObj('encryptedMsg', new Buf(Buffer.concat(data))));
     }
-    const blocks: MsgBlock[] = []; // contains decrypted or otherwise formatted data
+    const sequentialProcessedBlocks: MsgBlock[] = []; // contains decrypted or otherwise formatted data
     for (const rawBlock of rawBlocks) {
       if (rawBlock.type === 'encryptedMsg') {
         const decryptRes = await PgpMsg.decrypt({ kisWithPp, msgPwd, encryptedData: rawBlock.content instanceof Uint8Array ? rawBlock.content : Buffer.from(rawBlock.content) });
         if (decryptRes.success) {
-          blocks.push(... await PgpMsg.fmtDecrypted(decryptRes.content, 'decryptedText'));
+          sequentialProcessedBlocks.push(... await PgpMsg.fmtDecrypted(decryptRes.content, 'decryptedHtml'));
         } else {
           decryptRes.message = undefined;
-          blocks.push(Pgp.internal.msgBlockDecryptErrObj(decryptRes.error.type === DecryptErrTypes.noMdc ? decryptRes.content! : rawBlock.content, decryptRes));
+          sequentialProcessedBlocks.push(Pgp.internal.msgBlockDecryptErrObj(decryptRes.error.type === DecryptErrTypes.noMdc ? decryptRes.content! : rawBlock.content, decryptRes));
         }
       } else {
-        blocks.push(rawBlock);
+        sequentialProcessedBlocks.push(rawBlock);
       }
     }
-    for (const block of blocks) {
+    const msgContentBlocks: MsgBlock[] = [];
+    const blocks: MsgBlock[] = [];
+    const replyType = 'plain'; // todo - detect 'encrypted'
+    for (const block of sequentialProcessedBlocks) {
       if (block.content instanceof Buf) { // cannot JSON-serialize Buf
-        if (block.type === 'plainText' || block.type === 'decryptedText' || block.type === 'plainHtml' || block.type === 'decryptedHtml' || block.type === 'signedMsg') {
-          block.content = block.content.toUtfStr();
-        } else {
-          block.content = block.content.toRawBytesStr();
-        }
+        block.content = isContentBlock(block.type) ? block.content.toUtfStr() : block.content.toRawBytesStr();
       }
       if (block.type === 'publicKey' && !block.keyDetails) { // this could eventually be moved into detectBlocks, which would make it async
-        block.keyDetails = await Pgp.key.details(await Pgp.key.read(block.content));
+        block.keyDetails = await Pgp.key.details(await Pgp.key.read(block.content.toString()));
+      }
+      if (isContentBlock(block.type)) {
+        msgContentBlocks.push(block);
+      } else {
+        blocks.push(block);
       }
     }
+    const { contentBlock, text } = fmtContentBlock(msgContentBlocks);
+    blocks.unshift(contentBlock);
     // data represent one JSON-stringified block per line. This is so that it can be read as a stream later
-    return fmtRes({}, Buffer.from(blocks.map(b => JSON.stringify(b)).join('\n')));
+    return fmtRes({ text, replyType }, Buffer.from(blocks.map(b => JSON.stringify(b)).join('\n')));
   }
 
   public decryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
