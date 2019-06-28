@@ -1,4 +1,4 @@
-# flowcrypt-mobile-node
+# flowcrypt-mobile-core
 
 This repo hosts code a NodeJS instance meant to run in the backround in our Android and iOS apps. Some of the code is also reused in FlowCrypt Browser extensions for Chrome and Firefox, and on our web.
 
