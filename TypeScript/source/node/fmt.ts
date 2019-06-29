@@ -19,13 +19,13 @@ const fmtMsgContentBlockAsHtml = (sanitizedHtmlContent: string, frame: 'green' |
   const generalCss = `background: white;padding-left: 10px;min-height: 38px;padding-top: 6px;padding-bottom: 6px;width: 100%;`;
   let frameCss: string;
   if (frame === 'green') {
-    frameCss = `border: 1px solid #f0f0f0;border-left: 4px solid #31A217;background-image: url(data:image/png;base64,${seamlessLockBg});`;
+    frameCss = `border: 1px solid #f0f0f0;border-left: 4px solid #31A217;border-right: none;background-image: url(data:image/png;base64,${seamlessLockBg});`;
   } else if (frame === 'red') {
-    frameCss = `border: 1px solid #f0f0f0;border-left: 4px solid #d14836;`;
+    frameCss = `border: 1px solid #f0f0f0;border-left: 4px solid #d14836;border-right: none;`;
   } else if (frame === 'plain') {
-    frameCss = `border: 1px solid #f0f0f0;`;
+    frameCss = `border: none;`;
   } else { // gray
-    frameCss = `border: 1px solid #f0f0f0;border-left: 4px solid #989898;`;
+    frameCss = `border: 1px solid #f0f0f0;border-left: 4px solid #989898;border-right: none;`;
   }
   return `<div style="${generalCss}${frameCss}">${sanitizedHtmlContent}</div>\n`;
 }
@@ -61,6 +61,14 @@ export const fmtContentBlock = (contentBlocks: MsgBlock[]): { contentBlock: MsgB
       msgContentAsText += block.content.toString();
     }
   }
+  msgContentAsHtml = `
+  <!DOCTYPE html><html>
+    <head>
+      <meta name="viewport" content="width=device-width" />
+      <style>img {display: inline !important; height: auto !important; max-width: 100% !important; font-size: 14px; }</style>
+    </head>
+    <body>${msgContentAsHtml}</body>
+  </html>`;
   return { contentBlock: Pgp.internal.msgBlockObj('plainHtml', msgContentAsHtml), text: msgContentAsText };
 }
 
