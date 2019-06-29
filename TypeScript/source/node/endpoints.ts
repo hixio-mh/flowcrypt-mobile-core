@@ -94,7 +94,7 @@ export class Endpoints {
     }
     const msgContentBlocks: MsgBlock[] = [];
     const blocks: MsgBlock[] = [];
-    const replyType = 'plain'; // todo - detect 'encrypted'
+    let replyType = 'plain';
     for (const block of sequentialProcessedBlocks) {
       if (block.content instanceof Buf) { // cannot JSON-serialize Buf
         block.content = isContentBlock(block.type) ? block.content.toUtfStr() : block.content.toRawBytesStr();
@@ -106,6 +106,9 @@ export class Endpoints {
       }
       if (block.type === 'publicKey' && !block.keyDetails) { // this could eventually be moved into detectBlocks, which would make it async
         block.keyDetails = await Pgp.key.details(await Pgp.key.read(block.content.toString()));
+      }
+      if (block.type === 'decryptedHtml' || block.type === 'decryptedText' || block.type === 'decryptedAtt' || block.type === 'decryptErr') {
+        replyType = 'encrypted';
       }
       if (isContentBlock(block.type)) {
         msgContentBlocks.push(block);
