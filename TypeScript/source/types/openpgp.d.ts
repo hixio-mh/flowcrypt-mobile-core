@@ -798,7 +798,7 @@ declare namespace OpenPGP {
     class Key {
       constructor(packetlist: packet.List<packet.AnyPacket>);
       armor(): string;
-      decrypt(passphrase: string | string[]): Promise<boolean>;
+      decrypt(passphrase: string | string[], keyId?: Keyid): Promise<boolean>;
       encrypt(passphrase: string | string[]): Promise<void>;
       getExpirationTime(): Promise<Date | typeof Infinity>;
       getKeyIds(): Keyid[];
