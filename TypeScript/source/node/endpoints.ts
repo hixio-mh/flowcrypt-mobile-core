@@ -34,12 +34,7 @@ export class Endpoints {
     if (passphrase.length < 12) {
       throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
     }
-    let k: { private: string };
-    if (variant === 'rsa2048') {
-      k = await Pgp.key.create(userIds, 2048, passphrase);
-    } else {
-      throw new Error(`Unknown generateKey variant: ${variant}`);
-    }
+    let k = await Pgp.key.create(userIds, variant, passphrase);
     return fmtRes({ key: await Pgp.key.details(await Pgp.key.read(k.private)) });
   }
 

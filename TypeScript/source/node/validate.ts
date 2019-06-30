@@ -10,7 +10,7 @@ export namespace NodeRequest {
   export interface composeEmailPlain extends composeEmailBase { format: 'plain' };
   export interface composeEmailEncrypted extends composeEmailBase { format: 'encrypt-inline' | 'encrypt-pgpmime', pubKeys: string[] };
 
-  export type generateKey = { passphrase: string, variant: 'rsa2048', userIds: { name: string, email: string }[] };
+  export type generateKey = { passphrase: string, variant: 'rsa2048' | 'rsa4096' | 'curve25519', userIds: { name: string, email: string }[] };
   export type composeEmail = composeEmailPlain | composeEmailEncrypted;
   export type encryptMsg = { pubKeys: string[] };
   export type encryptFile = { pubKeys: string[], name: string };
@@ -27,7 +27,7 @@ export namespace NodeRequest {
 export class Validate {
 
   public static generateKey = (v: any): NodeRequest.generateKey => {
-    if (isObj(v) && hasProp(v, 'userIds', 'Userid[]') && v.userIds.length && v.variant === 'rsa2048' && hasProp(v, 'passphrase', 'string')) {
+    if (isObj(v) && hasProp(v, 'userIds', 'Userid[]') && v.userIds.length && ['rsa2048', 'rsa4096', 'curve25519'].includes(v.variant) && hasProp(v, 'passphrase', 'string')) {
       return v as NodeRequest.generateKey;
     }
     throw new Error('Wrong request structure for NodeRequest.generateKey');

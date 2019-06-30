@@ -248,8 +248,16 @@ export class Pgp {
   };
 
   public static key = {
-    create: async (userIds: { name: string, email: string }[], numBits: 4096 | 2048, passphrase: string): Promise<{ private: string, public: string }> => {
-      const k = await openpgp.generateKey({ numBits, userIds, passphrase });
+    create: async (userIds: { name: string, email: string }[], variant: 'rsa2048' | 'rsa4096' | 'curve25519', passphrase: string): Promise<{ private: string, public: string }> => {
+      const opt: OpenPGP.KeyOptions = { userIds, passphrase };
+      if (variant === 'curve25519') {
+        opt.curve = 'curve25519';
+      } else if (variant === 'rsa2048') {
+        opt.numBits = 2048;
+      } else {
+        opt.numBits = 4096;
+      }
+      let k = await openpgp.generateKey(opt);
       return { public: k.publicKeyArmored, private: k.privateKeyArmored };
     },
     /**
