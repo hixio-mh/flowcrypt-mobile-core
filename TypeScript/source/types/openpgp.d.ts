@@ -812,7 +812,7 @@ declare namespace OpenPGP {
       isRevoked(): Promise<boolean>;
       getEncryptionKey(keyid?: Keyid | null, date?: Date, userid?: UserId | null): Promise<packet.PublicSubkey | packet.SecretSubkey | packet.SecretKey | packet.PublicKey | null>;
       getSigningKey(): Promise<packet.PublicSubkey | packet.SecretSubkey | packet.SecretKey | packet.PublicKey | null>;
-      getKeys(): packet.List<packet.AnyKeyPacket>;
+      getKeys(keyId?: Keyid): packet.List<packet.AnyKeyPacket>;
       isDecrypted(): boolean;
       getFingerprint(): string;
       getCreationTime(): Date;
