@@ -69556,9 +69556,20 @@ Pgp.key = {
    * used only for keys that we ourselves parsed / formatted before, eg from local storage, because no err handling
    */
   read: async armoredKey => {
+    const fromCache = store_js_1.Store.armoredKeyCacheGet(armoredKey);
+
+    if (fromCache) {
+      return fromCache;
+    }
+
     const {
       keys: [key]
     } = await openpgp.key.readArmored(armoredKey);
+
+    if (key && key.isPrivate()) {
+      store_js_1.Store.armoredKeyCacheSet(armoredKey, key);
+    }
+
     return key;
   },
 
@@ -70038,18 +70049,14 @@ Pgp.internal = {
     await Pgp.internal.cryptoMsgGetSignedBy(msg, keys);
 
     for (const ki of kiWithPp) {
-      ki.parsed = await Pgp.key.read(ki.private);
-      ki.details = await Pgp.key.details(ki.parsed);
-    }
-
-    for (const ki of kiWithPp) {
-      // this is inefficient because we are doing unnecessary parsing of all keys here
+      ki.parsed = await Pgp.key.read(ki.private); // this is inefficient because we are doing unnecessary parsing of all keys here
       // better would be to compare to already stored KeyInfo, however KeyInfo currently only holds primary longid, not longids of subkeys
       // while messages are typically encrypted for subkeys, thus we have to parse the key to get the info
       // we are filtering here to avoid a significant performance issue of having to attempt decrypting with all keys simultaneously
-      for (const {
-        longid
-      } of ki.details.ids) {
+
+      for (const longid of await Promise.all(ki.parsed.getKeyIds().map(({
+        bytes
+      }) => Pgp.key.longid(bytes)))) {
         if (keys.encryptedFor.includes(longid)) {
           keys.prvMatching.push(ki);
           break;
@@ -70371,9 +70378,7 @@ PgpMsg.decrypt = async ({
     };
   }
 
-  const start = new Date().getTime();
   const keys = await Pgp.internal.cryptoMsgGetSortedKeys(kisWithPp, prepared.message);
-  console.log(`cryptoMsgGetSortedKeys: ${new Date().getTime() - start}`);
   longids.message = keys.encryptedFor;
   longids.matching = keys.prvForDecrypt.map(ki => ki.longid);
   longids.chosen = keys.prvForDecryptDecrypted.map(ki => ki.longid);
@@ -70424,7 +70429,6 @@ PgpMsg.decrypt = async ({
     const passwords = msgPwd ? [msgPwd] : undefined;
     const privateKeys = keys.prvForDecryptDecrypted.map(ki => ki.decrypted);
     const decrypted = await prepared.message.decrypt(privateKeys, passwords, undefined, false);
-    console.log(`decrypted: ${new Date().getTime() - start}`);
     const content = new buf_js_1.Buf((await openpgp.stream.readToEnd(decrypted.getLiteralData())));
     let signature;
 
@@ -70731,8 +70735,8 @@ Object.defineProperty(exports, "__esModule", {
 const require_js_1 = __webpack_require__(11);
 
 const openpgp = require_js_1.requireOpenpgp();
-let DECRYPTED_KEY_CACHE = {};
-let DECRYPTED_KEY_CACHE_WIPE_TIMEOUT;
+let KEY_CACHE = {};
+let KEY_CACHE_WIPE_TIMEOUT;
 
 const keyLongid = k => openpgp.util.str_to_hex(k.getKeyId().bytes).toUpperCase();
 
@@ -70743,28 +70747,35 @@ Store.dbContactGet = async (db, emailOrLongid) => {
 };
 
 Store.decryptedKeyCacheSet = k => {
-  Store.decryptedKeyCacheRenewExpiry();
-  DECRYPTED_KEY_CACHE[keyLongid(k)] = k;
+  Store.keyCacheRenewExpiry();
+  KEY_CACHE[keyLongid(k)] = k;
 };
 
 Store.decryptedKeyCacheGet = longid => {
-  Store.decryptedKeyCacheRenewExpiry();
-  return DECRYPTED_KEY_CACHE[longid];
+  Store.keyCacheRenewExpiry();
+  return KEY_CACHE[longid];
 };
 
-Store.decryptedKeyCacheWipe = () => {
-  console.log('cache: wiping');
-  DECRYPTED_KEY_CACHE = {};
+Store.armoredKeyCacheSet = (armored, k) => {
+  Store.keyCacheRenewExpiry();
+  KEY_CACHE[armored] = k;
 };
 
-Store.decryptedKeyCacheRenewExpiry = () => {
-  console.log('cache: renewing');
+Store.armoredKeyCacheGet = armored => {
+  Store.keyCacheRenewExpiry();
+  return KEY_CACHE[armored];
+};
 
-  if (DECRYPTED_KEY_CACHE_WIPE_TIMEOUT) {
-    clearTimeout(DECRYPTED_KEY_CACHE_WIPE_TIMEOUT);
+Store.keyCacheWipe = () => {
+  KEY_CACHE = {};
+};
+
+Store.keyCacheRenewExpiry = () => {
+  if (KEY_CACHE_WIPE_TIMEOUT) {
+    clearTimeout(KEY_CACHE_WIPE_TIMEOUT);
   }
 
-  DECRYPTED_KEY_CACHE_WIPE_TIMEOUT = setTimeout(Store.decryptedKeyCacheWipe, 10000);
+  KEY_CACHE_WIPE_TIMEOUT = setTimeout(Store.keyCacheWipe, 5 * 60 * 1000);
 };
 
 exports.Store = Store;
@@ -71559,7 +71570,7 @@ class Endpoints {
     };
 
     this.generateKey = async uncheckedReq => {
-      store_1.Store.decryptedKeyCacheWipe(); // decryptKey may be used when changing major settings, wipe cache to prevent dated results
+      store_1.Store.keyCacheWipe(); // decryptKey may be used when changing major settings, wipe cache to prevent dated results
 
       const {
         passphrase,
@@ -71814,7 +71825,7 @@ class Endpoints {
     };
 
     this.decryptKey = async uncheckedReq => {
-      store_1.Store.decryptedKeyCacheWipe(); // decryptKey may be used when changing major settings, wipe cache to prevent dated results
+      store_1.Store.keyCacheWipe(); // decryptKey may be used when changing major settings, wipe cache to prevent dated results
 
       const {
         armored,
@@ -71834,7 +71845,7 @@ class Endpoints {
     };
 
     this.encryptKey = async uncheckedReq => {
-      store_1.Store.decryptedKeyCacheWipe(); // encryptKey may be used when changing major settings, wipe cache to prevent dated results
+      store_1.Store.keyCacheWipe(); // encryptKey may be used when changing major settings, wipe cache to prevent dated results
 
       const {
         armored,

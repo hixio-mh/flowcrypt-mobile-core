@@ -31,7 +31,7 @@ export class Endpoints {
   }
 
   public generateKey = async (uncheckedReq: any): Promise<Buffers> => {
-    Store.decryptedKeyCacheWipe(); // decryptKey may be used when changing major settings, wipe cache to prevent dated results
+    Store.keyCacheWipe(); // decryptKey may be used when changing major settings, wipe cache to prevent dated results
     const { passphrase, userIds, variant } = Validate.generateKey(uncheckedReq);
     if (passphrase.length < 12) {
       throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
@@ -177,7 +177,7 @@ export class Endpoints {
   }
 
   public decryptKey = async (uncheckedReq: any) => {
-    Store.decryptedKeyCacheWipe(); // decryptKey may be used when changing major settings, wipe cache to prevent dated results
+    Store.keyCacheWipe(); // decryptKey may be used when changing major settings, wipe cache to prevent dated results
     const { armored, passphrases } = Validate.decryptKey(uncheckedReq);
     const key = await readArmoredKeyOrThrow(armored);
     if (await Pgp.key.decrypt(key, passphrases)) {
@@ -187,7 +187,7 @@ export class Endpoints {
   }
 
   public encryptKey = async (uncheckedReq: any) => {
-    Store.decryptedKeyCacheWipe(); // encryptKey may be used when changing major settings, wipe cache to prevent dated results
+    Store.keyCacheWipe(); // encryptKey may be used when changing major settings, wipe cache to prevent dated results
     const { armored, passphrase } = Validate.encryptKey(uncheckedReq);
     const key = await readArmoredKeyOrThrow(armored);
     if (!passphrase || passphrase.length < 12) { // last resort check, this should never happen

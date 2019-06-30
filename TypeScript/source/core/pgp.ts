@@ -60,7 +60,6 @@ export interface PrvKeyInfo {
   passphrase?: string;
   decrypted?: OpenPGP.key.Key;  // only for internal use in this file
   parsed?: OpenPGP.key.Key;     // only for internal use in this file
-  details?: KeyDetails;    // only for internal use in this file
 }
 
 export interface KeyInfo extends PrvKeyInfo {
@@ -265,7 +264,14 @@ export class Pgp {
      * used only for keys that we ourselves parsed / formatted before, eg from local storage, because no err handling
      */
     read: async (armoredKey: string) => { // should be renamed to readOne
+      const fromCache = Store.armoredKeyCacheGet(armoredKey);
+      if (fromCache) {
+        return fromCache;
+      }
       const { keys: [key] } = await openpgp.key.readArmored(armoredKey);
+      if (key && key.isPrivate()) {
+        Store.armoredKeyCacheSet(armoredKey, key);
+      }
       return key;
     },
     /**
@@ -607,15 +613,12 @@ export class Pgp {
       await Pgp.internal.cryptoMsgGetSignedBy(msg, keys);
       for (const ki of kiWithPp) {
         ki.parsed = await Pgp.key.read(ki.private);
-        ki.details = await Pgp.key.details(ki.parsed);
-      }
-      for (const ki of kiWithPp) {
         // this is inefficient because we are doing unnecessary parsing of all keys here
         // better would be to compare to already stored KeyInfo, however KeyInfo currently only holds primary longid, not longids of subkeys
         // while messages are typically encrypted for subkeys, thus we have to parse the key to get the info
         // we are filtering here to avoid a significant performance issue of having to attempt decrypting with all keys simultaneously
-        for (const { longid } of ki.details!.ids) {
-          if (keys.encryptedFor.includes(longid)) {
+        for (const longid of await Promise.all(ki.parsed.getKeyIds().map(({ bytes }) => Pgp.key.longid(bytes)))) {
+          if (keys.encryptedFor.includes(longid!)) {
             keys.prvMatching.push(ki);
             break;
           }
@@ -839,9 +842,7 @@ export class PgpMsg {
     } catch (formatErr) {
       return { success: false, error: { type: DecryptErrTypes.format, message: String(formatErr) }, longids };
     }
-    const start = new Date().getTime();
     const keys = await Pgp.internal.cryptoMsgGetSortedKeys(kisWithPp, prepared.message);
-    console.log(`cryptoMsgGetSortedKeys: ${new Date().getTime() - start}`)
     longids.message = keys.encryptedFor;
     longids.matching = keys.prvForDecrypt.map(ki => ki.longid);
     longids.chosen = keys.prvForDecryptDecrypted.map(ki => ki.longid);
@@ -865,7 +866,6 @@ export class PgpMsg {
       const passwords = msgPwd ? [msgPwd] : undefined;
       const privateKeys = keys.prvForDecryptDecrypted.map(ki => ki.decrypted!);
       const decrypted = await (prepared.message as OpenPGP.message.Message).decrypt(privateKeys, passwords, undefined, false);
-      console.log(`decrypted: ${new Date().getTime() - start}`)
       const content = new Buf(await openpgp.stream.readToEnd(decrypted.getLiteralData()!));
       let signature: MsgVerifyResult | undefined;
       try { // remove when resolved: https://github.com/openpgpjs/openpgpjs/issues/916

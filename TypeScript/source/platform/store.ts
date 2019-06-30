@@ -7,8 +7,8 @@ import { requireOpenpgp } from './require.js';
 
 const openpgp = requireOpenpgp();
 
-let DECRYPTED_KEY_CACHE: { [longid: string]: OpenPGP.key.Key } = {};
-let DECRYPTED_KEY_CACHE_WIPE_TIMEOUT: NodeJS.Timeout;
+let KEY_CACHE: { [longidOrArmoredKey: string]: OpenPGP.key.Key } = {};
+let KEY_CACHE_WIPE_TIMEOUT: NodeJS.Timeout;
 
 const keyLongid = (k: OpenPGP.key.Key) => openpgp.util.str_to_hex(k.getKeyId().bytes).toUpperCase();
 
@@ -19,24 +19,34 @@ export class Store {
   }
 
   static decryptedKeyCacheSet = (k: OpenPGP.key.Key) => {
-    Store.decryptedKeyCacheRenewExpiry();
-    DECRYPTED_KEY_CACHE[keyLongid(k)] = k;
+    Store.keyCacheRenewExpiry();
+    KEY_CACHE[keyLongid(k)] = k;
   }
 
   static decryptedKeyCacheGet = (longid: string): OpenPGP.key.Key | undefined => {
-    Store.decryptedKeyCacheRenewExpiry();
-    return DECRYPTED_KEY_CACHE[longid];
+    Store.keyCacheRenewExpiry();
+    return KEY_CACHE[longid];
   }
 
-  static decryptedKeyCacheWipe = () => {
-    DECRYPTED_KEY_CACHE = {};
+  static armoredKeyCacheSet = (armored: string, k: OpenPGP.key.Key) => {
+    Store.keyCacheRenewExpiry();
+    KEY_CACHE[armored] = k;
   }
 
-  private static decryptedKeyCacheRenewExpiry = () => {
-    if (DECRYPTED_KEY_CACHE_WIPE_TIMEOUT) {
-      clearTimeout(DECRYPTED_KEY_CACHE_WIPE_TIMEOUT);
+  static armoredKeyCacheGet = (armored: string): OpenPGP.key.Key | undefined => {
+    Store.keyCacheRenewExpiry();
+    return KEY_CACHE[armored];
+  }
+
+  static keyCacheWipe = () => {
+    KEY_CACHE = {};
+  }
+
+  private static keyCacheRenewExpiry = () => {
+    if (KEY_CACHE_WIPE_TIMEOUT) {
+      clearTimeout(KEY_CACHE_WIPE_TIMEOUT);
     }
-    DECRYPTED_KEY_CACHE_WIPE_TIMEOUT = setTimeout(Store.decryptedKeyCacheWipe, 5 * 60 * 1000);
+    KEY_CACHE_WIPE_TIMEOUT = setTimeout(Store.keyCacheWipe, 5 * 60 * 1000);
   }
 
 }
