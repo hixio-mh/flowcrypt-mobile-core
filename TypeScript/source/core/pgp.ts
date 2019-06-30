@@ -27,7 +27,7 @@ export namespace PgpMsgMethod {
   export namespace Arg {
     export type Encrypt = { pubkeys: string[], signingPrv?: OpenPGP.key.Key, pwd?: Pwd, data: Uint8Array, filename?: string, armor: boolean, date?: Date };
     export type Type = { data: Uint8Array };
-    export type Decrypt = { kisWithPp: KeyInfosWithPassphrases, encryptedData: Uint8Array, msgPwd?: string };
+    export type Decrypt = { kisWithPp: PrvKeyInfo[], encryptedData: Uint8Array, msgPwd?: string };
     export type DiagnosePubkeys = { privateKis: KeyInfo[], message: Uint8Array };
     export type VerifyDetached = { plaintext: Uint8Array, sigText: Uint8Array };
   }
@@ -57,7 +57,10 @@ export type Contact = {
 export interface PrvKeyInfo {
   private: string;
   longid: string;
-  decrypted?: OpenPGP.key.Key;
+  passphrase?: string;
+  decrypted?: OpenPGP.key.Key;  // only for internal use in this file
+  parsed?: OpenPGP.key.Key;     // only for internal use in this file
+  details?: KeyDetails;    // only for internal use in this file
 }
 
 export interface KeyInfo extends PrvKeyInfo {
@@ -66,8 +69,6 @@ export interface KeyInfo extends PrvKeyInfo {
   primary: boolean;
   keywords: string;
 }
-
-export type KeyInfosWithPassphrases = { keys: PrvKeyInfo[]; passphrases: string[]; };
 
 type KeyDetails$ids = {
   shortid: string;
@@ -586,7 +587,11 @@ export class Pgp {
         }
       }
     },
-    cryptoMsgGetSortedKeys: async (kiWithPp: KeyInfosWithPassphrases, msg: OpenpgpMsgOrCleartext): Promise<SortedKeysForDecrypt> => {
+    cryptoKeyDecryptForMessage: async (ki: PrvKeyInfo): Promise<boolean> => {
+      // todo - only decrypt subkeys that match, no need to decrypt the primary key or other subkeys
+      return await Pgp.key.decrypt(ki.parsed!, [ki.passphrase!]) === true;
+    },
+    cryptoMsgGetSortedKeys: async (kiWithPp: PrvKeyInfo[], msg: OpenpgpMsgOrCleartext): Promise<SortedKeysForDecrypt> => {
       const keys: SortedKeysForDecrypt = {
         verificationContacts: [],
         forVerification: [],
@@ -599,27 +604,29 @@ export class Pgp {
       };
       keys.encryptedFor = await Pgp.internal.longids(msg instanceof openpgp.message.Message ? (msg as OpenPGP.message.Message).getEncryptionKeyIds() : []);
       await Pgp.internal.cryptoMsgGetSignedBy(msg, keys);
-      for (const ki of kiWithPp.keys) {
+      for (const ki of kiWithPp) {
+        ki.parsed = await Pgp.key.read(ki.private);
+        ki.details = await Pgp.key.details(ki.parsed);
+      }
+      for (const ki of kiWithPp) {
         // this is inefficient because we are doing unnecessary parsing of all keys here
         // better would be to compare to already stored KeyInfo, however KeyInfo currently only holds primary longid, not longids of subkeys
         // while messages are typically encrypted for subkeys, thus we have to parse the key to get the info
         // we are filtering here to avoid a significant performance issue of having to attempt decrypting with all keys simultaneously
-        const { ids } = await Pgp.key.details(await Pgp.key.read(ki.private));
-        for (const { longid } of ids) {
+        for (const { longid } of ki.details!.ids) {
           if (keys.encryptedFor.includes(longid)) {
             keys.prvMatching.push(ki);
             break;
           }
         }
       }
-      keys.prvForDecrypt = keys.prvMatching.length ? keys.prvMatching : kiWithPp.keys;
-      for (const prvForDecrypt of keys.prvForDecrypt) {
-        const prv = await Pgp.key.read(prvForDecrypt.private);
-        if (prv.isDecrypted() || (kiWithPp.passphrases.length && await Pgp.key.decrypt(prv, kiWithPp.passphrases) === true)) {
-          prvForDecrypt.decrypted = prv;
-          keys.prvForDecryptDecrypted.push(prvForDecrypt);
+      keys.prvForDecrypt = keys.prvMatching.length ? keys.prvMatching : kiWithPp;
+      for (const ki of keys.prvForDecrypt) {
+        if (ki.parsed!.isDecrypted() || await Pgp.internal.cryptoKeyDecryptForMessage(ki) === true) {
+          ki.decrypted = ki.parsed!;
+          keys.prvForDecryptDecrypted.push(ki);
         } else {
-          keys.prvForDecryptWithoutPassphrases.push(prvForDecrypt);
+          keys.prvForDecryptWithoutPassphrases.push(ki);
         }
       }
       return keys;
@@ -748,7 +755,7 @@ export class PgpMsg {
   static verifyDetached: PgpMsgMethod.VerifyDetached = async ({ plaintext, sigText }) => {
     const message = openpgp.message.fromText(Buf.fromUint8(plaintext).toUtfStr());
     await message.appendSignature(Buf.fromUint8(sigText).toUtfStr());
-    const keys = await Pgp.internal.cryptoMsgGetSortedKeys({ keys: [], passphrases: [] }, message);
+    const keys = await Pgp.internal.cryptoMsgGetSortedKeys([], message);
     return await PgpMsg.verify(message, keys.forVerification, keys.verificationContacts[0]);
   }
 

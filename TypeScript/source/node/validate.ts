@@ -5,7 +5,7 @@
 type Obj = { [k: string]: any };
 
 export namespace NodeRequest {
-  type PrvKeyInfo = { private: string; longid: string };
+  type PrvKeyInfo = { private: string; longid: string, passphrase: string | undefined };
   interface composeEmailBase { text: string, to: string[], cc: string[], bcc: string[], from: string, subject: string, replyToMimeMsg: string };
   export interface composeEmailPlain extends composeEmailBase { format: 'plain' };
   export interface composeEmailEncrypted extends composeEmailBase { format: 'encrypt-inline' | 'encrypt-pgpmime', pubKeys: string[] };
@@ -14,8 +14,8 @@ export namespace NodeRequest {
   export type composeEmail = composeEmailPlain | composeEmailEncrypted;
   export type encryptMsg = { pubKeys: string[] };
   export type encryptFile = { pubKeys: string[], name: string };
-  export type parseDecryptMsg = { keys: PrvKeyInfo[], passphrases: string[], msgPwd?: string, isEmail?: boolean };
-  export type decryptFile = { keys: PrvKeyInfo[], passphrases: string[], msgPwd?: string };
+  export type parseDecryptMsg = { keys: PrvKeyInfo[], msgPwd?: string, isEmail?: boolean };
+  export type decryptFile = { keys: PrvKeyInfo[], msgPwd?: string };
   export type parseDateStr = { dateStr: string };
   export type zxcvbnStrengthBar = { guesses: number, purpose: 'passphrase' };
   export type gmailBackupSearch = { acctEmail: string };
@@ -54,7 +54,7 @@ export class Validate {
   }
 
   public static parseDecryptMsg = (v: any): NodeRequest.parseDecryptMsg => {
-    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'isEmail', 'boolean?')) {
+    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'isEmail', 'boolean?')) {
       return v as NodeRequest.parseDecryptMsg;
     }
     throw new Error('Wrong request structure for NodeRequest.parseDecryptMsg');
@@ -68,7 +68,7 @@ export class Validate {
   }
 
   public static decryptFile = (v: any): NodeRequest.decryptFile => {
-    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?')) {
+    if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'msgPwd', 'string?')) {
       return v as NodeRequest.decryptFile;
     }
     throw new Error('Wrong request structure for NodeRequest.decryptFile');
@@ -140,7 +140,7 @@ const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 
     return Array.isArray(value) && value.filter((x: any) => typeof x === 'string').length === value.length;
   }
   if (type === 'PrvKeyInfo[]') {
-    return Array.isArray(value) && value.filter((ki: any) => hasProp(ki, 'private', 'string') && hasProp(ki, 'longid', 'string')).length === value.length;
+    return Array.isArray(value) && value.filter((ki: any) => hasProp(ki, 'private', 'string') && hasProp(ki, 'longid', 'string') && hasProp(ki, 'passphrase', 'string?')).length === value.length;
   }
   if (type === 'Userid[]') {
     return Array.isArray(value) && value.filter((ui: any) => hasProp(ui, 'name', 'string') && hasProp(ui, 'email', 'string')).length === value.length;

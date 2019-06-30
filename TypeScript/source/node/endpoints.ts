@@ -64,8 +64,7 @@ export class Endpoints {
   }
 
   public parseDecryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
-    const { keys, passphrases, msgPwd, isEmail } = Validate.parseDecryptMsg(uncheckedReq);
-    const kisWithPp = { keys, passphrases };
+    const { keys: kisWithPp, msgPwd, isEmail } = Validate.parseDecryptMsg(uncheckedReq);
     const rawBlocks: MsgBlock[] = []; // contains parsed, unprocessed / possibly encrypted data
     if (isEmail) {
       const { blocks } = await Mime.process(Buffer.concat(data));
@@ -118,8 +117,8 @@ export class Endpoints {
   }
 
   public decryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
-    const { keys, passphrases, msgPwd } = Validate.decryptFile(uncheckedReq);
-    const decryptedMeta = await PgpMsg.decrypt({ kisWithPp: { keys, passphrases }, encryptedData: Buffer.concat(data), msgPwd });
+    const { keys: kisWithPp, msgPwd } = Validate.decryptFile(uncheckedReq);
+    const decryptedMeta = await PgpMsg.decrypt({ kisWithPp, encryptedData: Buffer.concat(data), msgPwd });
     if (!decryptedMeta.success) {
       decryptedMeta.message = undefined;
       return fmtRes(decryptedMeta);
