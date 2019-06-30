@@ -29,16 +29,14 @@ export class Store {
   }
 
   static decryptedKeyCacheWipe = () => {
-    console.log('cache: wiping');
     DECRYPTED_KEY_CACHE = {};
   }
 
   private static decryptedKeyCacheRenewExpiry = () => {
-    console.log('cache: renewing');
     if (DECRYPTED_KEY_CACHE_WIPE_TIMEOUT) {
       clearTimeout(DECRYPTED_KEY_CACHE_WIPE_TIMEOUT);
     }
-    DECRYPTED_KEY_CACHE_WIPE_TIMEOUT = setTimeout(Store.decryptedKeyCacheWipe, 10000);
+    DECRYPTED_KEY_CACHE_WIPE_TIMEOUT = setTimeout(Store.decryptedKeyCacheWipe, 5 * 60 * 1000);
   }
 
 }
