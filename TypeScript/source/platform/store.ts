@@ -46,7 +46,7 @@ export class Store {
     if (KEY_CACHE_WIPE_TIMEOUT) {
       clearTimeout(KEY_CACHE_WIPE_TIMEOUT);
     }
-    KEY_CACHE_WIPE_TIMEOUT = setTimeout(Store.keyCacheWipe, 5 * 60 * 1000);
+    KEY_CACHE_WIPE_TIMEOUT = setTimeout(Store.keyCacheWipe, 2 * 60 * 1000);
   }
 
 }

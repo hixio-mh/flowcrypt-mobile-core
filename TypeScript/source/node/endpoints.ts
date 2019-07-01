@@ -107,13 +107,25 @@ export class Endpoints {
         // no longer used below, only gets passed to be serialized so be safe
         block.attMeta.data = Buf.fromUint8(block.attMeta.data).toBase64Str() as any as Uint8Array;
       }
-      if (block.type === 'publicKey' && !block.keyDetails) { // this could eventually be moved into detectBlocks, which would make it async
-        block.keyDetails = await Pgp.key.details(await Pgp.key.read(block.content.toString()));
-      }
-      if (block.type === 'decryptedHtml' || block.type === 'decryptedText' || block.type === 'decryptedAtt' || block.type === 'decryptErr') {
+      if (block.type === 'decryptedHtml' || block.type === 'decryptedText' || block.type === 'decryptedAtt') {
         replyType = 'encrypted';
       }
-      if (isContentBlock(block.type)) {
+      if (block.type === 'publicKey' && !block.keyDetails) { // this could eventually be moved into detectBlocks, which would make it async
+        const { keys } = await Pgp.key.normalize(block.content);
+        if (keys.length) {
+          for (const pub of keys) {
+            blocks.push({ type: 'publicKey', content: pub.armor(), complete: true, keyDetails: await Pgp.key.details(pub) });
+          }
+        } else {
+          blocks.push({
+            type: 'decryptErr', content: block.content, complete: true, decryptErr: {
+              success: false,
+              error: { type: 'format' as DecryptErrTypes, message: 'Badly formatted public key' },
+              longids: { message: [], matching: [], chosen: [], needPassphrase: [] }
+            }
+          });
+        }
+      } else if (isContentBlock(block.type)) {
         msgContentBlocks.push(block);
       } else {
         blocks.push(block);

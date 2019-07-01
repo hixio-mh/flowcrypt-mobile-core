@@ -299,12 +299,31 @@ export class Pgp {
       }
       return { keys: allKeys, errs: allErrs };
     },
-    decrypt: async (key: OpenPGP.key.Key, passphrases: string[], optionalKeyid?: OpenPGP.Keyid): Promise<boolean> => {
+    decrypt: async (key: OpenPGP.key.Key, passphrases: string[], optionalKeyid?: OpenPGP.Keyid, optionalBehaviorFlag?: 'OK-IF-ALREADY-DECRYPTED'): Promise<boolean> => {
       try {
         return await key.decrypt(passphrases, optionalKeyid); // when no keyid intersection found, it will decrypt all
       } catch (e) {
         if (e instanceof Error && e.message.toLowerCase().includes('passphrase')) {
           return false;
+        } else if (e instanceof Error && e.message.toLowerCase().includes('already decrypted') && optionalBehaviorFlag === 'OK-IF-ALREADY-DECRYPTED') {
+          // OpenPGP.js will say key.isDecrypted() -> false, but still throw 'already decrypted', if some packets were already decrypted, but not others
+          // below we can gracefully decrypt the remaining required packets, if a flag was provided to do so
+          if (passphrases.length !== 1) {
+            throw new Error(`Key packet is already decrypted + cannot gracefully decrypt with more than one pass phrase`);
+          }
+          for (const { keyPacket } of key.getKeys(optionalKeyid)) {
+            if (keyPacket.isDecrypted() === false) {
+              try {
+                await (keyPacket as OpenPGP.packet.SecretKey).decrypt(passphrases[0]);
+              } catch (e) {
+                if (e instanceof Error && e.message.includes('passphrase')) {
+                  return false;
+                }
+                throw e;
+              }
+            }
+          }
+          return true
         }
         throw e;
       }
@@ -412,16 +431,13 @@ export class Pgp {
       return { original: armored, normalized, keys: await Promise.all(keys.map(Pgp.key.details)) };
     },
     details: async (k: OpenPGP.key.Key): Promise<KeyDetails> => {
-      const keyPackets: OpenPGP.packet.AnyKeyPacket[] = [];
-      for (const keyPacket of k.getKeys()) {
-        keyPackets.push(keyPacket);
-      }
+      const keys = k.getKeys();
       const algoInfo = k.primaryKey.getAlgorithmInfo();
       const algo = { algorithm: algoInfo.algorithm, bits: algoInfo.bits, curve: (algoInfo as any).curve, algorithmId: openpgp.enums.publicKey[algoInfo.algorithm] };
       const created = k.primaryKey.created.getTime() / 1000;
       const ids: KeyDetails$ids[] = [];
-      for (const keyPacket of keyPackets) {
-        const fingerprint = keyPacket.getFingerprint().toUpperCase();
+      for (const key of keys) {
+        const fingerprint = key.getFingerprint().toUpperCase();
         if (fingerprint) {
           const longid = await Pgp.key.longid(fingerprint);
           if (longid) {
@@ -631,7 +647,7 @@ export class Pgp {
         if (cachedDecryptedKey && (cachedDecryptedKey.isDecrypted() || (optionalMatchingKeyid && cachedDecryptedKey.getKeys(optionalMatchingKeyid).every(k => k.isDecrypted() === true)))) {
           ki.decrypted = cachedDecryptedKey;
           keys.prvForDecryptDecrypted.push(ki);
-        } else if (ki.parsed!.isDecrypted() || await Pgp.key.decrypt(ki.parsed!, [ki.passphrase!], optionalMatchingKeyid) === true) {
+        } else if (ki.parsed!.isDecrypted() || await Pgp.key.decrypt(ki.parsed!, [ki.passphrase!], optionalMatchingKeyid, 'OK-IF-ALREADY-DECRYPTED') === true) {
           Store.decryptedKeyCacheSet(ki.parsed!)
           ki.decrypted = ki.parsed!;
           keys.prvForDecryptDecrypted.push(ki);

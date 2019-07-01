@@ -69611,12 +69611,36 @@ Pgp.key = {
       errs: allErrs
     };
   },
-  decrypt: async (key, passphrases, optionalKeyid) => {
+  decrypt: async (key, passphrases, optionalKeyid, optionalBehaviorFlag) => {
     try {
       return await key.decrypt(passphrases, optionalKeyid); // when no keyid intersection found, it will decrypt all
     } catch (e) {
       if (e instanceof Error && e.message.toLowerCase().includes('passphrase')) {
         return false;
+      } else if (e instanceof Error && e.message.toLowerCase().includes('already decrypted') && optionalBehaviorFlag === 'OK-IF-ALREADY-DECRYPTED') {
+        // OpenPGP.js will say key.isDecrypted() -> false, but still throw 'already decrypted', if some packets were already decrypted, but not others
+        // below we can gracefully decrypt the remaining required packets, if a flag was provided to do so
+        if (passphrases.length !== 1) {
+          throw new Error(`Key packet is already decrypted + cannot gracefully decrypt with more than one pass phrase`);
+        }
+
+        for (const {
+          keyPacket
+        } of key.getKeys(optionalKeyid)) {
+          if (keyPacket.isDecrypted() === false) {
+            try {
+              await keyPacket.decrypt(passphrases[0]);
+            } catch (e) {
+              if (e instanceof Error && e.message.includes('passphrase')) {
+                return false;
+              }
+
+              throw e;
+            }
+          }
+        }
+
+        return true;
       }
 
       throw e;
@@ -69758,12 +69782,7 @@ Pgp.key = {
     };
   },
   details: async k => {
-    const keyPackets = [];
-
-    for (const keyPacket of k.getKeys()) {
-      keyPackets.push(keyPacket);
-    }
-
+    const keys = k.getKeys();
     const algoInfo = k.primaryKey.getAlgorithmInfo();
     const algo = {
       algorithm: algoInfo.algorithm,
@@ -69774,8 +69793,8 @@ Pgp.key = {
     const created = k.primaryKey.created.getTime() / 1000;
     const ids = [];
 
-    for (const keyPacket of keyPackets) {
-      const fingerprint = keyPacket.getFingerprint().toUpperCase();
+    for (const key of keys) {
+      const fingerprint = key.getFingerprint().toUpperCase();
 
       if (fingerprint) {
         const longid = await Pgp.key.longid(fingerprint);
@@ -70073,7 +70092,7 @@ Pgp.internal = {
       if (cachedDecryptedKey && (cachedDecryptedKey.isDecrypted() || optionalMatchingKeyid && cachedDecryptedKey.getKeys(optionalMatchingKeyid).every(k => k.isDecrypted() === true))) {
         ki.decrypted = cachedDecryptedKey;
         keys.prvForDecryptDecrypted.push(ki);
-      } else if (ki.parsed.isDecrypted() || (await Pgp.key.decrypt(ki.parsed, [ki.passphrase], optionalMatchingKeyid)) === true) {
+      } else if (ki.parsed.isDecrypted() || (await Pgp.key.decrypt(ki.parsed, [ki.passphrase], optionalMatchingKeyid, 'OK-IF-ALREADY-DECRYPTED')) === true) {
         store_js_1.Store.decryptedKeyCacheSet(ki.parsed);
         ki.decrypted = ki.parsed;
         keys.prvForDecryptDecrypted.push(ki);
@@ -70775,7 +70794,7 @@ Store.keyCacheRenewExpiry = () => {
     clearTimeout(KEY_CACHE_WIPE_TIMEOUT);
   }
 
-  KEY_CACHE_WIPE_TIMEOUT = setTimeout(Store.keyCacheWipe, 5 * 60 * 1000);
+  KEY_CACHE_WIPE_TIMEOUT = setTimeout(Store.keyCacheWipe, 2 * 60 * 1000);
 };
 
 exports.Store = Store;
@@ -71713,16 +71732,46 @@ class Endpoints {
           block.attMeta.data = buf_1.Buf.fromUint8(block.attMeta.data).toBase64Str();
         }
 
-        if (block.type === 'publicKey' && !block.keyDetails) {
-          // this could eventually be moved into detectBlocks, which would make it async
-          block.keyDetails = await pgp_1.Pgp.key.details((await pgp_1.Pgp.key.read(block.content.toString())));
-        }
-
-        if (block.type === 'decryptedHtml' || block.type === 'decryptedText' || block.type === 'decryptedAtt' || block.type === 'decryptErr') {
+        if (block.type === 'decryptedHtml' || block.type === 'decryptedText' || block.type === 'decryptedAtt') {
           replyType = 'encrypted';
         }
 
-        if (fmt_1.isContentBlock(block.type)) {
+        if (block.type === 'publicKey' && !block.keyDetails) {
+          // this could eventually be moved into detectBlocks, which would make it async
+          const {
+            keys
+          } = await pgp_1.Pgp.key.normalize(block.content);
+
+          if (keys.length) {
+            for (const pub of keys) {
+              blocks.push({
+                type: 'publicKey',
+                content: pub.armor(),
+                complete: true,
+                keyDetails: await pgp_1.Pgp.key.details(pub)
+              });
+            }
+          } else {
+            blocks.push({
+              type: 'decryptErr',
+              content: block.content,
+              complete: true,
+              decryptErr: {
+                success: false,
+                error: {
+                  type: 'format',
+                  message: 'Badly formatted public key'
+                },
+                longids: {
+                  message: [],
+                  matching: [],
+                  chosen: [],
+                  needPassphrase: []
+                }
+              }
+            });
+          }
+        } else if (fmt_1.isContentBlock(block.type)) {
           msgContentBlocks.push(block);
         } else {
           blocks.push(block);
