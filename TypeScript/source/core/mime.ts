@@ -3,7 +3,7 @@
 'use strict';
 
 import { Str, Dict } from './common.js';
-import { Pgp, KeyDetails, DecryptError } from './pgp.js';
+import { Pgp, KeyDetails, DecryptError, VerifyRes } from './pgp.js';
 import { Att, AttMeta } from './att.js';
 import { Catch } from '../platform/catch.js';
 import { requireMimeParser, requireMimeBuilder, requireIso88592 } from '../platform/require.js';
@@ -31,7 +31,7 @@ export type SendableMsgBody = { [key: string]: string | undefined; 'text/plain'?
 export type KeyBlockType = 'publicKey' | 'privateKey';
 export type ReplaceableMsgBlockType = KeyBlockType | 'cryptupVerification' | 'signedMsg' | 'encryptedMsg' | 'encryptedMsgLink';
 export type MsgBlockType = ReplaceableMsgBlockType | 'plainText' | 'decryptedText' | 'plainHtml' | 'decryptedHtml' | 'plainAtt' | 'encryptedAtt'
-  | 'decryptedAtt' | 'encryptedAttLink' | 'decryptErr';
+  | 'decryptedAtt' | 'encryptedAttLink' | 'decryptErr' | 'verifiedMsg';
 export type MsgBlock = {
   type: MsgBlockType;
   content: string | Buf;
@@ -40,6 +40,7 @@ export type MsgBlock = {
   keyDetails?: KeyDetails; // only in publicKey when returned to Android (could eventually be made mandatory, done straight in detectBlocks?)
   attMeta?: AttMeta; // only in plainAtt, encryptedAtt, decryptedAtt, encryptedAttLink (not sure if always)
   decryptErr?: DecryptError; // only in decryptErr block, always
+  verifyRes?: VerifyRes,
 };
 
 export class Mime {

@@ -32,7 +32,7 @@ export namespace PgpMsgMethod {
     export type VerifyDetached = { plaintext: Uint8Array, sigText: Uint8Array };
   }
   export type DiagnosePubkeys = (arg: Arg.DiagnosePubkeys) => Promise<DiagnoseMsgPubkeysResult>;
-  export type VerifyDetached = (arg: Arg.VerifyDetached) => Promise<MsgVerifyResult>;
+  export type VerifyDetached = (arg: Arg.VerifyDetached) => Promise<VerifyRes>;
   export type Decrypt = (arg: Arg.Decrypt) => Promise<DecryptSuccess | DecryptError>;
   export type Type = (arg: Arg.Type) => Promise<PgpMsgTypeResult>;
   export type Encrypt = (arg: Arg.Encrypt) => Promise<OpenPGP.EncryptResult>;
@@ -102,7 +102,7 @@ type SortedKeysForDecrypt = {
   prvForDecryptWithoutPassphrases: PrvKeyInfo[];
 };
 
-type DecryptSuccess = { success: true; signature?: MsgVerifyResult; isEncrypted?: boolean, filename?: string, content: Buf };
+type DecryptSuccess = { success: true; signature?: VerifyRes; isEncrypted?: boolean, filename?: string, content: Buf };
 type DecryptError$error = { type: DecryptErrTypes; message: string; };
 type DecryptError$longids = { message: string[]; matching: string[]; chosen: string[]; needPassphrase: string[]; };
 export type DecryptError = {
@@ -117,7 +117,7 @@ type PreparedForDecrypt = { isArmored: boolean, isCleartext: true, message: Open
 type OpenpgpMsgOrCleartext = OpenPGP.message.Message | OpenPGP.cleartext.CleartextMessage;
 
 export type Pwd = { question?: string; answer: string; };
-export type MsgVerifyResult = { signer?: string; contact?: Contact; match: boolean | null; error?: string; };
+export type VerifyRes = { signer?: string; contact?: Contact; match: boolean | null; error?: string; };
 export type PgpMsgTypeResult = { armored: boolean, type: MsgBlockType } | undefined;
 export type DecryptResult = DecryptSuccess | DecryptError;
 export type DiagnoseMsgPubkeysResult = { found_match: boolean, receivers: number, };
@@ -735,8 +735,8 @@ export class PgpMsg {
     return await openpgp.stream.readToEnd((signRes as OpenPGP.SignArmorResult).data);
   }
 
-  static verify = async (message: OpenpgpMsgOrCleartext, keysForVerification: OpenPGP.key.Key[], optionalContact?: Contact): Promise<MsgVerifyResult> => {
-    const sig: MsgVerifyResult = { contact: optionalContact, match: null }; // tslint:disable-line:no-null-keyword
+  static verify = async (message: OpenpgpMsgOrCleartext, keysForVerification: OpenPGP.key.Key[], optionalContact?: Contact): Promise<VerifyRes> => {
+    const sig: VerifyRes = { contact: optionalContact, match: null }; // tslint:disable-line:no-null-keyword
     try {
       const verifyResults = await message.verify(keysForVerification);
       for (const verifyRes of verifyResults) {
@@ -867,7 +867,7 @@ export class PgpMsg {
       const privateKeys = keys.prvForDecryptDecrypted.map(ki => ki.decrypted!);
       const decrypted = await (prepared.message as OpenPGP.message.Message).decrypt(privateKeys, passwords, undefined, false);
       const content = new Buf(await openpgp.stream.readToEnd(decrypted.getLiteralData()!));
-      let signature: MsgVerifyResult | undefined;
+      let signature: VerifyRes | undefined;
       try { // remove when resolved: https://github.com/openpgpjs/openpgpjs/issues/916
         const sigText = await PgpMsg.extractSignature(decrypted);
         signature = sigText ? await PgpMsg.verifyDetached({ plaintext: content, sigText }) : undefined;

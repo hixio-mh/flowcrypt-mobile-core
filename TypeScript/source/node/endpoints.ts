@@ -76,10 +76,14 @@ export class Endpoints {
     }
     const sequentialProcessedBlocks: MsgBlock[] = []; // contains decrypted or otherwise formatted data
     for (const rawBlock of rawBlocks) {
-      if (rawBlock.type === 'encryptedMsg') {
+      if (rawBlock.type === 'encryptedMsg' || rawBlock.type === 'signedMsg') {
         const decryptRes = await PgpMsg.decrypt({ kisWithPp, msgPwd, encryptedData: rawBlock.content instanceof Uint8Array ? rawBlock.content : Buffer.from(rawBlock.content) });
         if (decryptRes.success) {
-          sequentialProcessedBlocks.push(... await PgpMsg.fmtDecrypted(decryptRes.content, 'decryptedHtml'));
+          if (decryptRes.isEncrypted) {
+            sequentialProcessedBlocks.push(... await PgpMsg.fmtDecrypted(decryptRes.content, 'decryptedHtml'));
+          } else {
+            sequentialProcessedBlocks.push({ type: 'verifiedMsg', content: decryptRes.content, complete: true });
+          }
         } else {
           decryptRes.message = undefined;
           sequentialProcessedBlocks.push(Pgp.internal.msgBlockDecryptErrObj(decryptRes.error.type === DecryptErrTypes.noMdc ? decryptRes.content! : rawBlock.content, decryptRes));
