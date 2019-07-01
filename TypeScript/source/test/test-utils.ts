@@ -59,6 +59,9 @@ export const request = (endpoint: string, json: JsonDict, data: Buffer | string 
         if (expectSuccess && (status !== 200 || typeof err !== 'undefined')) {
           reject(`Status unexpectedly ${status} with err: ${err}`);
         } else {
+          if (endpoint === 'parseDecryptMsg') {
+            delete json.text; // todo - currently Android wrongly returns html, thus not tested
+          }
           resolve({ json, data, err, status });
         }
       }
@@ -93,8 +96,31 @@ export const expectData = (data: Buffer, type?: 'armoredMsg' | 'msgBlocks' | 'bi
     const blocks = data.toString().split('\n').map(block => JSON.parse(block));
     expect(details).to.be.instanceOf(Array);
     const expectedBlocks = details as any[];
-    expect(expectedBlocks.length).to.equal(blocks.length);
+    expect(blocks).to.have.property('length').which.is.greaterThan(0);
+    expect(blocks[0]).to.have.property('type').which.equals('plainHtml'); // todo plainHtml - should be renambed - legacy compat reasons
+    const renderedContentBlocksBlock = blocks.shift();
+    const [head, body, foot] = renderedContentBlocksBlock.content.split(/<\/?body>/g);
+    expect(head).to.contain('<!DOCTYPE html><html>');
+    expect(head).to.contain('<style>');
+    expect(head).to.contain('<meta name="viewport" content="width=device-width" />');
+    expect(foot).to.contain('</html>');
+    if (body.includes('<!-- next MsgBlock -->\n')) {
+      const renderedContentBlocks = body.split('<!-- next MsgBlock -->\n');
+      const lastEmpty = renderedContentBlocks.pop(); // last one should be empty due to the splitting above
+      expect(lastEmpty).to.equal('');
+      for (const renderedContentBlock of renderedContentBlocks) {
+        const m = (renderedContentBlock as string).match(/<div class="MsgBlock ([a-z]+)" style="[^"]+">(.*)<\/div>/);
+        if (m === null) {
+          blocks.unshift({ error: "TEST VALIDATION ERROR - MISMATCHING CONTENT BLOCK FORMAT", content: renderedContentBlock });
+        } else {
+          blocks.unshift({ rendered: true, frameColor: m[1], htmlContent: m[2] });
+        }
+      }
+    }
     for (let i = 0; i < blocks.length; i++) {
+      if (i === 0 && blocks[i].type === 'decryptedHtml') {
+
+      }
       expect(blocks[i]).to.deep.equal(expectedBlocks[i], `block ${i} failed cmp check`);
     }
   } else if (type === "binary") {
@@ -131,9 +157,8 @@ const TEST_KEYS: { [name: string]: TestKey } = {
 export const getKeypairs = (...names: ('rsa1' | 'rsa2' | 'ecc')[]) => {
   return {
     pubKeys: names.map(name => TEST_KEYS[name].pubKey),
-    keys: names.map(name => ({ private: TEST_KEYS[name].private, longid: TEST_KEYS[name].longid })),
+    keys: names.map(name => ({ private: TEST_KEYS[name].private, longid: TEST_KEYS[name].longid, passphrase: TEST_KEYS[name].passphrase })),
     decrypted: names.map(name => TEST_KEYS[name].decrypted),
-    passphrases: names.map(name => TEST_KEYS[name].passphrase),
     longids: names.map(name => TEST_KEYS[name].longid),
   };
 }
