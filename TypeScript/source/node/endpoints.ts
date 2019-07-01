@@ -76,13 +76,16 @@ export class Endpoints {
     }
     const sequentialProcessedBlocks: MsgBlock[] = []; // contains decrypted or otherwise formatted data
     for (const rawBlock of rawBlocks) {
-      if (rawBlock.type === 'encryptedMsg' || rawBlock.type === 'signedMsg') {
+      if (rawBlock.type === 'signedMsg' && rawBlock.signature) {
+        const verify = await PgpMsg.verifyDetached({ sigText: Buf.fromUtfStr(rawBlock.signature), plaintext: Buf.with(rawBlock.content) });
+        sequentialProcessedBlocks.push({ type: 'verifiedMsg', content: rawBlock.content, verifyRes: verify, complete: true });
+      } else if (rawBlock.type === 'encryptedMsg' || rawBlock.type === 'signedMsg') {
         const decryptRes = await PgpMsg.decrypt({ kisWithPp, msgPwd, encryptedData: rawBlock.content instanceof Uint8Array ? rawBlock.content : Buffer.from(rawBlock.content) });
         if (decryptRes.success) {
           if (decryptRes.isEncrypted) {
             sequentialProcessedBlocks.push(... await PgpMsg.fmtDecrypted(decryptRes.content, 'decryptedHtml'));
           } else {
-            sequentialProcessedBlocks.push({ type: 'verifiedMsg', content: decryptRes.content, complete: true });
+            sequentialProcessedBlocks.push({ type: 'verifiedMsg', content: decryptRes.content, complete: true, verifyRes: decryptRes.signature });
           }
         } else {
           decryptRes.message = undefined;
