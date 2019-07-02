@@ -13,6 +13,7 @@ import { Str } from '../core/common';
 import { Mime, MsgBlock, RichHeaders } from '../core/mime';
 import { Buf } from '../core/buf';
 import { Store } from '../platform/store';
+import { Xss } from '../platform/xss';
 
 const openpgp = requireOpenpgp();
 
@@ -68,22 +69,28 @@ export class Endpoints {
   public parseDecryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
     const { keys: kisWithPp, msgPwd, isEmail } = Validate.parseDecryptMsg(uncheckedReq);
     const rawBlocks: MsgBlock[] = []; // contains parsed, unprocessed / possibly encrypted data
+    let rawSigned: string | undefined = undefined;
     if (isEmail) {
-      const { blocks } = await Mime.process(Buffer.concat(data));
+      const { blocks, rawSignedContent } = await Mime.process(Buffer.concat(data));
+      rawSigned = rawSignedContent;
       rawBlocks.push(...blocks);
     } else {
       rawBlocks.push(Pgp.internal.msgBlockObj('encryptedMsg', new Buf(Buffer.concat(data))));
     }
     const sequentialProcessedBlocks: MsgBlock[] = []; // contains decrypted or otherwise formatted data
     for (const rawBlock of rawBlocks) {
-      if (rawBlock.type === 'signedMsg' && rawBlock.signature) {
-        const verify = await PgpMsg.verifyDetached({ sigText: Buf.fromUtfStr(rawBlock.signature), plaintext: Buf.with(rawBlock.content) });
-        sequentialProcessedBlocks.push({ type: 'verifiedMsg', content: rawBlock.content, verifyRes: verify, complete: true });
+      if ((rawBlock.type === 'signedMsg' || rawBlock.type === 'signedHtml') && rawBlock.signature) {
+        const verify = await PgpMsg.verifyDetached({ sigText: Buf.fromUtfStr(rawBlock.signature), plaintext: Buf.with(rawSigned || rawBlock.content) });
+        if (rawBlock.type === 'signedHtml') {
+          sequentialProcessedBlocks.push({ type: 'verifiedMsg', content: Xss.htmlSanitizeKeepBasicTags(rawBlock.content.toString()), verifyRes: verify, complete: true });
+        } else { // text
+          sequentialProcessedBlocks.push({ type: 'verifiedMsg', content: Str.asEscapedHtml(rawBlock.content.toString()), verifyRes: verify, complete: true });
+        }
       } else if (rawBlock.type === 'encryptedMsg' || rawBlock.type === 'signedMsg') {
         const decryptRes = await PgpMsg.decrypt({ kisWithPp, msgPwd, encryptedData: Buf.with(rawBlock.content) });
         if (decryptRes.success) {
           if (decryptRes.isEncrypted) {
-            sequentialProcessedBlocks.push(... await PgpMsg.fmtDecrypted(decryptRes.content, 'decryptedHtml'));
+            sequentialProcessedBlocks.push(... await PgpMsg.fmtDecryptedAsSanitizedHtmlBlocks(decryptRes.content));
           } else {
             sequentialProcessedBlocks.push({ type: 'verifiedMsg', content: decryptRes.content, complete: true, verifyRes: decryptRes.signature });
           }

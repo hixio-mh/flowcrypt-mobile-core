@@ -8,7 +8,7 @@ import { expect } from 'chai';
 import { ChildProcess } from './test/flowcrypt-node-modules';
 import { requireOpenpgp } from './platform/require';
 
-const htmlContent = 'some\n汉\ntxt'.replace(/\n/g, '<br>');
+const htmlContent = 'some\n汉\ntxt'.replace(/\n/g, '<br />');
 
 const openpgp = requireOpenpgp();
 
@@ -51,7 +51,7 @@ ava.test('encryptMsg -> parseDecryptMsg', async t => {
   expectData(encryptedMsg, 'armoredMsg');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys }, encryptedMsg);
   expect(decryptJson).to.deep.equal({ replyType: 'encrypted' });
-  expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent: content.replace(/\n/g, '<br>') }]);
+  expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent: content.replace(/\n/g, '<br />') }]);
   t.pass();
 });
 
@@ -70,7 +70,7 @@ ava.test('composeEmail format:plain -> parseDecryptMsg', async t => {
   expect(plainMimeStr).contains('MIME-Version: 1.0');
   const { data: blocks, json: parseJson } = await request('parseDecryptMsg', { keys, isEmail: true }, plainMimeMsg);
   expect(parseJson).to.deep.equal({ replyType: 'plain' });
-  expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'plain', htmlContent: content.replace(/\n/g, '<br>') }]);
+  expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'plain', htmlContent: content.replace(/\n/g, '<br />') }]);
   t.pass();
 });
 
@@ -111,7 +111,7 @@ ava.test('composeEmail format:encrypt-inline -> parseDecryptMsg', async t => {
   expectData(encryptedMimeMsg, 'armoredMsg'); // armored msg block should be contained in the mime message
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, encryptedMimeMsg);
   expect(decryptJson).deep.equal({ replyType: 'encrypted' });
-  expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent: content.replace(/\n/g, '<br>') }]);
+  expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent: content.replace(/\n/g, '<br />') }]);
   t.pass();
 });
 

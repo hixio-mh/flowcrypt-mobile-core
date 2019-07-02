@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "description": "Node.js bundle for FlowCrypt Android internal use.",
   "dependencies": {
-    "openpgp": "4.4.1"
+    "openpgp": "4.4.1",
+    "sanitize-html": "1.20.1"
   },
   "devDependencies": {
     "@types/chai": "4.1.4",
@@ -14,7 +15,7 @@
     "babel-preset-env": "1.7.0",
     "tslint": "5.11.0",
     "pg": "7.4.3",
-    "request": "^2.88.0",
+    "request": "2.88.0",
     "node-cleanup": "2.1.2",
     "chai": "4.1.2",
     "typescript": "3.4.1",
@@ -26,7 +27,7 @@
     "prebuild": "rm -rf build/ts build/final/* && mkdir -p build/final",
     "_buildTs": "cd .. && ./TypeScript/node_modules/typescript/bin/tsc --project tsconfig.json",
     "_buildBundles": "webpack --config webpack.config.js && node tooling/fix-bundles.js",
-    "_buildFinalWip": "cat build/bundles/emailjs-bundle.js build/bundles/openpgp-bundle.js build/bundles/flowcrypt-bundle.js > build/final/flowcrypt-android-wip.js",
+    "_buildFinalWip": "cat build/bundles/html-sanitize-bundle.js build/bundles/emailjs-bundle.js build/bundles/openpgp-bundle.js build/bundles/flowcrypt-bundle.js > build/final/flowcrypt-android-wip.js",
     "_buildFinal": "node tooling/build-final.js",
     "build": "npm run-script _buildTs && npm run-script _buildBundles && npm run-script _buildFinalWip && npm run-script _buildFinal",
     "predeploy": "npm run-script build",

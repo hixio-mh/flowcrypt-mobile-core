@@ -31,7 +31,7 @@ export type SendableMsgBody = { [key: string]: string | undefined; 'text/plain'?
 export type KeyBlockType = 'publicKey' | 'privateKey';
 export type ReplaceableMsgBlockType = KeyBlockType | 'cryptupVerification' | 'signedMsg' | 'encryptedMsg' | 'encryptedMsgLink';
 export type MsgBlockType = ReplaceableMsgBlockType | 'plainText' | 'decryptedText' | 'plainHtml' | 'decryptedHtml' | 'plainAtt' | 'encryptedAtt'
-  | 'decryptedAtt' | 'encryptedAttLink' | 'decryptErr' | 'verifiedMsg';
+  | 'decryptedAtt' | 'encryptedAttLink' | 'decryptErr' | 'verifiedMsg' | 'signedHtml';
 export type MsgBlock = {
   type: MsgBlockType;
   content: string | Buf;
@@ -48,10 +48,10 @@ export class Mime {
   public static process = async (mimeMsg: Uint8Array) => {
     const decoded = await Mime.decode(mimeMsg);
     const blocks: MsgBlock[] = [];
-    if (decoded.text) {  // may be undefined or empty
-      blocks.push(...Pgp.armor.detectBlocks(decoded.text).blocks);
-    } else if (decoded.html) {
+    if (decoded.html) {
       blocks.push(Pgp.internal.msgBlockObj('plainHtml', decoded.html));
+    } else if (decoded.text) {  // may be undefined or empty
+      blocks.push(...Pgp.armor.detectBlocks(decoded.text).blocks);
     }
     for (const file of decoded.atts) {
       const treatAs = file.treatAs();
@@ -74,16 +74,19 @@ export class Mime {
     }
     if (decoded.signature) {
       for (const block of blocks) {
-        if (block.type === 'plainText' || block.type === 'plainHtml') {
+        if (block.type === 'plainText') {
           block.type = 'signedMsg';
+          block.signature = decoded.signature;
+        } else if (block.type === 'plainHtml') {
+          block.type = 'signedHtml';
           block.signature = decoded.signature;
         }
       }
-      if (!blocks.find(block => block.type === 'plainText' || block.type === 'plainHtml')) { // signed an empty message
+      if (!blocks.find(block => block.type === 'plainText' || block.type === 'plainHtml' || block.type === 'signedMsg' || block.type === 'signedHtml')) { // signed an empty message
         blocks.push({ type: "signedMsg", "content": "", signature: decoded.signature, complete: true });
       }
     }
-    return { headers: decoded.headers, blocks, from: decoded.from, to: decoded.to };
+    return { headers: decoded.headers, blocks, from: decoded.from, to: decoded.to, rawSignedContent: decoded.rawSignedContent };
   }
 
   private static headersToFrom = (parsedMimeMsg: MimeContent) => {

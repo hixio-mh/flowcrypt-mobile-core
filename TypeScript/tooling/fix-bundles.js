@@ -29,6 +29,9 @@ for (const filename of fs.readdirSync(bundleRawDir)) {
 // copy raw to flowcrypt-bundle
 fs.copyFileSync(`${bundleRawDir}/flowcrypt.js`, `${bundleDir}/flowcrypt-bundle.js`);
 
+// copy wip to html-sanitize-bundle
+fs.copyFileSync(`${bundleWipDir}/html-sanitize.js`, `${bundleDir}/html-sanitize-bundle.js`);
+
 // // concat emailjs bundle/wip to become emailjs-bundle 
 // fs.writeFileSync(`${bundleDir}/emailjs-bundle.js`, [ // this would work when using modules directly from Node - we don't do that yet
 //   `${bundleWipDir}/emailjs-mime-parser.js`,

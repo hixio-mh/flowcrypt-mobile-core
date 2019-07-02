@@ -10,12 +10,13 @@ const wipSrc = fs.readFileSync(wipPath).toString();
 const fixedImportsSrc = wipSrc
   .replace(/require\(['"]bn\.js['"]\)/g, 'dereq_bn')
   .replace(/require\(['"]minimalistic-assert['"]\)/g, 'dereq_minimalistic_assert')
-  .replace(/require\(['"]inherits['"]\)/g, 'require("util").inherits')
+  .replace(/require\(['"]inherits['"]\)/g, 'dereq_inherits')
   .replace(/require\(['"]asn1\.js['"]\)/g, 'dereq_asn1');
 
 const finalSrc = `
 try {
 /* final flowcrypt-android bundle starts here */
+const dereq_inherits = require("util").inherits; // standard node util, not to interfere with webpack require, which cannot resolve it
 ${fixedImportsSrc.replace("'[BUILD_REPLACEABLE_VERSION]'", 'APP_VERSION')}
 /* final flowcrypt-android bundle ends here */
 } catch(e) {
