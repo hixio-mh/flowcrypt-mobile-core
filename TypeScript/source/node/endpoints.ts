@@ -80,7 +80,7 @@ export class Endpoints {
         const verify = await PgpMsg.verifyDetached({ sigText: Buf.fromUtfStr(rawBlock.signature), plaintext: Buf.with(rawBlock.content) });
         sequentialProcessedBlocks.push({ type: 'verifiedMsg', content: rawBlock.content, verifyRes: verify, complete: true });
       } else if (rawBlock.type === 'encryptedMsg' || rawBlock.type === 'signedMsg') {
-        const decryptRes = await PgpMsg.decrypt({ kisWithPp, msgPwd, encryptedData: rawBlock.content instanceof Uint8Array ? rawBlock.content : Buffer.from(rawBlock.content) });
+        const decryptRes = await PgpMsg.decrypt({ kisWithPp, msgPwd, encryptedData: Buf.with(rawBlock.content) });
         if (decryptRes.success) {
           if (decryptRes.isEncrypted) {
             sequentialProcessedBlocks.push(... await PgpMsg.fmtDecrypted(decryptRes.content, 'decryptedHtml'));
@@ -90,6 +90,13 @@ export class Endpoints {
         } else {
           decryptRes.message = undefined;
           sequentialProcessedBlocks.push(Pgp.internal.msgBlockDecryptErrObj(decryptRes.error.type === DecryptErrTypes.noMdc ? decryptRes.content! : rawBlock.content, decryptRes));
+        }
+      } else if (rawBlock.type === 'encryptedAtt' && rawBlock.attMeta && /^(0x)?[A-Fa-f0-9]{16,40}\.asc\.pgp$/.test(rawBlock.attMeta.name || '')) { // encrypted pubkey attached
+        const decryptRes = await PgpMsg.decrypt({ kisWithPp, msgPwd, encryptedData: Buf.with(rawBlock.attMeta.data || '') });
+        if (decryptRes.content) {
+          sequentialProcessedBlocks.push({ type: 'publicKey', content: decryptRes.content.toString(), complete: true });
+        } else {
+          sequentialProcessedBlocks.push(rawBlock); // will show as encryptedAtt
         }
       } else {
         sequentialProcessedBlocks.push(rawBlock);
@@ -128,6 +135,9 @@ export class Endpoints {
       } else if (isContentBlock(block.type)) {
         msgContentBlocks.push(block);
       } else {
+        if (block.attMeta && !block.content.length) { // add a note about lacking file support. todo - remove when added support
+          block.content = `${block.attMeta.name || '(unnamed file)'} [${Str.numberFormat(Math.ceil((block.attMeta.length || 0) / 1024)) + 'KB'}]\n(Improved file support coming very soon!)`;
+        }
         blocks.push(block);
       }
     }
