@@ -26,12 +26,12 @@ export class Xss {
 
   private static ALLOWED_ATTRS = {
     a: ['href', 'name', 'target'],
-    // img: ['src'],
+    img: ['src'],
     font: ['size', 'color'],
     span: ['color'],
     div: ['color'],
     p: ['color'],
-    // em: ['style'], // tests rely on this, could potentially remove
+    em: ['style'], // tests rely on this, could potentially remove
   };
 
   /**

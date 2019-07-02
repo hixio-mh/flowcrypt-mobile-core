@@ -74816,8 +74816,7 @@ exports.fmtContentBlock = contentBlocks => {
       </style>
     </head>
     <body>${msgContentAsHtml}</body>
-  </html>`; // console.log(msgContentAsHtml);
-
+  </html>`;
   return {
     contentBlock: pgp_1.Pgp.internal.msgBlockObj('plainHtml', msgContentAsHtml),
     text: msgContentAsText
@@ -77393,11 +77392,12 @@ class Xss {}
 Xss.ALLOWED_BASIC_TAGS = ['p', 'div', 'br', 'u', 'i', 'em', 'b', 'ol', 'ul', 'pre', 'li', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'td', 'th', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'address', 'blockquote', 'dl', 'fieldset', 'a', 'font', 'strong', 'strike', 'code'];
 Xss.ALLOWED_ATTRS = {
   a: ['href', 'name', 'target'],
-  // img: ['src'],
+  img: ['src'],
   font: ['size', 'color'],
   span: ['color'],
   div: ['color'],
-  p: ['color']
+  p: ['color'],
+  em: ['style']
 };
 /**
  * used whenever untrusted remote content (eg html email) is rendered, but we still want to preserve html
