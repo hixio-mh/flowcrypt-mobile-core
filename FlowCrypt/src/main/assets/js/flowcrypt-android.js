@@ -69330,6 +69330,7 @@ var DecryptErrTypes;
   DecryptErrTypes["usePassword"] = "use_password";
   DecryptErrTypes["wrongPwd"] = "wrong_password";
   DecryptErrTypes["noMdc"] = "no_mdc";
+  DecryptErrTypes["badMdc"] = "bad_mdc";
   DecryptErrTypes["needPassphrase"] = "need_passphrase";
   DecryptErrTypes["format"] = "format";
   DecryptErrTypes["other"] = "other";
@@ -70127,6 +70128,11 @@ Pgp.internal = {
         type: DecryptErrTypes.format,
         message: e
       };
+    } else if (e === 'Modification detected.') {
+      return {
+        type: DecryptErrTypes.badMdc,
+        message: `Security threat - opening this message is dangerous because it was modified in transit.`
+      };
     } else {
       return {
         type: DecryptErrTypes.other,
@@ -70921,10 +70927,20 @@ Mime.process = async mimeMsg => {
 
   if (decoded.signature) {
     for (const block of blocks) {
-      if (block.type === 'plainText') {
+      if (block.type === 'plainText' || block.type === 'plainHtml') {
         block.type = 'signedMsg';
         block.signature = decoded.signature;
       }
+    }
+
+    if (!blocks.find(block => block.type === 'plainText' || block.type === 'plainHtml')) {
+      // signed an empty message
+      blocks.push({
+        type: "signedMsg",
+        "content": "",
+        signature: decoded.signature,
+        complete: true
+      });
     }
   }
 

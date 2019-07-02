@@ -74,10 +74,13 @@ export class Mime {
     }
     if (decoded.signature) {
       for (const block of blocks) {
-        if (block.type === 'plainText') {
+        if (block.type === 'plainText' || block.type === 'plainHtml') {
           block.type = 'signedMsg';
           block.signature = decoded.signature;
         }
+      }
+      if (!blocks.find(block => block.type === 'plainText' || block.type === 'plainHtml')) { // signed an empty message
+        blocks.push({ type: "signedMsg", "content": "", signature: decoded.signature, complete: true });
       }
     }
     return { headers: decoded.headers, blocks, from: decoded.from, to: decoded.to };

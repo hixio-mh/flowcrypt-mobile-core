@@ -126,6 +126,7 @@ export enum DecryptErrTypes {
   usePassword = 'use_password',
   wrongPwd = 'wrong_password',
   noMdc = 'no_mdc',
+  badMdc = 'bad_mdc',
   needPassphrase = 'need_passphrase',
   format = 'format',
   other = 'other',
@@ -669,6 +670,8 @@ export class Pgp {
         return { type: DecryptErrTypes.noMdc, message: e };
       } else if (e === 'Decryption error') {
         return { type: DecryptErrTypes.format, message: e };
+      } else if (e === 'Modification detected.') {
+        return { type: DecryptErrTypes.badMdc, message: `Security threat - opening this message is dangerous because it was modified in transit.` };
       } else {
         return { type: DecryptErrTypes.other, message: e };
       }
