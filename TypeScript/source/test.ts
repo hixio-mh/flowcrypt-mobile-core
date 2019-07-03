@@ -8,7 +8,8 @@ import { expect } from 'chai';
 import { ChildProcess } from './test/flowcrypt-node-modules';
 import { requireOpenpgp } from './platform/require';
 
-const htmlContent = 'some\n汉\ntxt'.replace(/\n/g, '<br />');
+const text = 'some\n汉\ntxt';
+const htmlContent = text.replace(/\n/g, '<br />');
 
 const openpgp = requireOpenpgp();
 
@@ -50,7 +51,7 @@ ava.test('encryptMsg -> parseDecryptMsg', async t => {
   expectEmptyJson(encryptJson);
   expectData(encryptedMsg, 'armoredMsg');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys }, encryptedMsg);
-  expect(decryptJson).to.deep.equal({ replyType: 'encrypted' });
+  expect(decryptJson).to.deep.equal({ text: content, replyType: 'encrypted' });
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent: content.replace(/\n/g, '<br />') }]);
   t.pass();
 });
@@ -69,7 +70,7 @@ ava.test('composeEmail format:plain -> parseDecryptMsg', async t => {
   expect(plainMimeStr).contains('Date: ');
   expect(plainMimeStr).contains('MIME-Version: 1.0');
   const { data: blocks, json: parseJson } = await request('parseDecryptMsg', { keys, isEmail: true }, plainMimeMsg);
-  expect(parseJson).to.deep.equal({ replyType: 'plain' });
+  expect(parseJson).to.deep.equal({ text: content, replyType: 'plain' });
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'plain', htmlContent: content.replace(/\n/g, '<br />') }]);
   t.pass();
 });
@@ -110,7 +111,7 @@ ava.test('composeEmail format:encrypt-inline -> parseDecryptMsg', async t => {
   expect(encryptedMimeStr).contains('MIME-Version: 1.0');
   expectData(encryptedMimeMsg, 'armoredMsg'); // armored msg block should be contained in the mime message
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, encryptedMimeMsg);
-  expect(decryptJson).deep.equal({ replyType: 'encrypted' });
+  expect(decryptJson).deep.equal({ text: content, replyType: 'encrypted' });
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent: content.replace(/\n/g, '<br />') }]);
   t.pass();
 });
@@ -209,7 +210,7 @@ ava.test('parseDecryptMsg compat direct-encrypted-text', async t => {
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys }, await getCompatAsset('direct-encrypted-text'));
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent }]);
-  expect(decryptJson).to.deep.equal({ replyType: 'encrypted' });
+  expect(decryptJson).to.deep.equal({ text, replyType: 'encrypted' });
   t.pass();
 });
 
@@ -217,7 +218,7 @@ ava.test('parseDecryptMsg compat direct-encrypted-pgpmime', async t => {
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys }, await getCompatAsset('direct-encrypted-pgpmime'));
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent }]);
-  expect(decryptJson).to.deep.equal({ replyType: 'encrypted' });
+  expect(decryptJson).to.deep.equal({ text, replyType: 'encrypted' });
   t.pass();
 });
 
@@ -225,7 +226,7 @@ ava.test('parseDecryptMsg compat mime-email-plain', async t => {
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, await getCompatAsset('mime-email-plain'));
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'plain', htmlContent }]);
-  expect(decryptJson).to.deep.equal({ replyType: 'plain' });
+  expect(decryptJson).to.deep.equal({ text, replyType: 'plain' });
   t.pass();
 });
 
@@ -233,7 +234,7 @@ ava.test('parseDecryptMsg compat mime-email-encrypted-inline-text', async t => {
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, await getCompatAsset('mime-email-encrypted-inline-text'));
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent }]);
-  expect(decryptJson).to.deep.equal({ replyType: 'encrypted' });
+  expect(decryptJson).to.deep.equal({ text, replyType: 'encrypted' });
   t.pass();
 });
 
@@ -241,7 +242,7 @@ ava.test('parseDecryptMsg compat mime-email-encrypted-inline-pgpmime', async t =
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, await getCompatAsset('mime-email-encrypted-inline-pgpmime'));
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent }]);
-  expect(decryptJson).to.deep.equal({ replyType: 'encrypted' });
+  expect(decryptJson).to.deep.equal({ text, replyType: 'encrypted' });
   t.pass();
 });
 
@@ -266,7 +267,7 @@ ava.test('parseDecryptMsg compat mime-email-encrypted-inline-text-2 Mime-TextEnc
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, await getCompatAsset('mime-email-encrypted-inline-text-2'));
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent }]);
-  expect(decryptJson).to.deep.equal({ replyType: 'encrypted' });
+  expect(decryptJson).to.deep.equal({ text, replyType: 'encrypted' });
   t.pass();
 });
 
@@ -292,7 +293,7 @@ ava.test('parseDecryptMsg - decryptErr', async t => {
     },
     "complete": true
   }]);
-  expect(decryptJson).to.deep.equal({ replyType: 'plain' });
+  expect(decryptJson).to.deep.equal({ text: '', replyType: 'plain' });
   t.pass();
 });
 
@@ -300,7 +301,7 @@ ava.test('parseDecryptMsg compat mime-email-plain-html', async t => {
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, await getCompatAsset('mime-email-plain-html'));
   expectData(blocks, 'msgBlocks', [{ frameColor: 'plain', htmlContent: '<p>paragraph 1</p><p>paragraph 2 with <b>bold</b></p><p>paragraph 3 with <em style="color:red">red i</em></p>', rendered: true }]);
-  expect(decryptJson).to.deep.equal({ replyType: 'plain' });
+  expect(decryptJson).to.deep.equal({ text: `paragraph 1\nparagraph 2 with bold\nparagraph 3 with red i`, replyType: 'plain' });
   t.pass();
 });
 
@@ -326,7 +327,7 @@ ava.test('parseDecryptMsg compat mime-email-plain-with-pubkey', async t => {
       }
     },
   ]);
-  expect(decryptJson).to.deep.equal({ replyType: 'plain' });
+  expect(decryptJson).to.deep.equal({ text, replyType: 'plain' });
   t.pass();
 });
 

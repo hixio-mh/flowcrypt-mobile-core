@@ -75,7 +75,7 @@ export const fmtContentBlock = (contentBlocks: MsgBlock[]): { contentBlock: MsgB
     </head>
     <body>${msgContentAsHtml}</body>
   </html>`;
-  return { contentBlock: Pgp.internal.msgBlockObj('plainHtml', msgContentAsHtml), text: msgContentAsText };
+  return { contentBlock: Pgp.internal.msgBlockObj('plainHtml', msgContentAsHtml), text: msgContentAsText.trim() };
 }
 
 export const fmtRes = (response: {}, data?: Buffer | Uint8Array): Buffers => {

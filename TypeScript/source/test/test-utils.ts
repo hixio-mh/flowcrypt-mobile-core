@@ -59,9 +59,6 @@ export const request = (endpoint: string, json: JsonDict, data: Buffer | string 
         if (expectSuccess && (status !== 200 || typeof err !== 'undefined')) {
           reject(`Status unexpectedly ${status} with err: ${err}`);
         } else {
-          if (endpoint === 'parseDecryptMsg') {
-            delete json.text; // todo - currently Android wrongly returns html, thus not tested
-          }
           resolve({ json, data, err, status });
         }
       }
