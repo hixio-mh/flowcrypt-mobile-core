@@ -188,7 +188,7 @@ export class Endpoints {
     const allData = Buffer.concat(data);
     const pgpType = await PgpMsg.type({ data: allData });
     if (!pgpType) {
-      return fmtRes({ format: 'unknown', keyDetails, error: { message: `Cannot parse key: could not determine pgpType` } });
+      return fmtRes({ format: 'unknown', keyDetails });
     }
     if (pgpType.armored) {
       // armored

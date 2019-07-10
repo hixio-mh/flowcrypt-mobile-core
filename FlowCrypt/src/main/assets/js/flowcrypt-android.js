@@ -77886,10 +77886,7 @@ class Endpoints {
       if (!pgpType) {
         return fmt_1.fmtRes({
           format: 'unknown',
-          keyDetails,
-          error: {
-            message: `Cannot parse key: could not determine pgpType`
-          }
+          keyDetails
         });
       }
 
