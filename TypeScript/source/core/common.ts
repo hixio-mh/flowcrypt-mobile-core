@@ -8,7 +8,7 @@ export type Dict<T> = { [key: string]: T; };
 
 export class Str {
 
-  public static parseEmail = (full: string) => {
+  public static parseEmail = (full: string, flag: 'VALIDATE' | 'DO-NOT-VALIDATE' = 'VALIDATE') => {
     let email: string | undefined;
     let name: string | undefined;
     if (full.includes('<') && full.includes('>')) {
@@ -17,7 +17,7 @@ export class Str {
     } else {
       email = full.replace(/["']/g, '').trim().toLowerCase();
     }
-    if (!Str.isEmailValid(email)) {
+    if (flag === 'VALIDATE' && !Str.isEmailValid(email)) {
       email = undefined;
     }
     return { email, name, full };
@@ -82,6 +82,8 @@ export class Str {
   public static toUtcTimestamp = (datetimeStr: string, asStr: boolean = false) => asStr ? String(Date.parse(datetimeStr)) : Date.parse(datetimeStr);
 
   public static datetimeToDate = (date: string) => date.substr(0, 10).replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;');
+
+  public static fromDate = (date: Date) => date.toISOString().replace(/T/, ' ').replace(/:[^:]+$/, '');
 
   private static base64urlUtfEncode = (str: string) => {
     // https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings

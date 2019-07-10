@@ -20,7 +20,7 @@
     "outDir": "./TypeScript/build/ts",
     "baseUrl": "..",
     "typeRoots": [
-      "./TypeScript/source/types/*.d.ts"
+      "./TypeScript/source/core/types/*.d.ts"
     ]
   },
   "include": [

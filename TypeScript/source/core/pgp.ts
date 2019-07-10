@@ -13,7 +13,7 @@ import { requireOpenpgp } from '../platform/require.js';
 import { secureRandomBytes, base64encode } from '../platform/util.js';
 import { FcAttLinkData } from './att.js';
 import { Buf } from './buf.js';
-import { Xss } from '../platform/xss.js'
+import { Xss } from '../platform/xss.js';
 
 const openpgp = requireOpenpgp();
 
@@ -259,7 +259,7 @@ export class Pgp {
       } else {
         opt.numBits = 4096;
       }
-      let k = await openpgp.generateKey(opt);
+      const k = await openpgp.generateKey(opt);
       return { public: k.publicKeyArmored, private: k.privateKeyArmored };
     },
     /**
@@ -325,7 +325,7 @@ export class Pgp {
               }
             }
           }
-          return true
+          return true;
         }
         throw e;
       }
@@ -650,7 +650,7 @@ export class Pgp {
           ki.decrypted = cachedDecryptedKey;
           keys.prvForDecryptDecrypted.push(ki);
         } else if (ki.parsed!.isDecrypted() || await Pgp.key.decrypt(ki.parsed!, [ki.passphrase!], optionalMatchingKeyid, 'OK-IF-ALREADY-DECRYPTED') === true) {
-          Store.decryptedKeyCacheSet(ki.parsed!)
+          Store.decryptedKeyCacheSet(ki.parsed!);
           ki.decrypted = ki.parsed!;
           keys.prvForDecryptDecrypted.push(ki);
         } else {
@@ -897,7 +897,7 @@ export class PgpMsg {
         console.error('error verifying decrypted signature');
         console.error(e);
       }
-      if (!prepared.isCleartext && prepared.message.packets.filterByTag(openpgp.enums.packet.symmetricallyEncrypted).length) {
+      if (!prepared.isCleartext && (prepared.message as OpenPGP.message.Message).packets.filterByTag(openpgp.enums.packet.symmetricallyEncrypted).length) {
         const noMdc = 'Security threat!\n\nMessage is missing integrity checks (MDC). The sender should update their outdated software.\n\nDisplay the message at your own risk.';
         return { success: false, content, error: { type: DecryptErrTypes.noMdc, message: noMdc }, message: prepared.message, longids, isEncrypted };
       }

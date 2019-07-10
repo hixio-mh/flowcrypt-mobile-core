@@ -8,7 +8,7 @@ import { Att, AttMeta } from './att.js';
 import { Catch } from '../platform/catch.js';
 import { requireMimeParser, requireMimeBuilder, requireIso88592 } from '../platform/require.js';
 import { Buf } from './buf.js';
-import { MimeParserNode } from '../types/emailjs.js';
+import { MimeParserNode } from './types/emailjs';
 
 const MimeParser = requireMimeParser();  // tslint:disable-line:variable-name
 const MimeBuilder = requireMimeBuilder();  // tslint:disable-line:variable-name
@@ -20,6 +20,7 @@ type MimeContent = {
   atts: Att[];
   signature?: string;
   rawSignedContent?: string;
+  subject?: string;
   html?: string;
   text?: string;
   from?: string;
@@ -42,10 +43,17 @@ export type MsgBlock = {
   decryptErr?: DecryptError; // only in decryptErr block, always
   verifyRes?: VerifyRes,
 };
+export type MimeProccesedMsg = {
+  rawSignedContent: string | undefined,
+  headers: Dict<MimeContentHeader>,
+  blocks: MsgBlock[],
+  from: string | undefined,
+  to: string[]
+};
 
 export class Mime {
 
-  public static process = async (mimeMsg: Uint8Array) => {
+  public static process = async (mimeMsg: Uint8Array): Promise<MimeProccesedMsg> => {
     const decoded = await Mime.decode(mimeMsg);
     const blocks: MsgBlock[] = [];
     if (decoded.text) {
@@ -150,7 +158,7 @@ export class Mime {
 
   public static decode = (mimeMsg: Uint8Array): Promise<MimeContent> => {
     return new Promise(async resolve => {
-      const mimeContent: MimeContent = { atts: [], headers: {}, text: undefined, html: undefined, signature: undefined, from: undefined, to: [] };
+      const mimeContent: MimeContent = { atts: [], headers: {}, subject: undefined, text: undefined, html: undefined, signature: undefined, from: undefined, to: [] };
       try {
         const parser = new MimeParser();
         const leafNodes: { [key: string]: MimeParserNode } = {};
@@ -175,7 +183,9 @@ export class Mime {
             } else if (Mime.getNodeType(node) === 'text/plain' && !Mime.getNodeFilename(node)) {
               mimeContent.text = Mime.getNodeContentAsUtfStr(node);
             } else if (Mime.getNodeType(node) === 'text/rfc822-headers') {
-              // todo - surface and render encrypted headers
+              if (node._parentNode && node._parentNode.headers.subject) {
+                mimeContent.subject = node._parentNode.headers.subject[0].value;
+              }
             } else {
               mimeContent.atts.push(Mime.getNodeAsAtt(node));
             }
