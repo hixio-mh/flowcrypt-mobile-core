@@ -8,18 +8,19 @@
 import * as https from 'https';
 import { IncomingMessage, ServerResponse } from 'http';
 import { parseReq } from './node/parse';
-import { fmtErr, indexHtml, HttpClientErr, HttpAuthErr, Buffers } from './node/fmt';
+import { fmtErr, indexHtml, HttpClientErr, HttpAuthErr, Buffers, printReplayTestDefinition } from './node/fmt';
 import { Endpoints } from './node/endpoints';
 import { sendNativeMessageToJava } from './node/native';
 import { setGlobals } from './platform/util';
 
 setGlobals();
 
-declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, NODE_AUTH_HEADER: string, NODE_PORT: string, NODE_DEBUG: string;
+declare const NODE_SSL_KEY: string, NODE_SSL_CRT: string, NODE_SSL_CA: string, NODE_AUTH_HEADER: string, NODE_PORT: string, NODE_DEBUG: string, NODE_PRINT_REPLAY: string;
 declare const APP_ENV: 'dev' | 'prod', APP_PROFILE: string;
 
 const doPrintDebug = Boolean(NODE_DEBUG === 'true');
 const doProfile = Boolean(APP_PROFILE === 'true');
+const doPrintReplay = Boolean(NODE_PRINT_REPLAY === 'true');
 
 const endpoints = new Endpoints();
 
@@ -53,6 +54,9 @@ const handleReq = async (req: IncomingMessage, res: ServerResponse, receivedAt: 
     if (doPrintDebug) {
       console.debug(`parsed endpoint:`, endpoint);
       console.debug(`parsed request:`, request);
+    }
+    if (doPrintReplay) {
+      printReplayTestDefinition(endpoint, request, Buffer.concat(data))
     }
     const endpointResponse = await delegateReqToEndpoint(endpoint, request, data);
     if (doProfile) {

@@ -76,3 +76,5 @@ const APP_VERSION = '0.0.1-dev';
 const APP_ENV = 'dev';
 
 const APP_PROFILE = 'false';
+
+const NODE_PRINT_REPLAY = 'false';

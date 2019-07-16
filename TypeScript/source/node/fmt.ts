@@ -6,6 +6,7 @@ import { MsgBlockType, MsgBlock } from '../core/mime';
 import { Str } from '../core/common';
 import { Pgp } from '../core/pgp';
 import { Xss } from '../platform/xss';
+import { Buf } from '../core/buf';
 
 export class HttpAuthErr extends Error { }
 export class HttpClientErr extends Error { }
@@ -103,3 +104,15 @@ export const indexHtml = Buffer.from(`
   <input name="data" type="file"> <button type="submit">submit post request</button>
 </form>
 </body></html>`);
+
+export const printReplayTestDefinition = (endpoint: string, request: {}, data: Buffer) => {
+  console.log(`
+ava.test.only('replaying', async t => {
+  const reqData = Buf.fromBase64Str('${Buf.fromUint8(data).toBase64Str()}');
+  console.log('replay ${endpoint}: ', ${JSON.stringify(request)}, '-------- begin req data ---------', reqData.toString(), '--------- end req data ---------');
+  const { data, json } = await request('${endpoint}', ${JSON.stringify(request)}, Buffer.from(reqData));
+  console.log('response: ', json, '\n\n\n-------- begin res data ---------', Buf.fromUint8(data).toString(), '--------- end res data ---------\n\n\n');
+  t.pass();
+});
+  `)
+}
