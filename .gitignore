@@ -64,7 +64,7 @@ fastlane/screenshots
 fastlane/test_output
 fastlane/readme.md
 
-# flowcrypt-android-node
+# flowcrypt-mobile-core
 TypeScript/build/*
 TypeScript/tmp/*
 TypeScript/node_modules

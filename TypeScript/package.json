@@ -1,5 +1,5 @@
 {
-  "name": "flowcrypt-android-node",
+  "name": "flowcrypt-mobile-core",
   "version": "0.0.1",
   "description": "Node.js bundle for FlowCrypt Android internal use.",
   "dependencies": {
@@ -7,17 +7,17 @@
     "sanitize-html": "1.20.1"
   },
   "devDependencies": {
+    "@babel/core": "7.1.6",
     "@types/chai": "4.1.4",
     "@types/chrome": "0.0.65",
-    "@babel/core": "7.1.6",
     "ava": "1.0.0-beta.4",
     "babel-loader": "8.0.4",
     "babel-preset-env": "1.7.0",
-    "tslint": "5.11.0",
+    "chai": "4.1.2",
+    "node-cleanup": "2.1.2",
     "pg": "7.4.3",
     "request": "2.88.0",
-    "node-cleanup": "2.1.2",
-    "chai": "4.1.2",
+    "tslint": "5.11.0",
     "typescript": "3.4.1",
     "webpack": "4.26.1",
     "webpack-cli": "3.1.2",
@@ -33,9 +33,9 @@
     "predeploy": "npm run-script build",
     "deploy": "cp build/final/flowcrypt-android-prod.js ../FlowCrypt/src/main/assets/js/flowcrypt-android.js && cp build/final/flowcrypt-android-prod.js ../../flowcrypt-android/FlowCrypt/src/main/assets/js/flowcrypt-android.js",
     "pretest": "npm run-script build",
-    "test": "ava build/ts/flowcrypt-android-node/TypeScript/source/test.js --verbose",
+    "test": "ava build/ts/flowcrypt-mobile-core/TypeScript/source/test.js --verbose",
     "pregenCompatAssets": "npm run-script build",
-    "genCompatAssets": "ava build/ts/flowcrypt-android-node/TypeScript/source/gen-compat-assets.js --verbose",
+    "genCompatAssets": "ava build/ts/flowcrypt-mobile-core/TypeScript/source/gen-compat-assets.js --verbose",
     "preupdateCore": "rm -rf source/core source/lib",
     "updateCore": "npm run-script _updateCoreLib && npm run-script _updateCoreSrc",
     "_updateCoreSrc": "cp -r ../../flowcrypt-browser/extension/js/common/core source/core",
@@ -44,13 +44,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FlowCrypt/flowcrypt-android-node.git"
+    "url": "git+https://github.com/FlowCrypt/flowcrypt-mobile-core.git"
   },
   "author": "FlowCrypt Limited",
   "license": "SEE LICENSE IN <LICENSE>",
   "private": true,
   "bugs": {
-    "url": "https://github.com/FlowCrypt/flowcrypt-android-node/issues"
+    "url": "https://github.com/FlowCrypt/flowcrypt-mobile-core/issues"
   },
   "homepage": "https://flowcrypt.com"
 }

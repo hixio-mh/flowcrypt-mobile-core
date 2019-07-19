@@ -97,7 +97,7 @@ const server = https.createServer(serverOptins, (request, res) => { // all respo
   }).catch(e => {
     res.statusCode = 200;
     if (e instanceof HttpAuthErr) {
-      res.setHeader('WWW-Authenticate', 'Basic realm="flowcrypt-android-node"');
+      res.setHeader('WWW-Authenticate', 'Basic realm="flowcrypt-mobile-core"');
     } else if (!(e instanceof HttpClientErr)) {
       console.error(e);
     }
@@ -109,7 +109,7 @@ server.listen(LISTEN_PORT, 'localhost');
 
 server.on('listening', () => {
   const address = server.address();
-  const msg = `listening on ${typeof address === 'object' ? address.port : address} APP_ENV:${APP_ENV}`;
+  const msg = `listening on ${address && typeof address === 'object' ? address.port : address} APP_ENV:${APP_ENV}`;
   console.info(msg);
   sendNativeMessageToJava(msg);
 });

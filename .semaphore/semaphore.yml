@@ -22,7 +22,7 @@ blocks:
     task:
       env_vars:
         - name: SEMAPHORE_GIT_DIR
-          value: /home/semaphore/git/flowcrypt-android-node
+          value: /home/semaphore/git/flowcrypt-mobile-core
       jobs:
         - name: Assemble sources
           commands:
@@ -40,7 +40,7 @@ blocks:
           commands:
             - cache restore sources
             - cd ~/git/flowcrypt-node-modules && npm install
-            - cd ~/git/flowcrypt-android-node/TypeScript && npm install
+            - cd ~/git/flowcrypt-mobile-core/TypeScript && npm install
             - cd ~ && cache delete sources && cache store sources ./git
 
   - name: Test
@@ -51,4 +51,4 @@ blocks:
         - name: Build and Test
           commands:
             - cache restore sources
-            - cd ~/git/flowcrypt-android-node/TypeScript && npm run-script test
+            - cd ~/git/flowcrypt-mobile-core/TypeScript && npm run-script test
