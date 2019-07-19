@@ -6,7 +6,7 @@
 'use strict';
 
 import * as https from 'https';
-import { IncomingMessage, ServerResponse } from 'http';
+import { IncomingMessage, ServerResponse, createServer } from 'http';
 import { parseReq } from './node/parse';
 import { fmtErr, indexHtml, HttpClientErr, HttpAuthErr, Buffers, printReplayTestDefinition } from './node/fmt';
 import { Endpoints } from './node/endpoints';
@@ -21,6 +21,7 @@ declare const APP_ENV: 'dev' | 'prod', APP_PROFILE: string;
 const doPrintDebug = Boolean(NODE_DEBUG === 'true');
 const doProfile = Boolean(APP_PROFILE === 'true');
 const doPrintReplay = Boolean(NODE_PRINT_REPLAY === 'true');
+const doRunInsecure = process.argv.includes('--insecure');
 
 const endpoints = new Endpoints();
 
@@ -36,10 +37,13 @@ const handleReq = async (req: IncomingMessage, res: ServerResponse, receivedAt: 
   if (doProfile) {
     console.debug(`PROFILE[${Date.now() - receivedAt}ms] new request ${req.url}`);
   }
-  if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT || !NODE_SSL_CA) {
-    throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_CA, NODE_SSL_KEY or NODE_SSL_CRT');
+  if (!doRunInsecure && (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT || !NODE_SSL_CA)) {
+    throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_CA, NODE_SSL_KEY or NODE_SSL_CRT when doRunInsecure = false');
   }
-  if (req.headers['authorization'] !== NODE_AUTH_HEADER) {
+  if(doRunInsecure && APP_ENV !== 'dev') {
+    throw new Error('ERROR: --insecure can only be used with APP_ENV=dev');
+  }
+  if (req.headers['authorization'] !== NODE_AUTH_HEADER && !doRunInsecure) {
     throw new HttpAuthErr('Wrong Authorization');
   }
   if (req.url === '/' && req.method === 'GET') {
@@ -67,7 +71,7 @@ const handleReq = async (req: IncomingMessage, res: ServerResponse, receivedAt: 
   throw new HttpClientErr(`unknown path ${req.url}`);
 }
 
-const serverOptins: https.ServerOptions = {
+const sslOpts: https.ServerOptions = {
   key: NODE_SSL_KEY,
   cert: NODE_SSL_CRT,
   ca: NODE_SSL_CA,
@@ -80,17 +84,13 @@ if (isNaN(LISTEN_PORT) || LISTEN_PORT < 1024) {
   throw new Error('Wrong or no NODE_PORT supplied');
 }
 
-const sendRes = (res: ServerResponse, buffers: Buffers) => {
-  res.end(Buffer.concat(buffers));
-}
-
-const server = https.createServer(serverOptins, (request, res) => { // all responses are status code 200, error status is parsed from body
+const reqListener = (req: IncomingMessage, res: ServerResponse) => { // all responses are status code 200, error status is parsed from body
   const receivedAt = Date.now();
-  handleReq(request, res, receivedAt).then(buffers => {
+  handleReq(req, res, receivedAt).then(buffers => {
     if (doProfile) {
       console.debug(`PROFILE[${Date.now() - receivedAt}ms] begin sending response`);
     }
-    sendRes(res, buffers)
+    res.end(Buffer.concat(buffers));
     if (doProfile) {
       console.debug(`PROFILE[${Date.now() - receivedAt}ms] response sent, DONE`);
     }
@@ -103,7 +103,9 @@ const server = https.createServer(serverOptins, (request, res) => { // all respo
     }
     res.end(fmtErr(e));
   });
-});
+}
+
+const server = doRunInsecure ? createServer(reqListener) : https.createServer(sslOpts, reqListener);
 
 server.listen(LISTEN_PORT, 'localhost');
 
@@ -112,4 +114,7 @@ server.on('listening', () => {
   const msg = `listening on ${address && typeof address === 'object' ? address.port : address} APP_ENV:${APP_ENV}`;
   console.info(msg);
   sendNativeMessageToJava(msg);
+  if(doRunInsecure) {
+    console.error('SECURITY WARNING - MOBILE CORE USES INSECURE HTTP');
+  }
 });
