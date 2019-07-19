@@ -38,6 +38,18 @@
       "script": "genCompatAssets",
       "path": "TypeScript/",
       "problemMatcher": []
+    },
+    {
+      "type": "npm",
+      "script": "_buildBundles",
+      "path": "TypeScript/",
+      "problemMatcher": []
+    },
+    {
+      "type": "npm",
+      "script": "test",
+      "path": "TypeScript/",
+      "problemMatcher": []
     }
   ]
 }
