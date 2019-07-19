@@ -8,7 +8,7 @@
 import * as https from 'https';
 import { IncomingMessage, ServerResponse, createServer } from 'http';
 import { parseReq } from './node/parse';
-import { fmtErr, indexHtml, HttpClientErr, HttpAuthErr, Buffers, printReplayTestDefinition } from './node/fmt';
+import { fmtErr, HttpClientErr, HttpAuthErr, Buffers, printReplayTestDefinition } from './node/fmt';
 import { Endpoints } from './node/endpoints';
 import { sendNativeMessageToJava } from './node/native';
 import { setGlobals } from './platform/util';
@@ -47,8 +47,7 @@ const handleReq = async (req: IncomingMessage, res: ServerResponse, receivedAt: 
     throw new HttpAuthErr('Wrong Authorization');
   }
   if (req.url === '/' && req.method === 'GET') {
-    res.setHeader('content-type', 'text/html');
-    return [indexHtml];
+    return [Buffer.from(`app: mobile-core\nenv: ${APP_ENV}\ndebug: ${NODE_DEBUG}\ninsecure: ${doRunInsecure}\nprofile: ${doProfile}\n`)];
   }
   if (req.url === '/' && req.method === 'POST') {
     const { endpoint, request, data } = await parseReq(req, doPrintDebug);

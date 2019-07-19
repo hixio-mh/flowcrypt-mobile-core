@@ -96,15 +96,6 @@ export const fmtErr = (e: any) => Buffer.concat(fmtRes({
   }
 }));
 
-export const indexHtml = Buffer.from(`
-<html><head></head><body>
-<form method="POST" target="_blank" enctype="multipart/form-data">
-  <input type="text" placeholder="endpoint" name="endpoint"><br>
-  <textarea name="request" cols="160" rows="4" placeholder="json"></textarea><br>
-  <input name="data" type="file"> <button type="submit">submit post request</button>
-</form>
-</body></html>`);
-
 export const printReplayTestDefinition = (endpoint: string, request: {}, data: Buffer) => {
   console.log(`
 ava.test.only('replaying', async t => {
