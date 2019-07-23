@@ -134,6 +134,10 @@ const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 
     return typeof value === 'boolean' || typeof value === 'undefined';
   }
   if (type === 'string?') {
+    if(value === null) {
+      v[name] = undefined;
+      return true;
+    }
     return typeof value === 'string' || typeof value === 'undefined';
   }
   if (type === 'string[]') {
