@@ -31,7 +31,7 @@
     "_buildFinal": "node tooling/build-final.js",
     "build": "npm run-script _buildTs && npm run-script _buildBundles && npm run-script _buildFinalWip && npm run-script _buildFinal",
     "predeploy": "npm run-script build",
-    "deploy": "cp build/final/flowcrypt-android-prod.js ../../flowcrypt-android/FlowCrypt/src/main/assets/js/flowcrypt-android.js && cp build/final/flowcrypt-android-dev.js ../../flowcrypt-ios/mobile-core-dev.js",
+    "deploy": "cp build/final/flowcrypt-android-prod.js ../../flowcrypt-android/FlowCrypt/src/main/assets/js/flowcrypt-android.js && cp build/final/flowcrypt-android-dev.js ../../flowcrypt-ios/FlowCrypt/FlowCrypt/Resources/mobile-core-dev.js",
     "pretest": "npm run-script build",
     "test": "ava build/ts/flowcrypt-mobile-core/TypeScript/source/test.js --verbose",
     "pregenCompatAssets": "npm run-script build",
