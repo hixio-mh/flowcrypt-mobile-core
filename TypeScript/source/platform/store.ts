@@ -43,10 +43,13 @@ export class Store {
   }
 
   private static keyCacheRenewExpiry = () => {
-    if (KEY_CACHE_WIPE_TIMEOUT) {
-      clearTimeout(KEY_CACHE_WIPE_TIMEOUT);
+    // JavaScriptCore has no setTimeout. Need to wipe cache periodically from Swift instead
+    if(typeof setTimeout === "function") {
+      if (KEY_CACHE_WIPE_TIMEOUT) {
+        clearTimeout(KEY_CACHE_WIPE_TIMEOUT);
+      }
+      KEY_CACHE_WIPE_TIMEOUT = setTimeout(Store.keyCacheWipe, 2 * 60 * 1000);  
     }
-    KEY_CACHE_WIPE_TIMEOUT = setTimeout(Store.keyCacheWipe, 2 * 60 * 1000);
   }
 
 }

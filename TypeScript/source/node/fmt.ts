@@ -11,7 +11,7 @@ import { Buf } from '../core/buf';
 export class HttpAuthErr extends Error { }
 export class HttpClientErr extends Error { }
 
-export type Buffers = (Buffer | Uint8Array)[];
+export type Buffers = (Buf | Uint8Array)[];
 
 export const isContentBlock = (t: MsgBlockType) => t === 'plainText' || t === 'decryptedText' || t === 'plainHtml' || t === 'decryptedHtml' || t === 'signedMsg' || t === 'verifiedMsg';
 
@@ -79,24 +79,24 @@ export const fmtContentBlock = (contentBlocks: MsgBlock[]): { contentBlock: MsgB
   return { contentBlock: Pgp.internal.msgBlockObj('plainHtml', msgContentAsHtml), text: msgContentAsText.trim() };
 }
 
-export const fmtRes = (response: {}, data?: Buffer | Uint8Array): Buffers => {
-  const buffers: (Buffer | Uint8Array)[] = [];
-  buffers.push(Buffer.from(JSON.stringify(response)));
-  buffers.push(Buffer.from('\n'));
+export const fmtRes = (response: {}, data?: Buf | Uint8Array): Buffers => {
+  const buffers: Buffers = [];
+  buffers.push(Buf.fromUtfStr(JSON.stringify(response)));
+  buffers.push(Buf.fromUtfStr('\n'));
   if (data) {
     buffers.push(data);
   }
   return buffers;
 }
 
-export const fmtErr = (e: any) => Buffer.concat(fmtRes({
+export const fmtErr = (e: any): Buf => Buf.concat(fmtRes({
   error: {
     message: String(e),
     stack: e && typeof e === 'object' ? e.stack || '' : ''
   }
 }));
 
-export const printReplayTestDefinition = (endpoint: string, request: {}, data: Buffer) => {
+export const printReplayTestDefinition = (endpoint: string, request: {}, data: Buf) => {
   console.log(`
 ava.test.only('replaying', async t => {
   const reqData = Buf.fromBase64Str('${Buf.fromUint8(data).toBase64Str()}');

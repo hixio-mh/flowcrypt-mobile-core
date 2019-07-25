@@ -6,11 +6,12 @@ module.exports = {
   externals: [nodeExternals()],
   mode: 'none',
   entry: {
-    'flowcrypt': './build/ts/flowcrypt-mobile-core/TypeScript/source/node.js',
-    'asn1': './node_modules/asn1.js/lib/asn1.js',
+    'entrypoint-node': './build/ts/flowcrypt-mobile-core/TypeScript/source/entrypoint-node.js',
+    'entrypoint-bare': './build/ts/flowcrypt-mobile-core/TypeScript/source/entrypoint-bare.js',
+    'node-asn1': './node_modules/asn1.js/lib/asn1.js',
     'bn': './node_modules/bn.js/lib/bn.js',
     'minimalistic-assert': './node_modules/minimalistic-assert/index.js',
-    'html-sanitize': './node_modules/sanitize-html/dist/sanitize-html.js',
+    'node-html-sanitize': './node_modules/sanitize-html/dist/sanitize-html.js',
     // 'emailjs-mime-parser': './node_modules/emailjs-mime-parser/dist/mimeparser.js' // this works with latest version from Node - can use later
   },
   output: {

@@ -12,6 +12,7 @@ import { fmtErr, HttpClientErr, HttpAuthErr, Buffers, printReplayTestDefinition 
 import { Endpoints } from './node/endpoints';
 import { sendNativeMessageToJava } from './node/native';
 import { setGlobals } from './platform/util';
+import { Buf } from './core/buf';
 
 setGlobals();
 
@@ -59,7 +60,7 @@ const handleReq = async (req: IncomingMessage, res: ServerResponse, receivedAt: 
       console.debug(`parsed request:`, request);
     }
     if (doPrintReplay) {
-      printReplayTestDefinition(endpoint, request, Buffer.concat(data))
+      printReplayTestDefinition(endpoint, request, Buf.concat(data))
     }
     const endpointResponse = await delegateReqToEndpoint(endpoint, request, data);
     if (doProfile) {
@@ -100,7 +101,7 @@ const reqListener = (req: IncomingMessage, res: ServerResponse) => { // all resp
     } else if (!(e instanceof HttpClientErr)) {
       console.error(e);
     }
-    res.end(fmtErr(e));
+    res.end(Buffer.concat([fmtErr(e)]));
   });
 }
 

@@ -24,14 +24,9 @@
     "webpack-node-externals": "1.7.2"
   },
   "scripts": {
-    "prebuild": "rm -rf build/ts build/final/* && mkdir -p build/final",
-    "_buildTs": "cd .. && ./TypeScript/node_modules/typescript/bin/tsc --project tsconfig.json",
-    "_buildBundles": "webpack --config webpack.config.js && node tooling/fix-bundles.js",
-    "_buildFinalWip": "cat build/bundles/html-sanitize-bundle.js build/bundles/emailjs-bundle.js build/bundles/openpgp-bundle.js build/bundles/flowcrypt-bundle.js > build/final/flowcrypt-android-wip.js",
-    "_buildFinal": "node tooling/build-final.js",
-    "build": "npm run-script _buildTs && npm run-script _buildBundles && npm run-script _buildFinalWip && npm run-script _buildFinal",
+    "build": "./tooling/build.sh",
     "predeploy": "npm run-script build",
-    "deploy": "cp build/final/flowcrypt-android-prod.js ../../flowcrypt-android/FlowCrypt/src/main/assets/js/flowcrypt-android.js && cp build/final/flowcrypt-android-dev.js ../../flowcrypt-ios/FlowCrypt/FlowCrypt/Resources/mobile-core-dev.js",
+    "deploy": "cp build/final/flowcrypt-android-prod.js ../../flowcrypt-android/FlowCrypt/src/main/assets/js/flowcrypt-android.js && cp build/final/flowcrypt-ios-prod.js ../../flowcrypt-ios/FlowCrypt/Resources/flowcrypt-ios-prod.js.txt",
     "pretest": "npm run-script build",
     "test": "ava build/ts/flowcrypt-mobile-core/TypeScript/source/test.js --verbose",
     "pregenCompatAssets": "npm run-script build",

@@ -14,6 +14,7 @@ import { Mime, MsgBlock, RichHeaders } from '../core/mime';
 import { Buf } from '../core/buf';
 import { Store } from '../platform/store';
 import { Xss } from '../platform/xss';
+import { VERSION } from '../core/const';
 
 const openpgp = requireOpenpgp();
 
@@ -22,13 +23,13 @@ export class Endpoints {
   [endpoint: string]: ((uncheckedReq: any, data: Buffers) => Promise<Buffers>) | undefined;
 
   public version = async (): Promise<Buffers> => {
-    return fmtRes(process.versions);
+    return fmtRes(typeof process === 'object' && process && typeof process.versions === 'object' ? process.versions : {app_version: VERSION});
   }
 
   public encryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
     const req = Validate.encryptMsg(uncheckedReq);
-    const encrypted = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buffer.concat(data), armor: true }) as OpenPGP.EncryptArmorResult;
-    return fmtRes({}, Buffer.from(encrypted.data));
+    const encrypted = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buf.concat(data), armor: true }) as OpenPGP.EncryptArmorResult;
+    return fmtRes({}, Buf.fromUtfStr(encrypted.data));
   }
 
   public generateKey = async (uncheckedReq: any): Promise<Buffers> => {
@@ -62,7 +63,7 @@ export class Endpoints {
 
   public encryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
     const req = Validate.encryptFile(uncheckedReq);
-    const encrypted = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buffer.concat(data), filename: req.name, armor: false }) as OpenPGP.EncryptBinaryResult;
+    const encrypted = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buf.concat(data), filename: req.name, armor: false }) as OpenPGP.EncryptBinaryResult;
     return fmtRes({}, encrypted.message.packets.write());
   }
 
@@ -71,11 +72,11 @@ export class Endpoints {
     const rawBlocks: MsgBlock[] = []; // contains parsed, unprocessed / possibly encrypted data
     let rawSigned: string | undefined = undefined;
     if (isEmail) {
-      const { blocks, rawSignedContent } = await Mime.process(Buffer.concat(data));
+      const { blocks, rawSignedContent } = await Mime.process(Buf.concat(data));
       rawSigned = rawSignedContent;
       rawBlocks.push(...blocks);
     } else {
-      rawBlocks.push(Pgp.internal.msgBlockObj('encryptedMsg', new Buf(Buffer.concat(data))));
+      rawBlocks.push(Pgp.internal.msgBlockObj('encryptedMsg', new Buf(Buf.concat(data))));
     }
     const sequentialProcessedBlocks: MsgBlock[] = []; // contains decrypted or otherwise formatted data
     for (const rawBlock of rawBlocks) {
@@ -151,12 +152,12 @@ export class Endpoints {
     const { contentBlock, text } = fmtContentBlock(msgContentBlocks);
     blocks.unshift(contentBlock);
     // data represent one JSON-stringified block per line. This is so that it can be read as a stream later
-    return fmtRes({ text, replyType }, Buffer.from(blocks.map(b => JSON.stringify(b)).join('\n')));
+    return fmtRes({ text, replyType }, Buf.fromUtfStr(blocks.map(b => JSON.stringify(b)).join('\n')));
   }
 
   public decryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
     const { keys: kisWithPp, msgPwd } = Validate.decryptFile(uncheckedReq);
-    const decryptedMeta = await PgpMsg.decrypt({ kisWithPp, encryptedData: Buffer.concat(data), msgPwd });
+    const decryptedMeta = await PgpMsg.decrypt({ kisWithPp, encryptedData: Buf.concat(data), msgPwd });
     if (!decryptedMeta.success) {
       decryptedMeta.message = undefined;
       return fmtRes(decryptedMeta);
@@ -185,7 +186,7 @@ export class Endpoints {
 
   public parseKeys = async (_uncheckedReq: any, data: Buffers) => {
     const keyDetails: KeyDetails[] = [];
-    const allData = Buffer.concat(data);
+    const allData = Buf.concat(data);
     const pgpType = await PgpMsg.type({ data: allData });
     if (!pgpType) {
       return fmtRes({ format: 'unknown', keyDetails });
@@ -248,7 +249,7 @@ const readArmoredKeyOrThrow = async (armored: string) => {
 
 export class Debug {
 
-  public static printChunk = (name: string, data: Buffer | Uint8Array) => {
+  public static printChunk = (name: string, data: Buf | Uint8Array) => {
     const header1 = `Debug.printChunk[${name}, ${data.length}B]: `;
     const header2 = ' '.repeat(header1.length);
     const chunk = Array.from(data.subarray(0, 30));

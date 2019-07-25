@@ -35,7 +35,7 @@ export const startNodeCoreInstance = async (t: AvaContext) => {
   return r;
 };
 
-const getSslInfo = new Function(`${readFileSync('source/assets/flowcrypt-android-dev-begin.txt').toString()}\nreturn {NODE_SSL_CA,NODE_SSL_CRT,NODE_SSL_KEY,NODE_AUTH_HEADER};`);
+const getSslInfo = new Function(`${readFileSync('source/assets/flowcrypt-android-dev-begin.js').toString()}\nreturn {NODE_SSL_CA,NODE_SSL_CRT,NODE_SSL_KEY,NODE_AUTH_HEADER};`);
 const { NODE_SSL_CA, NODE_SSL_CRT, NODE_SSL_KEY, NODE_AUTH_HEADER } = getSslInfo();
 const requestOpts = { hostname: 'localhost', port: 3000, method: 'POST', ca: NODE_SSL_CA, cert: NODE_SSL_CRT, key: NODE_SSL_KEY, headers: { Authorization: NODE_AUTH_HEADER } };
 

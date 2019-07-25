@@ -1,29 +1,65 @@
 
 const fs = require('fs');
 
-const wipPath = 'build/final/flowcrypt-android-wip.js';
-const finalPath = 'build/final/flowcrypt-android-prod.js';
-const finalPathDev = 'build/final/flowcrypt-android-dev.js';
+const path = {
+  beginAndroidDev: 'source/assets/flowcrypt-android-dev-begin.js',
+  beginIos: 'source/assets/flowcrypt-ios-begin.js',
+  nodeDepsBundle: 'build/bundles/node-deps-bundle.js',
+  bareDepsBundle: 'build/bundles/bare-deps-bundle.js',
+  bareEntrypointBundle: 'build/bundles/entrypoint-bare-bundle.js',
+  nodeEntrypointBundle: 'build/bundles/entrypoint-node-bundle.js',
+  finalDev: 'build/final/flowcrypt-android-dev.js',
+  finalIos: 'build/final/flowcrypt-ios-prod.js',
+  finalAndroid: 'build/final/flowcrypt-android-prod.js',
+}
 
-const wipSrc = fs.readFileSync(wipPath).toString();
+// node
 
-const fixedImportsSrc = wipSrc
+const nodeDepsSrc = fs.readFileSync(path.nodeDepsBundle).toString()
   .replace(/require\(['"]bn\.js['"]\)/g, 'dereq_bn')
   .replace(/require\(['"]minimalistic-assert['"]\)/g, 'dereq_minimalistic_assert')
   .replace(/require\(['"]inherits['"]\)/g, 'dereq_inherits')
   .replace(/require\(['"]asn1\.js['"]\)/g, 'dereq_asn1');
+const nodeEntrypointSrc = fs.readFileSync(path.nodeEntrypointBundle).toString().replace("'[BUILD_REPLACEABLE_VERSION]'", 'APP_VERSION');
 
-const finalSrc = `
+// bare
+
+const bareDepsSrc = fs.readFileSync(path.bareDepsBundle).toString()
+const bareEntrypointSrc = fs.readFileSync(path.bareEntrypointBundle).toString().replace("'[BUILD_REPLACEABLE_VERSION]'", 'APP_VERSION');
+
+// final (node, bare, dev)
+
+const finalNodeSrc = `
 try {
-/* final flowcrypt-android bundle starts here */
-const dereq_inherits = require("util").inherits; // standard node util, not to interfere with webpack require, which cannot resolve it
-${fixedImportsSrc.replace("'[BUILD_REPLACEABLE_VERSION]'", 'APP_VERSION')}
-/* final flowcrypt-android bundle ends here */
+  /* final flowcrypt-android bundle starts here */
+  const dereq_inherits = require("util").inherits; // standard node util, not to interfere with webpack require, which cannot resolve it
+  ${nodeDepsSrc}
+  ${nodeEntrypointSrc}
+  /* final flowcrypt-android bundle ends here */
 } catch(e) {
   console.error(e);
 }
 `;
 
-fs.writeFileSync(finalPathDev, fs.readFileSync('source/assets/flowcrypt-android-dev-begin.txt').toString() + finalSrc);
-fs.writeFileSync(finalPath, finalSrc);
-fs.unlinkSync(wipPath);
+const finalDevSrc = fs.readFileSync(path.beginAndroidDev).toString() + finalNodeSrc;
+
+const finalBareSrc = `
+let global = {};
+let coreHost = CoreHost.getInstance();
+let _logger = (x) => coreHost.log(String(x));
+const console = { log: _logger, error: _logger, info: _logger, warn: _logger };
+try {
+  ${fs.readFileSync(path.beginIos).toString()}
+  ${bareDepsSrc}
+  /* entrypoint-bare starts here */
+  ${bareEntrypointSrc}
+  /* entrypoint-bare starts here */
+  } catch(e) {
+    console.error(e instanceof Error ? \`\${e.message}\\n\${(e.stack || 'no stack').split("\\n").map(l => " -> js " + l).join("\\n")}\` : e);
+    throw e;
+  }
+`;
+
+fs.writeFileSync(path.finalDev, finalDevSrc);
+fs.writeFileSync(path.finalIos, finalBareSrc);
+fs.writeFileSync(path.finalAndroid, finalNodeSrc);
