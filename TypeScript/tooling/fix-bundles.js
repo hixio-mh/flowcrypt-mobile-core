@@ -84,7 +84,7 @@ if(!rsaDecryptionReplaceable.test(rawOpenpgpLib)) {
   throw new Error(`Could not find ${rsaDecryptionReplaceable} in openpgp.js`)
 }
 const hostRsaDecryption = function(c_encrypted, n, e, d, p, q, pgp_style_u_which_is_different_than_der_style_u) {
-  var RSAPrivateKey = dereq_bare_asn1.define('RSAPrivateKey', function() {
+  var RSAPrivateKey = dereq_asn1.define('RSAPrivateKey', function() {
     this.seq().obj(
       this.key('version').int(),
       this.key('modulus').int(),
