@@ -45,15 +45,14 @@ const finalDevSrc = fs.readFileSync(path.beginAndroidDev).toString() + finalNode
 
 const finalBareSrc = `
 let global = {};
-let coreHost = CoreHost.getInstance();
-let _logger = (x) => coreHost.log(String(x));
-const console = { log: _logger, error: _logger, info: _logger, warn: _logger };
+let _log = (x) => coreHost.log(String(x));
+const console = { log: _log, error: _log, info: _log, warn: _log };
 try {
   ${fs.readFileSync(path.beginIos).toString()}
   ${bareDepsSrc}
   /* entrypoint-bare starts here */
   ${bareEntrypointSrc}
-  /* entrypoint-bare starts here */
+  /* entrypoint-bare ends here */
   } catch(e) {
     console.error(e instanceof Error ? \`\${e.message}\\n\${(e.stack || 'no stack').split("\\n").map(l => " -> js " + l).join("\\n")}\` : e);
     throw e;

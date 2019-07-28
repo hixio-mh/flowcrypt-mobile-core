@@ -27,7 +27,11 @@ const crypto = {
     },
 };
 
-const window = { navigator, crypto };
+
+const setTimeout = (cb, ms) => coreHost.setTimeout(cb, ms);
+const clearTimeout = (id) => coreHost.clearTimeout(id);
+
+const window = { navigator, crypto, setTimeout, clearTimeout };
 const self = { window, navigator, crypto };
 global.window = window;
 
