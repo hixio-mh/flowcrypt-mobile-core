@@ -11,4 +11,7 @@ module.exports = {
     filename: '[name].js',
     libraryTarget: 'commonjs2'
   },
+  externals: {
+    openpgp: 'openpgp'
+  }
 }
