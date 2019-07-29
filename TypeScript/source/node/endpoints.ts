@@ -23,7 +23,8 @@ export class Endpoints {
   [endpoint: string]: ((uncheckedReq: any, data: Buffers) => Promise<Buffers>) | undefined;
 
   public version = async (): Promise<Buffers> => {
-    return fmtRes(typeof process === 'object' && process && typeof process.versions === 'object' ? process.versions : {app_version: VERSION});
+    const hasNodeVersions = typeof process === 'object' && process && typeof process.versions === 'object' && process.versions && process.versions.openssl;
+    return fmtRes(hasNodeVersions ? process.versions : {app_version: VERSION});
   }
 
   public encryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {

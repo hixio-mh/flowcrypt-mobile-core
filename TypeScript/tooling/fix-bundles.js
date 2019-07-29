@@ -123,7 +123,38 @@ const hostRsaDecryption = function(c_encrypted, n, e, d, p, q, pgp_style_u_which
   const bnDecrypted = new _bn2.default(_util2.default.b64_to_Uint8Array(decryptedBase64));
   return bnDecrypted.toArrayLike(Uint8Array, 'be', n.byteLength());
 }
-let hostAugumentedOpenpgpLib = rawOpenpgpLib.replace(rsaDecryptionReplaceable, `${hostRsaDecryption.toString()}(data_params[0], n, e, d, p, q, u)`)
+let hostAugumentedOpenpgpLib = rawOpenpgpLib.replace(
+  rsaDecryptionReplaceable, 
+  `${hostRsaDecryption.toString()}(data_params[0], n, e, d, p, q, u)`
+);
+
+const rsaVerifyReplaceable = /const EM = await _public_key2\.default\.rsa\.verify\(m, n, e\);/
+if(!rsaVerifyReplaceable.test(hostAugumentedOpenpgpLib)) {
+  throw new Error(`Could not find ${rsaVerifyReplaceable} in openpgp.js`)
+}
+hostAugumentedOpenpgpLib = hostAugumentedOpenpgpLib.replace(
+  rsaVerifyReplaceable, `
+  const computed = coreHost.verifyRsaModPow(m.toString(10), e.toString(10), n.toString(10)); // returns empty str if not supported: js fallback below
+  const EM = computed ? new _bn2.default(computed, 10).toArrayLike(Uint8Array, 'be', n.byteLength()) : await _public_key2.default.rsa.verify(m, n, e);`
+);
+
+const aesDecryptionReplaceable = /return _cfb\.AES_CFB\.decrypt\(ct, key, iv\);/
+if(!aesDecryptionReplaceable.test(hostAugumentedOpenpgpLib)) {
+  throw new Error(`Could not find ${aesDecryptionReplaceable} in openpgp.js`)
+}
+hostAugumentedOpenpgpLib = hostAugumentedOpenpgpLib.replace(
+  aesDecryptionReplaceable, 
+  `return Uint8Array.from(coreHost.decryptAesCfbNoPadding(ct, key, iv));`
+);
+
+const iteratedStringToKeyReplaceable = /const data = _util2\.default\.concatUint8Array\(\[s2k\.salt, passphrase\]\);/
+if(!iteratedStringToKeyReplaceable.test(hostAugumentedOpenpgpLib)) {
+  throw new Error(`Could not find ${iteratedStringToKeyReplaceable} in openpgp.js`)
+}
+hostAugumentedOpenpgpLib = hostAugumentedOpenpgpLib.replace(
+  iteratedStringToKeyReplaceable, 
+  `return Uint8Array.from(coreHost.produceHashedIteratedS2k(s2k.algorithm, prefix, s2k.salt, passphrase, count));`
+);
 
 fs.writeFileSync(`${bundleDir}/bare-openpgp-bundle.js`, `
 ${fs.readFileSync('source/lib/web-streams-polyfill.js').toString()}
