@@ -41,7 +41,7 @@ const handleReq = async (req: IncomingMessage, res: ServerResponse, receivedAt: 
   if (!doRunInsecure && (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT || !NODE_SSL_CA)) {
     throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_CA, NODE_SSL_KEY or NODE_SSL_CRT when doRunInsecure = false');
   }
-  if(doRunInsecure && APP_ENV !== 'dev') {
+  if (doRunInsecure && APP_ENV !== 'dev') {
     throw new Error('ERROR: --insecure can only be used with APP_ENV=dev');
   }
   if (req.headers['authorization'] !== NODE_AUTH_HEADER && !doRunInsecure) {
@@ -114,7 +114,7 @@ server.on('listening', () => {
   const msg = `listening on ${address && typeof address === 'object' ? address.port : address} APP_ENV:${APP_ENV}`;
   console.info(msg);
   sendNativeMessageToJava(msg);
-  if(doRunInsecure) {
+  if (doRunInsecure) {
     console.error('SECURITY WARNING - MOBILE CORE USES INSECURE HTTP');
   }
 });

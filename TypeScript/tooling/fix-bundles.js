@@ -32,7 +32,7 @@ fs.copyFileSync(`${bundleRawDir}/entrypoint-bare.js`, `${bundleDir}/entrypoint-b
 // copy wip to html-sanitize-bundle
 fs.copyFileSync(`${bundleWipDir}/node-html-sanitize.js`, `${bundleDir}/node-html-sanitize-bundle.js`);
 fs.writeFileSync(
-  `${bundleDir}/bare-html-sanitize-bundle.js`, 
+  `${bundleDir}/bare-html-sanitize-bundle.js`,
   `${fs.readFileSync('./node_modules/sanitize-html/dist/sanitize-html.js').toString()}\nconst dereq_html_sanitize = window.sanitizeHtml;\n`
 );
 
@@ -61,99 +61,42 @@ const emailjsNodeDep = emailjsRawDep // these replacements fix imports and expor
 fs.writeFileSync(`${bundleDir}/bare-emailjs-bundle.js`, `\n(function(){\n// begin emailjs\n${emailjsRawDep}\n// end emailjs\n})();\n`);
 fs.writeFileSync(`${bundleDir}/node-emailjs-bundle.js`, `\n(function(){\n// begin emailjs\n${emailjsNodeDep}\n// end emailjs\n})();\n`);
 
-// concat libs to become openpgp-bundle
-const rawOpenpgpLib = fs.readFileSync('source/lib/openpgp.js').toString();
-
-fs.writeFileSync(`${bundleDir}/node-openpgp-bundle.js`, `
-  (function(){
-    console.debug = console.log;
-    ${[
-      `${bundleWipDir}/minimalistic-assert.js`,
-      `${bundleWipDir}/bn.js`,
-      `${bundleWipDir}/node-asn1.js`
-    ].map(path => fs.readFileSync(path).toString()).join('\n')}
-    ${rawOpenpgpLib}
-    const openpgp = module.exports;
-    module.exports = {};
-    global['openpgp'] = openpgp;
-  })();
-`);
-
-const rsaDecryptionReplaceable = /[a-z0-9A-Z_]+\.default\.rsa\.decrypt\(c, n, e, d, p, q, u\)/
-if(!rsaDecryptionReplaceable.test(rawOpenpgpLib)) {
-  throw new Error(`Could not find ${rsaDecryptionReplaceable} in openpgp.js`)
-}
-const hostRsaDecryption = function(c_encrypted, n, e, d, p, q, pgp_style_u_which_is_different_than_der_style_u) {
-  var RSAPrivateKey = dereq_asn1.define('RSAPrivateKey', function() {
-    this.seq().obj(
-      this.key('version').int(),
-      this.key('modulus').int(),
-      this.key('publicExponent').int(),
-      this.key('privateExponent').int(),
-      this.key('prime1').int(),
-      this.key('prime2').int(),
-      this.key('exponent1').int(),
-      this.key('exponent2').int(),
-      this.key('coefficient').int(),
-    );
-  });
-  const dp = d.mod(p.subn(1)); // d mod (p-1)
-  const dq = d.mod(q.subn(1)); // d mod (q-1)
-  const u = q.invm(p); // (inverse of q) mod p (as per DER spec. PGP spec has it in the opposite way)
-  var derRsaPrv = RSAPrivateKey.encode({
-    version: 0,
-    modulus: n,
-    publicExponent: e,
-    privateExponent: d,
-    prime1: p,
-    prime2: q,
-    exponent1: dp, //         INTEGER,  -- d mod (p-1)
-    exponent2: dq, //        INTEGER,  -- d mod (q-1)
-    coefficient: u, //       INTEGER,  -- (inverse of q) mod p
-  }, 'der');
-  let derRsaPrvBase64 = derRsaPrv.toString("base64");
-  let encryptedBase64 = btoa(_util2.default.Uint8Array_to_str(c_encrypted.toUint8Array()));
-  // console.log(`RSA: ${derRsaPrvBase64}`);
-  // console.log(`SessionKey: ${encryptedBase64}`);
-  let decryptedBase64 = coreHost.decryptRsaNoPadding(derRsaPrvBase64, encryptedBase64);
-  // console.log(`decrypted: ${decryptedBase64}`);
-  if(!decryptedBase64) { // possibly msg-key mismatch
-    throw new Error("Session key decryption failed (host)");
+const replace = (libSrc, regex, replacement) => {
+  if (!regex.test(libSrc)) {
+    throw new Error(`Could not find ${regex} in openpgp.js`)
   }
-  const bnDecrypted = new _bn2.default(_util2.default.b64_to_Uint8Array(decryptedBase64));
-  return bnDecrypted.toArrayLike(Uint8Array, 'be', n.byteLength());
+  return libSrc.replace(regex, replacement);
 }
-let hostAugumentedOpenpgpLib = rawOpenpgpLib.replace(
-  rsaDecryptionReplaceable, 
-  `${hostRsaDecryption.toString()}(data_params[0], n, e, d, p, q, u)`
+
+let openpgpLib = fs.readFileSync('source/lib/openpgp.js').toString();
+const openpgpLibNodeDev = openpgpLib; // dev node runs without any host, no modifications needed
+
+openpgpLib = replace( // rsa decrypt on host
+  openpgpLib,
+  /[a-z0-9A-Z_]+\.default\.rsa\.decrypt\(c, n, e, d, p, q, u\)/,
+  `await hostRsaDecryption(dereq_asn1, _bn2, data_params[0], n, e, d, p, q)`
 );
 
-const rsaVerifyReplaceable = /const EM = await _public_key2\.default\.rsa\.verify\(m, n, e\);/
-if(!rsaVerifyReplaceable.test(hostAugumentedOpenpgpLib)) {
-  throw new Error(`Could not find ${rsaVerifyReplaceable} in openpgp.js`)
-}
-hostAugumentedOpenpgpLib = hostAugumentedOpenpgpLib.replace(
-  rsaVerifyReplaceable, `
-  const computed = coreHost.verifyRsaModPow(m.toString(10), e.toString(10), n.toString(10)); // returns empty str if not supported: js fallback below
+openpgpLib = replace( // rsa verify on host
+  openpgpLib,
+  /const EM = await _public_key2\.default\.rsa\.verify\(m, n, e\);/, `
+  const computed = await coreHost.verifyRsaModPow(m.toString(10), e.toString(10), n.toString(10)); // returns empty str if not supported: js fallback below
   const EM = computed ? new _bn2.default(computed, 10).toArrayLike(Uint8Array, 'be', n.byteLength()) : await _public_key2.default.rsa.verify(m, n, e);`
 );
 
-const aesDecryptionReplaceable = /return _cfb\.AES_CFB\.decrypt\(ct, key, iv\);/
-if(!aesDecryptionReplaceable.test(hostAugumentedOpenpgpLib)) {
-  throw new Error(`Could not find ${aesDecryptionReplaceable} in openpgp.js`)
-}
-hostAugumentedOpenpgpLib = hostAugumentedOpenpgpLib.replace(
-  aesDecryptionReplaceable, 
-  `return Uint8Array.from(coreHost.decryptAesCfbNoPadding(ct, key, iv));`
+let openpgpLibNode = openpgpLib; // no more modifications for node code
+let openpgpLibBare = openpgpLib; // further modify bare code below
+
+openpgpLibBare = replace( // bare - produce s2k (decrypt key) on host (because JS sha256 implementation is too slow)
+  openpgpLibBare,
+  /const data = _util2\.default\.concatUint8Array\(\[s2k\.salt, passphrase\]\);/,
+  `return Uint8Array.from(coreHost.produceHashedIteratedS2k(s2k.algorithm, prefix, s2k.salt, passphrase, count));`
 );
 
-const iteratedStringToKeyReplaceable = /const data = _util2\.default\.concatUint8Array\(\[s2k\.salt, passphrase\]\);/
-if(!iteratedStringToKeyReplaceable.test(hostAugumentedOpenpgpLib)) {
-  throw new Error(`Could not find ${iteratedStringToKeyReplaceable} in openpgp.js`)
-}
-hostAugumentedOpenpgpLib = hostAugumentedOpenpgpLib.replace(
-  iteratedStringToKeyReplaceable, 
-  `return Uint8Array.from(coreHost.produceHashedIteratedS2k(s2k.algorithm, prefix, s2k.salt, passphrase, count));`
+openpgpLibBare = replace( // bare - aes decrypt on host
+  openpgpLibBare,
+  /return _cfb\.AES_CFB\.decrypt\(ct, key, iv\);/,
+  `return Uint8Array.from(coreHost.decryptAesCfbNoPadding(ct, key, iv));`
 );
 
 fs.writeFileSync(`${bundleDir}/bare-openpgp-bundle.js`, `
@@ -164,6 +107,36 @@ const TransformStream = self.TransformStream;
 /* asn1 begin */
 ${fs.readFileSync(`${bundleWipDir}/bare-asn1.js`).toString()}
 /* asn1 end */
-${hostAugumentedOpenpgpLib}
+${openpgpLibBare}
 const openpgp = window.openpgp;
+`);
+
+fs.writeFileSync(`${bundleDir}/node-openpgp-bundle.js`, `
+  (function(){
+    console.debug = console.log;
+    ${[
+    `${bundleWipDir}/minimalistic-assert.js`,
+    `${bundleWipDir}/bn.js`,
+    `${bundleWipDir}/node-asn1.js`
+  ].map(path => fs.readFileSync(path).toString()).join('\n')}
+    ${openpgpLibNode}
+    const openpgp = module.exports;
+    module.exports = {};
+    global['openpgp'] = openpgp;
+  })();
+`);
+
+fs.writeFileSync(`${bundleDir}/node-dev-openpgp-bundle.js`, `
+  (function(){
+    console.debug = console.log;
+    ${[
+    `${bundleWipDir}/minimalistic-assert.js`,
+    `${bundleWipDir}/bn.js`,
+    `${bundleWipDir}/node-asn1.js`
+  ].map(path => fs.readFileSync(path).toString()).join('\n')}
+    ${openpgpLibNodeDev}
+    const openpgp = module.exports;
+    module.exports = {};
+    global['openpgp'] = openpgp;
+  })();
 `);
