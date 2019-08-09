@@ -100,7 +100,8 @@ export class Endpoints {
           decryptRes.message = undefined;
           sequentialProcessedBlocks.push(Pgp.internal.msgBlockDecryptErrObj(decryptRes.error.type === DecryptErrTypes.noMdc ? decryptRes.content! : rawBlock.content, decryptRes));
         }
-      } else if (rawBlock.type === 'encryptedAtt' && rawBlock.attMeta && /^(0x)?[A-Fa-f0-9]{16,40}\.asc\.pgp$/.test(rawBlock.attMeta.name || '')) { // encrypted pubkey attached
+      } else if (rawBlock.type === 'encryptedAtt' && rawBlock.attMeta && /^(0x)?[A-Fa-f0-9]{16,40}\.asc\.pgp$/.test(rawBlock.attMeta.name || '')) {
+        // encrypted pubkey attached
         const decryptRes = await PgpMsg.decrypt({ kisWithPp, msgPwd, encryptedData: Buf.with(rawBlock.attMeta.data || '') });
         if (decryptRes.content) {
           sequentialProcessedBlocks.push({ type: 'publicKey', content: decryptRes.content.toString(), complete: true });
@@ -114,7 +115,7 @@ export class Endpoints {
     const msgContentBlocks: MsgBlock[] = [];
     const blocks: MsgBlock[] = [];
     let replyType = 'plain';
-    for (const block of sequentialProcessedBlocks) {
+    for (const block of sequentialProcessedBlocks) { // fix/adjust/format blocks before returning it over JSON
       if (block.content instanceof Buf) { // cannot JSON-serialize Buf
         block.content = isContentBlock(block.type) ? block.content.toUtfStr() : block.content.toRawBytesStr();
       } else if (block.attMeta && block.attMeta.data instanceof Uint8Array) {
@@ -143,10 +144,7 @@ export class Endpoints {
         }
       } else if (isContentBlock(block.type)) {
         msgContentBlocks.push(block);
-      } else {
-        if (block.attMeta && !block.content.length) { // add a note about lacking file support. todo - remove when added support
-          block.content = `${block.attMeta.name || '(unnamed file)'} [${Str.numberFormat(Math.ceil((block.attMeta.length || 0) / 1024)) + 'KB'}]\n(Improved file support coming very soon!)`;
-        }
+      } else if (block.type !== 'plainAtt') {
         blocks.push(block);
       }
     }
@@ -255,7 +253,7 @@ export class Debug {
     const header2 = ' '.repeat(header1.length);
     const chunk = Array.from(data.subarray(0, 30));
     const chunkIndices = chunk.map((_, i) => i);
-    console.log(`-\n${header1}-+-[${chunk.map(Debug.pad).join(' ')} ]\n${header2} |-[${chunk.map(Debug.char).map(Debug.pad).join(' ')} ]\n${header2} \`-[${chunkIndices.map(Debug.pad).join(' ')} ]`);
+    console.log(`-\n${header1} - +-[${chunk.map(Debug.pad).join(' ')}]\n${header2} | -[${chunk.map(Debug.char).map(Debug.pad).join(' ')}]\n${header2} \`-[${chunkIndices.map(Debug.pad).join(' ')} ]`);
   }
 
   private static char = (byte: number) => {
