@@ -106,7 +106,7 @@ export class Mime {
   }
 
   public static isPlainInlineImg = (b: MsgBlock) => {
-    return b.type === 'plainAtt' && b.attMeta && b.attMeta.inline && b.attMeta.type && ['image/jpeg', 'image/png', 'image/svg+xml'].includes(b.attMeta.type);
+    return b.type === 'plainAtt' && b.attMeta && b.attMeta.inline && b.attMeta.type && ['image/jpeg', 'image/jpg', 'image/bmp', 'image/png', 'image/svg+xml'].includes(b.attMeta.type);
   }
 
   private static headersToFrom = (parsedMimeMsg: MimeContent) => {

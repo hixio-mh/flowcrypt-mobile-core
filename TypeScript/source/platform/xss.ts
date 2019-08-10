@@ -27,7 +27,7 @@ export class Xss {
 
   private static ALLOWED_ATTRS = {
     a: ['href', 'name', 'target'],
-    img: ['src', 'width', 'height'],
+    img: ['src', 'width', 'height', 'alt'],
     font: ['size', 'color', 'face'],
     span: ['color'],
     div: ['color'],
@@ -53,7 +53,7 @@ export class Xss {
         'img': (tagName, attribs) => {
           const srcBegin = (attribs.src || '').substring(0, 10);
           if (srcBegin.indexOf('data:') === 0) {
-            return { tagName: 'img', attribs: { src: attribs.src } };
+            return { tagName: 'img', attribs: { src: attribs.src, alt: attribs.alt || '' } };
           } else if (srcBegin.indexOf('http://') === 0 || srcBegin.indexOf('https://') === 0) {
             remoteContentReplacedWithLink = true;
             return { tagName: 'a', attribs: { href: String(attribs.src), target: "_blank" }, text: imgContentReplaceable };
@@ -104,7 +104,17 @@ export class Xss {
     let text = html.split(br).join('\n').split(blockStart).filter(v => !!v).join('\n').split(blockEnd).filter(v => !!v).join('\n');
     text = text.replace(/\n{2,}/g, '\n\n');
     // not all tags were removed above. Remove all remaining tags
-    text = dereq_html_sanitize(text, { allowedTags: [] });
+    text = dereq_html_sanitize(text, {
+      allowedTags: ['img', 'span'],
+      allowedAttributes: { img: ['src'] },
+      allowedSchemes: Xss.ALLOWED_SCHEMES,
+      transformTags: {
+        'img': (tagName, attribs) => {
+          return { tagName: 'span', attribs: {}, text: `[image: ${attribs.alt || attribs.title || 'no name'}]` };
+        },
+      }
+    });
+    text = dereq_html_sanitize(text, { allowedTags: [] }); // clean it one more time to replace leftover spans with their text
     text = text.trim();
     if (outputNl !== '\n') {
       text = text.replace(/\n/g, outputNl);
