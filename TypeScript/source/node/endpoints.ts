@@ -144,6 +144,8 @@ export class Endpoints {
         }
       } else if (isContentBlock(block.type)) {
         msgContentBlocks.push(block);
+      } else if (Mime.isPlainInlineImg(block)) {
+        msgContentBlocks.push(block);
       } else if (block.type !== 'plainAtt') {
         blocks.push(block);
       }

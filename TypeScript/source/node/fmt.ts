@@ -2,7 +2,7 @@
 
 'use strict';
 
-import { MsgBlockType, MsgBlock } from '../core/mime';
+import { MsgBlockType, MsgBlock, Mime } from '../core/mime';
 import { Str } from '../core/common';
 import { Pgp } from '../core/pgp';
 import { Xss } from '../platform/xss';
@@ -39,22 +39,54 @@ export const stripHtmlRootTags = (html: string) => { // todo - this is very rudi
   return html.trim();
 }
 
-export const fmtContentBlock = (contentBlocks: MsgBlock[]): { contentBlock: MsgBlock, text: string } => {
+/**
+ * replace content of imgs: <img src="cid:16c7a8c3c6a8d4ab1e01">
+ */
+const fillInlineHtmlImgs = (htmlContent: string, inlineImgsByCid: { [cid: string]: MsgBlock }): string => {
+  return htmlContent.replace(/src="cid:([^"]+)"/g, (originalSrcAttr, cid) => {
+    const img = inlineImgsByCid[cid];
+    if (img) {
+      // in current usage, as used by `endpoints.ts`: `block.attMeta!.data` actually contains base64 encoded data, not Uint8Array as the type claims
+      let alteredSrcAttr = `src="data:${img.attMeta!.type};base64,${img.attMeta!.data}"`;
+      // delete to find out if any imgs were unused
+      // later we can add the unused ones at the bottom 
+      // (though as implemented will cause issues if the same cid is reused in several places in html - which is theoretically valid - only first will get replaced)
+      delete inlineImgsByCid[cid];
+      return alteredSrcAttr;
+    } else {
+      return originalSrcAttr;
+    }
+  });
+}
+
+export const fmtContentBlock = (allContentBlocks: MsgBlock[]): { contentBlock: MsgBlock, text: string } => {
   let msgContentAsHtml = '';
   let msgContentAsText = '';
+  const contentBlocks = allContentBlocks.filter(b => !Mime.isPlainInlineImg(b))
+  const imgsAtTheBottom: MsgBlock[] = [];
+  const inlineImgsByCid: { [cid: string]: MsgBlock } = {};
+  for (let inlineImg of allContentBlocks.filter(b => Mime.isPlainInlineImg(b))) {
+    if (inlineImg.attMeta!.cid) {
+      inlineImgsByCid[inlineImg.attMeta!.cid.replace(/>$/, '').replace(/^</, '')] = inlineImg;
+    } else {
+      imgsAtTheBottom.push(inlineImg);
+    }
+  }
   for (const block of contentBlocks) {
     if (block.type === 'decryptedText') {
       msgContentAsHtml += fmtMsgContentBlockAsHtml(Str.asEscapedHtml(block.content.toString()), 'green');
       msgContentAsText += block.content.toString() + '\n';
     } else if (block.type === 'decryptedHtml') {
+      // todo - add support for inline imgs? when included using cid
       msgContentAsHtml += fmtMsgContentBlockAsHtml(stripHtmlRootTags(block.content.toString()), 'green');
       msgContentAsText += Xss.htmlSanitizeAndStripAllTags(block.content.toString(), '\n') + '\n';
     } else if (block.type === 'plainText') {
       msgContentAsHtml += fmtMsgContentBlockAsHtml(Str.asEscapedHtml(block.content.toString()), 'plain');
       msgContentAsText += block.content.toString() + '\n';
     } else if (block.type === 'plainHtml') {
-      msgContentAsHtml += fmtMsgContentBlockAsHtml(stripHtmlRootTags(block.content.toString()), 'plain');
-      msgContentAsText += Xss.htmlSanitizeAndStripAllTags(block.content.toString(), '\n'); + '\n';
+      const dirtyHtmlWithImgs = fillInlineHtmlImgs(stripHtmlRootTags(block.content.toString()), inlineImgsByCid);
+      msgContentAsHtml += fmtMsgContentBlockAsHtml(dirtyHtmlWithImgs, 'plain');
+      msgContentAsText += Xss.htmlSanitizeAndStripAllTags(dirtyHtmlWithImgs, '\n') + '\n';
     } else if (block.type === 'verifiedMsg') {
       msgContentAsHtml += fmtMsgContentBlockAsHtml(block.content.toString(), 'gray');
       msgContentAsText += block.content.toString() + '\n';
@@ -62,6 +94,13 @@ export const fmtContentBlock = (contentBlocks: MsgBlock[]): { contentBlock: MsgB
       msgContentAsHtml += fmtMsgContentBlockAsHtml(block.content.toString(), 'plain');
       msgContentAsText += block.content.toString() + '\n';
     }
+  }
+  for (const inlineImg of imgsAtTheBottom.concat(Object.values(inlineImgsByCid))) { // render any images we did not insert into content, at the bottom
+    let alt = `${inlineImg.attMeta!.name || '(unnamed image)'} - ${inlineImg.attMeta!.length! / 1024}kb`;
+    // in current usage, as used by `endpoints.ts`: `block.attMeta!.data` actually contains base64 encoded data, not Uint8Array as the type claims
+    let inlineImgTag = `<img src="data:${inlineImg.attMeta!.type};base64,${inlineImg.attMeta!.data}" alt="${Xss.escape(alt)} " />`;
+    msgContentAsHtml += fmtMsgContentBlockAsHtml(inlineImgTag, 'plain');
+    msgContentAsText += `[image: ${alt}]\n`;
   }
   msgContentAsHtml = `
   <!DOCTYPE html><html>
