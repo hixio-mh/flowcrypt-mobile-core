@@ -89,7 +89,7 @@ export const fmtContentBlock = (allContentBlocks: MsgBlock[]): { contentBlock: M
       msgContentAsText += Xss.htmlSanitizeAndStripAllTags(dirtyHtmlWithImgs, '\n') + '\n';
     } else if (block.type === 'verifiedMsg') {
       msgContentAsHtml += fmtMsgContentBlockAsHtml(block.content.toString(), 'gray');
-      msgContentAsText += block.content.toString() + '\n';
+      msgContentAsText += Xss.htmlSanitizeAndStripAllTags(block.content.toString(), '\n') + '\n';
     } else {
       msgContentAsHtml += fmtMsgContentBlockAsHtml(block.content.toString(), 'plain');
       msgContentAsText += block.content.toString() + '\n';

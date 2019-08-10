@@ -94,7 +94,11 @@ export class Endpoints {
           if (decryptRes.isEncrypted) {
             sequentialProcessedBlocks.push(... await PgpMsg.fmtDecryptedAsSanitizedHtmlBlocks(decryptRes.content));
           } else {
-            sequentialProcessedBlocks.push({ type: 'verifiedMsg', content: decryptRes.content, complete: true, verifyRes: decryptRes.signature });
+            // treating as text, converting to html - what about plain signed html? This could produce html tags
+            // although hopefully, that would, typically, result in the `(rawBlock.type === 'signedMsg' || rawBlock.type === 'signedHtml')` block above
+            // the only time I can imagine it screwing up down here is if it was a signed-only message that was actually fully armored (text not visible) with a mime msg inside
+            // ... -> in which case the user would I think see full mime content?
+            sequentialProcessedBlocks.push({ type: 'verifiedMsg', content: Str.asEscapedHtml(decryptRes.content.toUtfStr()), complete: true, verifyRes: decryptRes.signature });
           }
         } else {
           decryptRes.message = undefined;
