@@ -85,7 +85,9 @@ export class Mime {
       } else if (treatAs === 'encryptedFile') {
         blocks.push(Pgp.internal.msgBlockAttObj('encryptedAtt', '', { name: file.name, type: file.type, length: file.getData().length, data: file.getData() }));
       } else if (treatAs === 'plainFile') {
-        blocks.push(Pgp.internal.msgBlockAttObj('plainAtt', '', { name: file.name, type: file.type, length: file.getData().length, data: file.getData(), inline: file.inline, cid: file.cid }));
+        blocks.push(Pgp.internal.msgBlockAttObj('plainAtt', '', {
+          name: file.name, type: file.type, length: file.getData().length, data: file.getData(), inline: file.inline, cid: file.cid
+        }));
       }
     }
     if (decoded.signature) {
