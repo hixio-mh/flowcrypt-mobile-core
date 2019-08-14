@@ -221,8 +221,11 @@ export class Endpoints {
   public decryptKey = async (uncheckedReq: any) => {
     Store.keyCacheWipe(); // decryptKey may be used when changing major settings, wipe cache to prevent dated results
     const { armored, passphrases } = Validate.decryptKey(uncheckedReq);
+    if (passphrases.length !== 1) { // todo - refactor endpoint decryptKey api to accept a single pp
+      throw new Error(`decryptKey: Can only accept exactly 1 pass phrase for decrypt, received: ${passphrases.length}`);
+    }
     const key = await readArmoredKeyOrThrow(armored);
-    if (await Pgp.key.decrypt(key, passphrases)) {
+    if (await Pgp.key.decrypt(key, passphrases[0])) {
       return fmtRes({ decryptedKey: key.armor() });
     }
     return fmtRes({ decryptedKey: null });
