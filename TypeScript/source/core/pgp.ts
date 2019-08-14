@@ -339,6 +339,20 @@ export class Pgp {
       }
       return true;
     },
+    encrypt: async (prv: OpenPGP.key.Key, passphrase: string) => {
+      if (!passphrase || passphrase === 'undefined' || passphrase === 'null') {
+        throw new Error(`Encryption passphrase should not be empty:${typeof passphrase}:${passphrase}`);
+      }
+      const secretPackets = prv.getKeys().map(k => k.keyPacket).filter(Pgp.key.isPacketPrivate);
+      const encryptedPacketCount = secretPackets.filter(p => p.isDecrypted() === false).length;
+      if (!secretPackets.length) {
+        throw new Error(`No private key packets in key to encrypt. Is this a private key?`);
+      }
+      if (encryptedPacketCount) {
+        throw new Error(`Cannot encrypt a key that has ${encryptedPacketCount} of ${secretPackets.length} private packets still encrypted`);
+      }
+      await prv.encrypt(passphrase);
+    },
     normalize: async (armored: string): Promise<{ normalized: string, keys: OpenPGP.key.Key[] }> => {
       try {
         let keys: OpenPGP.key.Key[] = [];
