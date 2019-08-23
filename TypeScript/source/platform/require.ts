@@ -2,7 +2,7 @@
 
 'use strict';
 
-/// <reference path="../../../types/openpgp.d.ts" />
+/// <reference path="../core/types/openpgp.d.ts" />
 
 export const requireOpenpgp = (): typeof OpenPGP => {
   // @ts-ignore;
@@ -10,7 +10,10 @@ export const requireOpenpgp = (): typeof OpenPGP => {
     // @ts-ignore;
     return openpgp; // self-contained node-mobile
   }
-  return require('openpgp'); // normal desktop node, eg when running tests
+  // running tests on a desktop os node instance
+  // making the require semi-dynamic to surpress Webpack warnings/errors. This line does not rely on webpack at all
+  // if this was webpack, then the `openpgp` variable would be already set, and it would never get down here
+  return require(`${'../../../../../../source/lib/openpgp'}`); // this is flowcrypt-mobile-core/TypeScript/source/lib/openpgp.js
 };
 
 export const requireMimeParser = (): any => {

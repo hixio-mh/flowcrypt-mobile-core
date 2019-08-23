@@ -3,7 +3,7 @@
 'use strict';
 
 import * as ava from 'ava';
-import { startNodeCoreInstance, request, expectNoData, getKeypairs, expectData, expectEmptyJson, getCompatAsset } from './test/test-utils';
+import { startNodeCoreInstance, request, expectNoData, getKeypairs, expectData, expectEmptyJson, getCompatAsset, allKeypairNames } from './test/test-utils';
 import { expect } from 'chai';
 import { ChildProcess } from './test/flowcrypt-node-modules';
 import { openpgp } from './core/pgp';
@@ -43,17 +43,19 @@ ava.test('generateKey', async t => {
   t.pass();
 });
 
-ava.test('encryptMsg -> parseDecryptMsg', async t => {
-  const content = 'hello\nwrld';
-  const { pubKeys, keys } = getKeypairs('rsa1');
-  const { data: encryptedMsg, json: encryptJson } = await request('encryptMsg', { pubKeys }, content);
-  expectEmptyJson(encryptJson);
-  expectData(encryptedMsg, 'armoredMsg');
-  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys }, encryptedMsg);
-  expect(decryptJson).to.deep.equal({ text: content, replyType: 'encrypted' });
-  expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent: content.replace(/\n/g, '<br />') }]);
-  t.pass();
-});
+for (const keypairName of allKeypairNames) {
+  ava.test(`encryptMsg -> parseDecryptMsg (${keypairName})`, async t => {
+    const content = 'hello\nwrld';
+    const { pubKeys, keys } = getKeypairs(keypairName);
+    const { data: encryptedMsg, json: encryptJson } = await request('encryptMsg', { pubKeys }, content);
+    expectEmptyJson(encryptJson);
+    expectData(encryptedMsg, 'armoredMsg');
+    const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys }, encryptedMsg);
+    expect(decryptJson).to.deep.equal({ text: content, replyType: 'encrypted' });
+    expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent: content.replace(/\n/g, '<br />') }]);
+    t.pass();
+  });
+}
 
 ava.test('composeEmail format:plain -> parseDecryptMsg', async t => {
   const content = 'hello\nwrld';
@@ -196,18 +198,20 @@ ava.test('composeEmail format:encrypt-inline -> parseDecryptMsg', async t => {
   t.pass();
 });
 
-ava.test('encryptFile -> decryptFile', async t => {
-  const { pubKeys, keys } = getKeypairs('rsa1');
-  const name = 'myfile.txt';
-  const content = Buffer.from([10, 20, 40, 80, 160, 0, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250]);
-  const { data: encryptedFile, json: encryptJson } = await request('encryptFile', { pubKeys, name }, content);
-  expectEmptyJson(encryptJson);
-  expectData(encryptedFile);
-  const { data: decryptedContent, json: decryptJson } = await request('decryptFile', { keys }, encryptedFile);
-  expect(decryptJson).to.deep.equal({ success: true, name });
-  expectData(decryptedContent, 'binary', content);
-  t.pass();
-});
+for (const keypairName of allKeypairNames) {
+  ava.test(`encryptFile -> decryptFile ${keypairName}`, async t => {
+    const { pubKeys, keys } = getKeypairs(keypairName);
+    const name = 'myfile.txt';
+    const content = Buffer.from([10, 20, 40, 80, 160, 0, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250]);
+    const { data: encryptedFile, json: encryptJson } = await request('encryptFile', { pubKeys, name }, content);
+    expectEmptyJson(encryptJson);
+    expectData(encryptedFile);
+    const { data: decryptedContent, json: decryptJson } = await request('decryptFile', { keys }, encryptedFile);
+    expect(decryptJson).to.deep.equal({ success: true, name });
+    expectData(decryptedContent, 'binary', content);
+    t.pass();
+  });
+}
 
 ava.test('parseDateStr', async t => {
   const { data, json } = await request('parseDateStr', { dateStr: 'Sun, 10 Feb 2019 07:08:20 -0800' }, []);
@@ -270,6 +274,7 @@ ava.test('decryptKey', async t => {
   const { data, json } = await request('decryptKey', { armored: key.private, passphrases: [key.passphrase] }, Buffer.from([]));
   const { keys: [decryptedKey] } = await openpgp.key.readArmored(json.decryptedKey);
   expect(decryptedKey.isFullyDecrypted()).to.be.true;
+  expect(decryptedKey.isFullyEncrypted()).to.be.false;
   expectNoData(data);
   t.pass();
 });
@@ -280,8 +285,29 @@ ava.test('encryptKey', async t => {
   const { data, json } = await request('encryptKey', { armored: decryptedKey, passphrase }, Buffer.from([]));
   const { keys: [encryptedKey] } = await openpgp.key.readArmored(json.encryptedKey);
   expect(encryptedKey.isFullyEncrypted()).to.be.true;
+  expect(encryptedKey.isFullyDecrypted()).to.be.false;
   expect(await encryptedKey.decrypt(passphrase)).to.be.true;
   expectNoData(data);
+  t.pass();
+});
+
+ava.test('decryptKey gpg-dummy', async t => {
+  const { keys: [key] } = getKeypairs('gpg-dummy');
+  const { keys: [encryptedKey] } = await openpgp.key.readArmored(key.private);
+  expect(encryptedKey.isFullyEncrypted()).to.be.true;
+  expect(encryptedKey.isFullyDecrypted()).to.be.false;
+  const { json } = await request('decryptKey', { armored: key.private, passphrases: [key.passphrase] }, Buffer.from([]));
+  const { keys: [decryptedKey] } = await openpgp.key.readArmored(json.decryptedKey);
+  expect(decryptedKey.isFullyEncrypted()).to.be.false;
+  expect(decryptedKey.isFullyDecrypted()).to.be.true;
+  const { json: json2 } = await request('encryptKey', { armored: decryptedKey.armor(), passphrase: 'another pass phrase' }, Buffer.from([]));
+  const { keys: [reEncryptedKey] } = await openpgp.key.readArmored(json2.encryptedKey);
+  expect(reEncryptedKey.isFullyEncrypted()).to.be.true;
+  expect(reEncryptedKey.isFullyDecrypted()).to.be.false;
+  const { json: json3 } = await request('decryptKey', { armored: reEncryptedKey.armor(), passphrases: ['another pass phrase'] }, Buffer.from([]));
+  const { keys: [reDecryptedKey] } = await openpgp.key.readArmored(json3.decryptedKey);
+  expect(reDecryptedKey.isFullyEncrypted()).to.be.false;
+  expect(reDecryptedKey.isFullyDecrypted()).to.be.true;
   t.pass();
 });
 
