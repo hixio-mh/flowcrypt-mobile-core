@@ -2,10 +2,7 @@
 
 'use strict';
 
-import { Contact } from '../core/pgp.js';
-import { requireOpenpgp } from './require.js';
-
-const openpgp = requireOpenpgp();
+import { Contact, openpgp } from '../core/pgp.js';
 
 let KEY_CACHE: { [longidOrArmoredKey: string]: OpenPGP.key.Key } = {};
 let KEY_CACHE_WIPE_TIMEOUT: NodeJS.Timeout;
@@ -46,7 +43,7 @@ export class Store {
     if (KEY_CACHE_WIPE_TIMEOUT) {
       clearTimeout(KEY_CACHE_WIPE_TIMEOUT);
     }
-    KEY_CACHE_WIPE_TIMEOUT = setTimeout(Store.keyCacheWipe, 2 * 60 * 1000);  
+    KEY_CACHE_WIPE_TIMEOUT = setTimeout(Store.keyCacheWipe, 2 * 60 * 1000);
   }
 
 }

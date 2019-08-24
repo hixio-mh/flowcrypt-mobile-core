@@ -4,19 +4,16 @@
 
 'use strict';
 
-import { PgpMsg, Pgp, KeyDetails, DecryptErrTypes } from '../core/pgp';
+import { PgpMsg, Pgp, KeyDetails, DecryptErrTypes, openpgp } from '../core/pgp';
 import { Validate } from './validate';
 import { fmtRes, Buffers, isContentBlock, fmtContentBlock } from './fmt';
 import { gmailBackupSearchQuery } from '../core/const';
-import { requireOpenpgp } from '../platform/require';
 import { Str } from '../core/common';
 import { Mime, MsgBlock, RichHeaders } from '../core/mime';
 import { Buf } from '../core/buf';
 import { Store } from '../platform/store';
 import { Xss } from '../platform/xss';
 import { VERSION } from '../core/const';
-
-const openpgp = requireOpenpgp();
 
 export class Endpoints {
 
