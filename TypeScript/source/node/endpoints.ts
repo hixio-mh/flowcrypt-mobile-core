@@ -37,7 +37,7 @@ export class Endpoints {
       throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
     }
     let k = await Pgp.key.create(userIds, variant, passphrase);
-    return fmtRes({ key: await Pgp.key.details(await Pgp.key.read(k.private)) });
+    return fmtRes({ key: legacyIsDecrypted(await Pgp.key.details(await Pgp.key.read(k.private))) });
   }
 
   public composeEmail = async (uncheckedReq: any): Promise<Buffers> => {
