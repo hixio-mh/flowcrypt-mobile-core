@@ -11,6 +11,8 @@ import { Xss } from './platform/xss';
 
 const text = 'some\n汉\ntxt';
 const htmlContent = text.replace(/\n/g, '<br />');
+const textSpecialChars = '> special <tag> & other\n> second line';
+const htmlSpecialChars = Xss.escape(textSpecialChars).replace('\n', '<br />');
 
 let nodeProcess: ChildProcess;
 
@@ -102,8 +104,7 @@ orig message
   t.pass();
 });
 
-ava.test.failing('parseDecryptMsg unescaped special characters in text', async t => {
-  const text = 'msg has < characters > and <b> tag & other stuff';
+ava.test('parseDecryptMsg unescaped special characters in text (originally text/plain)', async t => {
   const mime = `MIME-Version: 1.0
 Date: Fri, 6 Sep 2019 10:48:25 +0000
 Message-ID: <some@mail.gmail.com>
@@ -112,11 +113,44 @@ From: Human at FlowCrypt <human@flowcrypt.com>
 To: FlowCrypt Compatibility <flowcrypt.compatibility@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 
-${text}`;
+${textSpecialChars}`;
   const { keys } = getKeypairs('rsa1');
-  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: false }, mime);
-  expect(decryptJson).deep.equal({ text, replyType: 'plain' });
-  expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'plain', htmlContent: Xss.escape(text) }]);
+  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, mime);
+  expect(decryptJson).deep.equal({ text: textSpecialChars, replyType: 'plain' });
+  expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'plain', htmlContent: htmlSpecialChars }]);
+  t.pass();
+});
+
+ava.test('parseDecryptMsg unescaped special characters in text (originally text/html)', async t => {
+  const mime = `MIME-Version: 1.0
+Date: Fri, 6 Sep 2019 10:48:25 +0000
+Message-ID: <some@mail.gmail.com>
+Subject: plain text with special chars
+From: Human at FlowCrypt <human@flowcrypt.com>
+To: FlowCrypt Compatibility <flowcrypt.compatibility@gmail.com>
+Content-Type: text/html; charset="UTF-8"
+
+${htmlSpecialChars}`;
+  const { keys } = getKeypairs('rsa1');
+  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, mime);
+  expect(decryptJson).deep.equal({ text: textSpecialChars, replyType: 'plain' });
+  expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'plain', htmlContent: htmlSpecialChars }]);
+  t.pass();
+});
+
+ava.test('parseDecryptMsg unescaped special characters in encrypted pgpmime', async t => {
+  const { keys } = getKeypairs('rsa1');
+  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: false }, await getCompatAsset('direct-encrypted-pgpmime-special-chars'));
+  expect(decryptJson).deep.equal({ text: textSpecialChars, replyType: 'encrypted' });
+  expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent: htmlSpecialChars }]);
+  t.pass();
+});
+
+ava.test('parseDecryptMsg unescaped special characters in encrypted text', async t => {
+  const { keys } = getKeypairs('rsa1');
+  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: false }, await getCompatAsset('direct-encrypted-text-special-chars'));
+  expect(decryptJson).deep.equal({ text: textSpecialChars, replyType: 'encrypted' });
+  expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent: htmlSpecialChars }]);
   t.pass();
 });
 

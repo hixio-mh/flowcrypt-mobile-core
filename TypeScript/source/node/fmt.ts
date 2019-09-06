@@ -79,14 +79,14 @@ export const fmtContentBlock = (allContentBlocks: MsgBlock[]): { contentBlock: M
     } else if (block.type === 'decryptedHtml') {
       // todo - add support for inline imgs? when included using cid
       msgContentAsHtml += fmtMsgContentBlockAsHtml(stripHtmlRootTags(block.content.toString()), 'green');
-      msgContentAsText += Xss.htmlSanitizeAndStripAllTags(block.content.toString(), '\n') + '\n';
+      msgContentAsText += Xss.htmlUnescape(Xss.htmlSanitizeAndStripAllTags(block.content.toString(), '\n') + '\n');
     } else if (block.type === 'plainText') {
       msgContentAsHtml += fmtMsgContentBlockAsHtml(Str.asEscapedHtml(block.content.toString()), 'plain');
       msgContentAsText += block.content.toString() + '\n';
     } else if (block.type === 'plainHtml') {
       const dirtyHtmlWithImgs = fillInlineHtmlImgs(stripHtmlRootTags(block.content.toString()), inlineImgsByCid);
       msgContentAsHtml += fmtMsgContentBlockAsHtml(dirtyHtmlWithImgs, 'plain');
-      msgContentAsText += Xss.htmlSanitizeAndStripAllTags(dirtyHtmlWithImgs, '\n') + '\n';
+      msgContentAsText += Xss.htmlUnescape(Xss.htmlSanitizeAndStripAllTags(dirtyHtmlWithImgs, '\n') + '\n');
     } else if (block.type === 'verifiedMsg') {
       msgContentAsHtml += fmtMsgContentBlockAsHtml(block.content.toString(), 'gray');
       msgContentAsText += Xss.htmlSanitizeAndStripAllTags(block.content.toString(), '\n') + '\n';

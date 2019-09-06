@@ -12,8 +12,10 @@ import * as ava from 'ava';
 import { PgpMsg } from './core/pgp';
 import { util } from './test/flowcrypt-node-modules';
 import { AvaContext } from './test/test-utils';
+import { Xss } from './platform/xss';
 
 const text = Buffer.from('some\n汉\ntxt');
+const textSpecialChars = Buffer.from('> special <tag> & other\n> second line');
 
 const pubkeys = ['-----BEGIN PGP PUBLIC KEY BLOCK-----\nVersion: FlowCrypt 6.3.5 Gmail Encryption\nComment: Seamlessly send and receive encrypted email\n\nxsBNBFwBWOEBB/9uIqBYIPDQbBqHMvGXhgnm+b2i5rNLXrrGoalrp7wYQ654\nZln/+ffxzttRLRiwRQAOG0z78aMDXAHRfI9d3GaRKTkhTqVY+C02E8NxgB3+\nmbSsF0Ui+oh1//LT1ic6ZnISCA7Q2h2U/DSAPNxDZUMu9kjh9TjkKlR81fiA\nlxuD05ivRxCnmZnzqZtHoUvvCqsENgRjO9a5oWpMwtdItjdRFF7UFKYpfeA+\nct0uUNMRVdPK7MXBEr2FdWiKN1K21dQ1pWiAwj/5cTA8hu5Jue2RcF8FcPfs\nniRihQkNqtLDsfY5no1B3xeSnyO2SES1bAHw8ObXZn/C/6jxFztkn4NbABEB\nAAHNEFRlc3QgPHRAZXN0LmNvbT7CwHUEEAEIACkFAlwBWOEGCwkHCAMCCRA6\nMPTMCpqPEAQVCAoCAxYCAQIZAQIbAwIeAQAA1pMH/R9oEVHaTdEzs/jbsfJk\n6xm2oQ/G7KewtSqawAC6nou0+GKvgICxvkNK+BivMLylut+MJqh2gHuExdzx\nHFNtKH69BzlK7hDBjyyrLuHIxc4YZaxHGe5ny3wF4QkEgfI+C5chH7Bi+jV6\n94L40zEeFO2OhIif8Ti9bRb2Pk6UV5MrsdM0K6J0gTQeTaRecQSg07vO3E8/\nGwfP2Dnq4yHICF/eaop+9QWj8UstEE6nEs7SSTrjIAxwAeZzpkjkXPXTLjz6\nEcS/9EU7B+5v1qwXk1YeW1qerKJn6Qd6hqJ5gkVzq3sy3eODyrEwpNQoAR4J\n8e3VQkKOn9oiAlFTglFeBhfOwE0EXAFY4QEH/2dyWbH3y9+hKk9RxwFzO+5n\nGaqT6Njoh368GEEWgSG11NKlrD8k2y1/R1Nc3xEIWMHSUe1rnWWVONKhupwX\nABTnj8coM5beoxVu9p1oYgum4IwLF0yAtaWll1hjsECm/U33Ok36JDa0iu+d\nRDfXbEo5cX9bzc1QnWdM5tBg2mxRkssbY3eTPXUe4FLcT0WAQ5hjLW0tPneG\nzlu2q9DkmngjDlwGgGhMCa/508wMpgGugE/C4V41EiiTAtOtVzGtdqPGVdoZ\neaYZLc9nTQderaDu8oipaWIwsshYWX4uVVvo7xsx5c5PWXRdI70aUs5IwMRz\nuljbq+SYCNta/uJRYc0AEQEAAcLAXwQYAQgAEwUCXAFY4QkQOjD0zAqajxAC\nGwwAAI03B/9aWF8l1v66Qaw4O8P3VyQn0/PkVWJYVt5KjMW4nexAfM4BlUw6\n97rP5IvfYXNh47Cm8VKqxgcXodzJrouzgwiPFxXmJe5Ug24FOpmeSeIl83Uf\nCzaiIm+B6K5cf2NuHTrr4pElDaQ7RQGH2m2cMcimv4oWU9a0tRjt1e7XQAfQ\nSWoCalUbLBeYORgVAF97MUNqeth6FMT5STjq+AGgnNZ2vdsUnASS/HbQQUUO\naVGVjo29lB6fS+UHT2gV/E/WQInjok5UrUMaFHwpO0VNP057DNyqhZwxaAs5\nBsSgJlOC5hrT+PKlfr9ic75fqnJqmLircB+hVnfhGR9OzH3RCIky\n=VKq5\n-----END PGP PUBLIC KEY BLOCK-----\n'];
 
@@ -113,7 +115,7 @@ ${text.toString()}
 --------------F396B399B1F808CB5EF04F7C
 Content-Type: text/html; charset=utf-8
 
-${text.toString().replace(/\n/g, '<br>')}
+${Xss.escape(text.toString()).replace(/\n/g, '<br>')}
 --------------F396B399B1F808CB5EF04F7C--
 
 --PpujspXwR9sayhr0t4sBaTxoXX6dlYhLU--
@@ -131,6 +133,18 @@ ava.test('direct-encrypted-text.txt', async t => {
 
 ava.test('direct-encrypted-pgpmime.txt', async t => {
   const { data } = await PgpMsg.encrypt({ data: mimePgp(t, text), pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
+  await write(t, data);
+  t.pass();
+});
+
+ava.test('direct-encrypted-pgpmime-special-chars.txt', async t => {
+  const { data } = await PgpMsg.encrypt({ data: mimePgp(t, textSpecialChars), pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
+  await write(t, data);
+  t.pass();
+});
+
+ava.test('direct-encrypted-text-special-chars.txt', async t => {
+  const { data } = await PgpMsg.encrypt({ data: textSpecialChars, pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
   await write(t, data);
   t.pass();
 });
