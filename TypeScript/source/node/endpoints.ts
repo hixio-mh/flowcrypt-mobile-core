@@ -128,20 +128,25 @@ export class Endpoints {
       if (block.type === 'decryptedHtml' || block.type === 'decryptedText' || block.type === 'decryptedAtt') {
         replyType = 'encrypted';
       }
-      if (block.type === 'publicKey' && !block.keyDetails) { // this could eventually be moved into detectBlocks, which would make it async
-        const { keys } = await Pgp.key.normalize(block.content);
-        if (keys.length) {
-          for (const pub of keys) {
-            blocks.push({ type: 'publicKey', content: pub.armor(), complete: true, keyDetails: await Pgp.key.details(pub) });
+      if (block.type === 'publicKey') {
+        if (!block.keyDetails) { // this could eventually be moved into detectBlocks, which would make it async
+          const { keys } = await Pgp.key.normalize(block.content);
+          if (keys.length) {
+            for (const pub of keys) {
+              blocks.push({ type: 'publicKey', content: pub.armor(), complete: true, keyDetails: legacyIsDecrypted(await Pgp.key.details(pub)) });
+            }
+          } else {
+            blocks.push({
+              type: 'decryptErr', content: block.content, complete: true, decryptErr: {
+                success: false,
+                error: { type: 'format' as DecryptErrTypes, message: 'Badly formatted public key' },
+                longids: { message: [], matching: [], chosen: [], needPassphrase: [] }
+              }
+            });
           }
         } else {
-          blocks.push({
-            type: 'decryptErr', content: block.content, complete: true, decryptErr: {
-              success: false,
-              error: { type: 'format' as DecryptErrTypes, message: 'Badly formatted public key' },
-              longids: { message: [], matching: [], chosen: [], needPassphrase: [] }
-            }
-          });
+          block.keyDetails = legacyIsDecrypted(block.keyDetails);
+          blocks.push(block);
         }
       } else if (isContentBlock(block.type)) {
         msgContentBlocks.push(block);
@@ -200,14 +205,14 @@ export class Endpoints {
         const { keys } = await Pgp.key.parse(block.content.toString());
         keyDetails.push(...keys);
       }
-      return fmtRes({ format: 'armored', keyDetails });
+      return fmtRes({ format: 'armored', keyDetails: keyDetails.map(legacyIsDecrypted) });
     }
     // binary
     const { keys: openPgpKeys } = await openpgp.key.read(allData);
     for (const openPgpKey of openPgpKeys) {
       keyDetails.push(await Pgp.key.details(openPgpKey))
     }
-    return fmtRes({ format: 'binary', keyDetails });
+    return fmtRes({ format: 'binary', keyDetails: keyDetails.map(legacyIsDecrypted) });
   }
 
   public isEmailValid = async (uncheckedReq: any) => {
@@ -239,6 +244,29 @@ export class Endpoints {
     return fmtRes({ encryptedKey: key.armor() });
   }
 
+}
+
+/**
+ * Core now uses isFullyEncrypted / isFullyDecrypted
+ * However host apps still rely on legacy isDecrypted field
+ * This should be deleted when https://github.com/FlowCrypt/flowcrypt-android/issues/708 is resolved
+ */
+const legacyIsDecrypted = (keyDetails: KeyDetails) => {
+  if (keyDetails.private) {
+    if (keyDetails.isFullyDecrypted) {
+      // @ts-ignore
+      keyDetails.isDecrypted = true;
+    } else if (keyDetails.isFullyEncrypted) {
+      // @ts-ignore
+      keyDetails.isDecrypted = false;
+    } else {
+      throw new Error('This key is only partially encrypted.')
+    }
+  } else {
+    // @ts-ignore
+    keyDetails.isDecrypted = null; // public key
+  }
+  return keyDetails
 }
 
 const readArmoredKeyOrThrow = async (armored: string) => {
