@@ -7,6 +7,7 @@ import { startNodeCoreInstance, request, expectNoData, getKeypairs, expectData, 
 import { expect } from 'chai';
 import { ChildProcess } from './test/flowcrypt-node-modules';
 import { openpgp } from './core/pgp';
+import { Xss } from './platform/xss';
 
 const text = 'some\n汉\ntxt';
 const htmlContent = text.replace(/\n/g, '<br />');
@@ -98,6 +99,24 @@ orig message
   const mimeMsgReplyStr = mimeMsgReply.toString();
   expect(mimeMsgReplyStr).contains('In-Reply-To: <originalmsg@from.com>');
   expect(mimeMsgReplyStr).contains('References: <originalmsg@from.com>');
+  t.pass();
+});
+
+ava.test.failing('parseDecryptMsg unescaped special characters in text', async t => {
+  const text = 'msg has < characters > and <b> tag & other stuff';
+  const mime = `MIME-Version: 1.0
+Date: Fri, 6 Sep 2019 10:48:25 +0000
+Message-ID: <some@mail.gmail.com>
+Subject: plain text with special chars
+From: Human at FlowCrypt <human@flowcrypt.com>
+To: FlowCrypt Compatibility <flowcrypt.compatibility@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+
+${text}`;
+  const { keys } = getKeypairs('rsa1');
+  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: false }, mime);
+  expect(decryptJson).deep.equal({ text, replyType: 'plain' });
+  expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'plain', htmlContent: Xss.escape(text) }]);
   t.pass();
 });
 
