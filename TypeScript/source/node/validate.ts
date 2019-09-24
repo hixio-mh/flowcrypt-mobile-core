@@ -17,7 +17,7 @@ export namespace NodeRequest {
   export type parseDecryptMsg = { keys: PrvKeyInfo[], msgPwd?: string, isEmail?: boolean };
   export type decryptFile = { keys: PrvKeyInfo[], msgPwd?: string };
   export type parseDateStr = { dateStr: string };
-  export type zxcvbnStrengthBar = { guesses: number, purpose: 'passphrase' };
+  export type zxcvbnStrengthBar = { guesses: number, purpose: 'passphrase', value: undefined } | { value: string, purpose: 'passphrase', guesses: undefined };
   export type gmailBackupSearch = { acctEmail: string };
   export type isEmailValid = { email: string };
   export type decryptKey = { armored: string, passphrases: string[] };
@@ -83,6 +83,9 @@ export class Validate {
 
   public static zxcvbnStrengthBar = (v: any): NodeRequest.zxcvbnStrengthBar => {
     if (isObj(v) && hasProp(v, 'guesses', 'number') && hasProp(v, 'purpose', 'string') && v.purpose === 'passphrase') {
+      return v as NodeRequest.zxcvbnStrengthBar;
+    }
+    if (isObj(v) && hasProp(v, 'value', 'string') && hasProp(v, 'purpose', 'string') && v.purpose === 'passphrase') {
       return v as NodeRequest.zxcvbnStrengthBar;
     }
     throw new Error('Wrong request structure for NodeRequest.zxcvbnStrengthBar');

@@ -19,7 +19,7 @@ node tooling/fix-bundles.js
 # concatenate external deps into one bundle
 ( cd build/bundles && cat node-html-sanitize-bundle.js node-emailjs-bundle.js node-openpgp-bundle.js > node-deps-bundle.js )  # node deps
 ( cd build/bundles && cat node-html-sanitize-bundle.js node-emailjs-bundle.js node-dev-openpgp-bundle.js > node-dev-deps-bundle.js )  # node dev - for tests
-( cd build/bundles && cat bare-html-sanitize-bundle.js bare-emailjs-bundle.js bare-openpgp-bundle.js > bare-deps-bundle.js )  # bare deps
+( cd build/bundles && cat bare-html-sanitize-bundle.js bare-emailjs-bundle.js bare-openpgp-bundle.js bare-zxcvbn-bundle.js > bare-deps-bundle.js )  # bare deps
 
 # create final builds for dev, ios, android
 node tooling/build-final.js

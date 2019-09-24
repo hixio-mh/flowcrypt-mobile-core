@@ -36,6 +36,10 @@ fs.writeFileSync(
   `${fs.readFileSync('./node_modules/sanitize-html/dist/sanitize-html.js').toString()}\nconst dereq_html_sanitize = window.sanitizeHtml;\n`
 );
 
+// copy zxcvbn, only used for bare (iOS) because zxcvbn-ios is not well maintained: https://github.com/dropbox/zxcvbn-ios/issues
+// todo - could add `\nconst zxcvbn = window.zxcvbn;` at the end, then could call it directly from endpoint.ts
+fs.copyFileSync('./node_modules/zxcvbn/dist/zxcvbn.js', `${bundleDir}/bare-zxcvbn-bundle.js`);
+
 // // concat emailjs bundle/wip to become emailjs-bundle 
 // fs.writeFileSync(`${bundleDir}/emailjs-bundle.js`, [ // this would work when using modules directly from Node - we don't do that yet
 //   `${bundleWipDir}/emailjs-mime-parser.js`,

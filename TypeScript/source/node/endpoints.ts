@@ -178,11 +178,22 @@ export class Endpoints {
   }
 
   public zxcvbnStrengthBar = async (uncheckedReq: any) => {
-    const { guesses, purpose } = Validate.zxcvbnStrengthBar(uncheckedReq);
-    if (purpose === 'passphrase') {
-      return fmtRes(Pgp.password.estimateStrength(guesses));
+    const r = Validate.zxcvbnStrengthBar(uncheckedReq);
+    if (r.purpose === 'passphrase') {
+      if(typeof r.guesses === 'number') { // the host has a port of zxcvbn and already knows amount of guesses per password
+        return fmtRes(Pgp.password.estimateStrength(r.guesses));
+      } else if(typeof r.value === 'string') { // gues does not have zxcvbn, let's use zxcvbn-js to estimate guesses
+        type FakeWindow = {zxcvbn: (password: string, weakWords: string[]) => {guesses: number}};
+        if(typeof (window as unknown as FakeWindow).zxcvbn !== 'function') {
+          throw new Error("window.zxcvbn missing in js")
+        }
+        let guesses = (window as unknown as FakeWindow).zxcvbn(r.value, Pgp.password.weakWords()).guesses;
+        return fmtRes(Pgp.password.estimateStrength(guesses));
+      } else {
+        throw new Error('Unexpected format: guesses is not a number, value is not a string');  
+      }
     } else {
-      throw new Error(`Unknown purpose: ${purpose}`);
+      throw new Error(`Unknown purpose: ${r.purpose}`);
     }
   }
 
