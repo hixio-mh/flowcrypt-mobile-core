@@ -6,7 +6,8 @@ type Obj = { [k: string]: any };
 
 export namespace NodeRequest {
   type PrvKeyInfo = { private: string; longid: string, passphrase: string | undefined };
-  interface composeEmailBase { text: string, to: string[], cc: string[], bcc: string[], from: string, subject: string, replyToMimeMsg: string };
+  type Attachment = {name: string; type: string; base64: string };
+  interface composeEmailBase { text: string, to: string[], cc: string[], bcc: string[], from: string, subject: string, replyToMimeMsg: string, atts?: Attachment[] };
   export interface composeEmailPlain extends composeEmailBase { format: 'plain' };
   export interface composeEmailEncrypted extends composeEmailBase { format: 'encrypt-inline' | 'encrypt-pgpmime', pubKeys: string[] };
 
@@ -42,7 +43,10 @@ export class Validate {
 
   public static composeEmail = (v: any): NodeRequest.composeEmail => {
     if (!(isObj(v) && hasProp(v, 'text', 'string') && hasProp(v, 'from', 'string') && hasProp(v, 'subject', 'string') && hasProp(v, 'to', 'string[]') && hasProp(v, 'cc', 'string[]') && hasProp(v, 'bcc', 'string[]'))) {
-      throw new Error('Wrong request structure for NodeRequest.composeEmail, need: text,from,subject,to,cc,bcc (can use empty arr for cc/bcc)');
+      throw new Error('Wrong request structure for NodeRequest.composeEmail, need: text,from,subject,to,cc,bcc,atts (can use empty arr for cc/bcc, and can skip atts)');
+    }
+    if (!hasProp(v, 'atts', 'Attachment[]?')) {
+      throw new Error('Wrong atts structure for NodeRequest.composeEmail, need: {name, type, base64}');
     }
     if (hasProp(v, 'pubKeys', 'string[]') && v.pubKeys.length && (v.format === 'encrypt-inline' || v.format === 'encrypt-pgpmime')) {
       return v as NodeRequest.composeEmailEncrypted;
@@ -125,7 +129,7 @@ const isObj = (v: any): v is Obj => {
   return v && typeof v === 'object';
 }
 
-const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 'number' | 'string?' | 'boolean?' | 'PrvKeyInfo[]' | 'Userid[]'): boolean => {
+const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 'number' | 'string?' | 'boolean?' | 'PrvKeyInfo[]' | 'Userid[]' | 'Attachment[]?'): boolean => {
   if (!isObj(v)) {
     return false;
   }
@@ -142,6 +146,9 @@ const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 
       return true;
     }
     return typeof value === 'string' || typeof value === 'undefined';
+  }
+  if (type === 'Attachment[]?') {
+    return typeof value === 'undefined' || (Array.isArray(value) && value.filter((x: any) => hasProp(x, 'name', 'string') && hasProp(x, 'type', 'string') && hasProp(x, 'base64', 'string')).length === value.length);
   }
   if (type === 'string[]') {
     return Array.isArray(value) && value.filter((x: any) => typeof x === 'string').length === value.length;
