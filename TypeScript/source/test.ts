@@ -410,14 +410,14 @@ ava.test('zxcvbnStrengthBar', async t => {
   expectNoData(data);
   expect(json).to.deep.equal({
     word: {
-      match: 'day',
+      match: 'week',
       word: 'poor',
-      bar: 20,
+      bar: 30,
       color: 'darkred',
       pass: false
     },
     seconds: 1111829,
-    time: '13 days',
+    time: '2 weeks',
   });
   t.pass();
 });
