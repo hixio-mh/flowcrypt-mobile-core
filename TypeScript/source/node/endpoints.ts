@@ -51,12 +51,12 @@ export class Endpoints {
       mimeHeaders['references'] = replyHeaders['references'];
     }
     if (req.format === 'plain') {
-      const atts = (req.atts || []).map(({name, type, base64}) => new Att({name, type, data: Buf.fromBase64Str(base64)}));
+      const atts = (req.atts || []).map(({ name, type, base64 }) => new Att({ name, type, data: Buf.fromBase64Str(base64) }));
       return fmtRes({}, Buf.fromUtfStr(await Mime.encode(req.text, mimeHeaders, atts)));
     } else if (req.format === 'encrypt-inline') {
       const encryptedAtts: Att[] = [];
-      for(const att of req.atts || []) {
-        const encryptedAtt = await PgpMsg.encrypt({pubkeys: req.pubKeys, data: Buf.fromBase64Str(att.base64), filename: att.name, armor: false}) as OpenPGP.EncryptBinaryResult;
+      for (const att of req.atts || []) {
+        const encryptedAtt = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buf.fromBase64Str(att.base64), filename: att.name, armor: false }) as OpenPGP.EncryptBinaryResult;
         encryptedAtts.push(new Att({ name: att.name, type: 'application/pgp-encrypted', data: encryptedAtt.message.packets.write() }))
       }
       const encrypted = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buf.fromUtfStr(req.text), armor: true }) as OpenPGP.EncryptArmorResult;
@@ -76,8 +76,10 @@ export class Endpoints {
     const { keys: kisWithPp, msgPwd, isEmail } = Validate.parseDecryptMsg(uncheckedReq);
     const rawBlocks: MsgBlock[] = []; // contains parsed, unprocessed / possibly encrypted data
     let rawSigned: string | undefined = undefined;
+    let subject: string | undefined = undefined;
     if (isEmail) {
-      const { blocks, rawSignedContent } = await Mime.process(Buf.concat(data));
+      const { blocks, rawSignedContent, headers } = await Mime.process(Buf.concat(data));
+      subject = String(headers['subject']);
       rawSigned = rawSignedContent;
       rawBlocks.push(...blocks);
     } else {
@@ -96,7 +98,9 @@ export class Endpoints {
         const decryptRes = await PgpMsg.decrypt({ kisWithPp, msgPwd, encryptedData: Buf.with(rawBlock.content) });
         if (decryptRes.success) {
           if (decryptRes.isEncrypted) {
-            sequentialProcessedBlocks.push(... await PgpMsg.fmtDecryptedAsSanitizedHtmlBlocks(decryptRes.content));
+            const formatted = await PgpMsg.fmtDecryptedAsSanitizedHtmlBlocks(decryptRes.content);
+            sequentialProcessedBlocks.push(...formatted.blocks);
+            subject = formatted.subject || subject;
           } else {
             // treating as text, converting to html - what about plain signed html? This could produce html tags
             // although hopefully, that would, typically, result in the `(rawBlock.type === 'signedMsg' || rawBlock.type === 'signedHtml')` block above
@@ -166,7 +170,7 @@ export class Endpoints {
     const { contentBlock, text } = fmtContentBlock(msgContentBlocks);
     blocks.unshift(contentBlock);
     // data represent one JSON-stringified block per line. This is so that it can be read as a stream later
-    return fmtRes({ text, replyType }, Buf.fromUtfStr(blocks.map(b => JSON.stringify(b)).join('\n')));
+    return fmtRes({ text, replyType, subject }, Buf.fromUtfStr(blocks.map(b => JSON.stringify(b)).join('\n')));
   }
 
   public decryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
@@ -187,17 +191,17 @@ export class Endpoints {
   public zxcvbnStrengthBar = async (uncheckedReq: any) => {
     const r = Validate.zxcvbnStrengthBar(uncheckedReq);
     if (r.purpose === 'passphrase') {
-      if(typeof r.guesses === 'number') { // the host has a port of zxcvbn and already knows amount of guesses per password
+      if (typeof r.guesses === 'number') { // the host has a port of zxcvbn and already knows amount of guesses per password
         return fmtRes(Pgp.password.estimateStrength(r.guesses));
-      } else if(typeof r.value === 'string') { // gues does not have zxcvbn, let's use zxcvbn-js to estimate guesses
-        type FakeWindow = {zxcvbn: (password: string, weakWords: string[]) => {guesses: number}};
-        if(typeof (window as unknown as FakeWindow).zxcvbn !== 'function') {
+      } else if (typeof r.value === 'string') { // gues does not have zxcvbn, let's use zxcvbn-js to estimate guesses
+        type FakeWindow = { zxcvbn: (password: string, weakWords: string[]) => { guesses: number } };
+        if (typeof (window as unknown as FakeWindow).zxcvbn !== 'function') {
           throw new Error("window.zxcvbn missing in js")
         }
         let guesses = (window as unknown as FakeWindow).zxcvbn(r.value, Pgp.password.weakWords()).guesses;
         return fmtRes(Pgp.password.estimateStrength(guesses));
       } else {
-        throw new Error('Unexpected format: guesses is not a number, value is not a string');  
+        throw new Error('Unexpected format: guesses is not a number, value is not a string');
       }
     } else {
       throw new Error(`Unknown purpose: ${r.purpose}`);

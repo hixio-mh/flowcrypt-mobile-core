@@ -74,7 +74,7 @@ ava.test('composeEmail format:plain -> parseDecryptMsg', async t => {
   expect(plainMimeStr).contains('Date: ');
   expect(plainMimeStr).contains('MIME-Version: 1.0');
   const { data: blocks, json: parseJson } = await request('parseDecryptMsg', { keys, isEmail: true }, plainMimeMsg);
-  expect(parseJson).to.deep.equal({ text: content, replyType: 'plain' });
+  expect(parseJson).to.deep.equal({ text: content, replyType: 'plain', subject: 'a subj' });
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'plain', htmlContent: content.replace(/\n/g, '<br />') }]);
   t.pass();
 });
@@ -116,7 +116,7 @@ Content-Type: text/plain; charset="UTF-8"
 ${textSpecialChars}`;
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, mime);
-  expect(decryptJson).deep.equal({ text: textSpecialChars, replyType: 'plain' });
+  expect(decryptJson).deep.equal({ text: textSpecialChars, replyType: 'plain', subject: 'plain text with special chars' });
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'plain', htmlContent: htmlSpecialChars }]);
   t.pass();
 });
@@ -133,7 +133,7 @@ Content-Type: text/html; charset="UTF-8"
 ${htmlSpecialChars}`;
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, mime);
-  expect(decryptJson).deep.equal({ text: textSpecialChars, replyType: 'plain' });
+  expect(decryptJson).deep.equal({ text: textSpecialChars, replyType: 'plain', subject: 'plain text with special chars' });
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'plain', htmlContent: htmlSpecialChars }]);
   t.pass();
 });
@@ -141,7 +141,7 @@ ${htmlSpecialChars}`;
 ava.test('parseDecryptMsg unescaped special characters in encrypted pgpmime', async t => {
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: false }, await getCompatAsset('direct-encrypted-pgpmime-special-chars'));
-  expect(decryptJson).deep.equal({ text: textSpecialChars, replyType: 'encrypted' });
+  expect(decryptJson).deep.equal({ text: textSpecialChars, replyType: 'encrypted', subject: 'direct encrypted pgpmime special chars' });
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent: htmlSpecialChars }]);
   t.pass();
 });
@@ -194,7 +194,7 @@ Ee3KQbcx28SsnZi9LNO/6/wBmhVJ7HDmOd4AAAAASUVORK5CYII=
 --000000000000ee643b058fc0fe65--`;
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, mime);
-  expect(decryptJson).deep.equal({ text: 'Below\n[image: image.png]\nAbove', replyType: 'plain' });
+  expect(decryptJson).deep.equal({ text: 'Below\n[image: image.png]\nAbove', replyType: 'plain', subject: 'tiny inline img plain' });
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'plain', htmlContent: '<div><div>Below</div><div><div><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAMFJREFUOE+lU9sRg0AIZDNpym9rSAumJm0hNfidsgic5w1wGJ1kZ3zgwvI4AQtIAHrq4zKY5uJ715sGP7C44BdPnZj1gaRVERBPpYJfUSpoGLeyir2Glg64mxMQg9f6xQbU94zrBDBWgVCBBmecbyGWbcrLgpX+OkR+L4ShPw3bdtdCnMmZfSig2a+gtcD1R0LyA1mh6OdmsJNnmW0Sfwp75LYevQ5AsUI3g0aKI+llEe3KQbcx28SsnZi9LNO/6/wBmhVJ7HDmOd4AAAAASUVORK5CYII=" alt="image.png" /><br /></div></div><div>Above<br /></div></div>' }]);
   t.pass();
 });
@@ -246,7 +246,7 @@ ava.test('composeEmail format:encrypt-inline -> parseDecryptMsg', async t => {
   expect(encryptedMimeStr).contains('MIME-Version: 1.0');
   expectData(encryptedMimeMsg, 'armoredMsg'); // armored msg block should be contained in the mime message
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, encryptedMimeMsg);
-  expect(decryptJson).deep.equal({ text: content, replyType: 'encrypted' });
+  expect(decryptJson).deep.equal({ text: content, replyType: 'encrypted', subject: 'encr subj' });
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent: content.replace(/\n/g, '<br />') }]);
   t.pass();
 });
@@ -377,7 +377,7 @@ ava.test('parseDecryptMsg compat direct-encrypted-pgpmime', async t => {
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys }, await getCompatAsset('direct-encrypted-pgpmime'));
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent }]);
-  expect(decryptJson).to.deep.equal({ text, replyType: 'encrypted' });
+  expect(decryptJson).to.deep.equal({ text, replyType: 'encrypted', subject: 'direct encrypted pgpmime' });
   t.pass();
 });
 
@@ -385,7 +385,7 @@ ava.test('parseDecryptMsg compat mime-email-plain', async t => {
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, await getCompatAsset('mime-email-plain'));
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'plain', htmlContent }]);
-  expect(decryptJson).to.deep.equal({ text, replyType: 'plain' });
+  expect(decryptJson).to.deep.equal({ text, replyType: 'plain', subject: 'mime email plain' });
   t.pass();
 });
 
@@ -393,7 +393,7 @@ ava.test('parseDecryptMsg compat mime-email-encrypted-inline-text', async t => {
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, await getCompatAsset('mime-email-encrypted-inline-text'));
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent }]);
-  expect(decryptJson).to.deep.equal({ text, replyType: 'encrypted' });
+  expect(decryptJson).to.deep.equal({ text, replyType: 'encrypted', subject: 'mime email encrypted inline text' });
   t.pass();
 });
 
@@ -401,7 +401,7 @@ ava.test('parseDecryptMsg compat mime-email-encrypted-inline-pgpmime', async t =
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, await getCompatAsset('mime-email-encrypted-inline-pgpmime'));
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent }]);
-  expect(decryptJson).to.deep.equal({ text, replyType: 'encrypted' });
+  expect(decryptJson).to.deep.equal({ text, replyType: 'encrypted', subject: 'mime email encrypted inline pgpmime' });
   t.pass();
 });
 
@@ -426,7 +426,7 @@ ava.test('parseDecryptMsg compat mime-email-encrypted-inline-text-2 Mime-TextEnc
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, await getCompatAsset('mime-email-encrypted-inline-text-2'));
   expectData(blocks, 'msgBlocks', [{ rendered: true, frameColor: 'green', htmlContent }]);
-  expect(decryptJson).to.deep.equal({ text, replyType: 'encrypted' });
+  expect(decryptJson).to.deep.equal({ text, replyType: 'encrypted', subject: 'mime email encrytped inline text 2' });
   t.pass();
 });
 
@@ -460,7 +460,7 @@ ava.test('parseDecryptMsg compat mime-email-plain-html', async t => {
   const { keys } = getKeypairs('rsa1');
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, await getCompatAsset('mime-email-plain-html'));
   expectData(blocks, 'msgBlocks', [{ frameColor: 'plain', htmlContent: '<p>paragraph 1</p><p>paragraph 2 with <b>bold</b></p><p>paragraph 3 with <em style="color:red">red i</em></p>', rendered: true }]);
-  expect(decryptJson).to.deep.equal({ text: `paragraph 1\nparagraph 2 with bold\nparagraph 3 with red i`, replyType: 'plain' });
+  expect(decryptJson).to.deep.equal({ text: `paragraph 1\nparagraph 2 with bold\nparagraph 3 with red i`, replyType: 'plain', subject: 'mime email plain html' });
   t.pass();
 });
 
@@ -486,7 +486,7 @@ ava.test('parseDecryptMsg compat mime-email-plain-with-pubkey', async t => {
       }
     },
   ]);
-  expect(decryptJson).to.deep.equal({ text, replyType: 'plain' });
+  expect(decryptJson).to.deep.equal({ text, replyType: 'plain', subject: 'mime email plain with pubkey' });
   t.pass();
 });
 
