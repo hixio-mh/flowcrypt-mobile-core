@@ -193,7 +193,7 @@ export class Endpoints {
     if (r.purpose === 'passphrase') {
       if (typeof r.guesses === 'number') { // the host has a port of zxcvbn and already knows amount of guesses per password
         return fmtRes(Pgp.password.estimateStrength(r.guesses));
-      } else if (typeof r.value === 'string') { // gues does not have zxcvbn, let's use zxcvbn-js to estimate guesses
+      } else if (typeof r.value === 'string') { // host does not have zxcvbn, let's use zxcvbn-js to estimate guesses
         type FakeWindow = { zxcvbn: (password: string, weakWords: string[]) => { guesses: number } };
         if (typeof (window as unknown as FakeWindow).zxcvbn !== 'function') {
           throw new Error("window.zxcvbn missing in js")
