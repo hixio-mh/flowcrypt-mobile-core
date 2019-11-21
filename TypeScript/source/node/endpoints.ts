@@ -32,7 +32,7 @@ export class Endpoints {
   }
 
   public generateKey = async (uncheckedReq: any): Promise<Buffers> => {
-    Store.keyCacheWipe(); // decryptKey may be used when changing major settings, wipe cache to prevent dated results
+    Store.keyCacheWipe(); // generateKey may be used when changing major settings, wipe cache to prevent dated results
     const { passphrase, userIds, variant } = Validate.generateKey(uncheckedReq);
     if (passphrase.length < 12) {
       throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
