@@ -58,7 +58,7 @@ export class Endpoints {
     }
     if (req.format === 'plain') {
       const atts = (req.atts || []).map(({ name, type, base64 }) => new Att({ name, type, data: Buf.fromBase64Str(base64) }));
-      return fmtRes({}, Buf.fromUtfStr(await Mime.encode({ 'text/html': req.text }, mimeHeaders, atts)));
+      return fmtRes({}, Buf.fromUtfStr(await Mime.encode({ 'text/plain': req.text }, mimeHeaders, atts)));
     } else if (req.format === 'encrypt-inline') {
       const encryptedAtts: Att[] = [];
       for (const att of req.atts || []) {
@@ -144,7 +144,7 @@ export class Endpoints {
       } else if (block.attMeta && block.attMeta.data instanceof Uint8Array) {
         // converting to base64-encoded string instead of uint8 for JSON serilization
         // value actually replaced to a string, but type remains Uint8Array type set to satisfy TS
-        // no longer used below, only gets passed to be serialized so be safe
+        // no longer used below, only gets passed to be serialized as JSON - later consumed by iOS or Android app
         block.attMeta.data = Buf.fromUint8(block.attMeta.data).toBase64Str() as any as Uint8Array;
       }
       if (block.type === 'decryptedHtml' || block.type === 'decryptedText' || block.type === 'decryptedAtt') {
