@@ -2,7 +2,8 @@
 
 'use strict';
 
-import { Contact, openpgp } from '../core/pgp.js';
+import { Contact } from '../core/pgp-key.js';
+import { openpgp } from '../core/pgp.js';
 
 let KEY_CACHE: { [longidOrArmoredKey: string]: OpenPGP.key.Key } = {};
 let KEY_CACHE_WIPE_TIMEOUT: NodeJS.Timeout;

@@ -4,6 +4,8 @@ type Attributes = { [attr: string]: string };
 type Tag = { tagName: string; attribs: Attributes; text?: string; };
 type Transformer = (tagName: string, attribs: Attributes) => Tag;
 
+export type SanitizeImgHandling = 'IMG-DEL' | 'IMG-KEEP' | 'IMG-TO-LINK';
+
 declare const dereq_html_sanitize: (dirty: string, opts?: {
   allowedTags?: string[],
   selfClosing?: string[],
@@ -40,8 +42,9 @@ export class Xss {
 
   /**
    * used whenever untrusted remote content (eg html email) is rendered, but we still want to preserve html
+   * imgToLink is ignored on Node. Remote links are replaced with <a>, and local imgs are preserved
    */
-  public static htmlSanitizeKeepBasicTags = (dirtyHtml: string): string => {
+  public static htmlSanitizeKeepBasicTags = (dirtyHtml: string, imgToLink?: SanitizeImgHandling): string => {
     const imgContentReplaceable = `IMG_ICON_${Str.sloppyRandom()}`;
     let remoteContentReplacedWithLink = false;
     let cleanHtml = dereq_html_sanitize(dirtyHtml, {
@@ -51,13 +54,13 @@ export class Xss {
       transformTags: {
         'img': (tagName, attribs) => {
           const srcBegin = (attribs.src || '').substring(0, 10);
-          if (srcBegin.indexOf('data:') === 0) {
+          if (srcBegin.startsWith('data:')) {
             return { tagName: 'img', attribs: { src: attribs.src, alt: attribs.alt || '' } };
-          } else if (srcBegin.indexOf('http://') === 0 || srcBegin.indexOf('https://') === 0) {
+          } else if (srcBegin.startsWith('http://') || srcBegin.startsWith('https://')) {
             remoteContentReplacedWithLink = true;
             return { tagName: 'a', attribs: { href: String(attribs.src), target: "_blank" }, text: imgContentReplaceable };
           } else {
-            return { tagName: 'img', attribs: {}, text: '[img]' } as Tag;
+            return { tagName: 'img', attribs: { alt: attribs.alt, title: attribs.title }, text: '[img]' } as Tag;
           }
         },
         '*': (tagName, attribs) => {
