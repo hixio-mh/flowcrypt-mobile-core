@@ -2,9 +2,10 @@
 
 'use strict';
 
-import { IncomingMessage } from 'http';
-import { HttpClientErr, Buffers } from './fmt';
+import { Buffers, HttpClientErr } from './fmt';
+
 import { Debug } from './endpoints';
+import { IncomingMessage } from 'http';
 
 type ParseRes = { endpoint: string, data: Buffers, request: {} };
 const NEWLINE = Buffer.from('\n');

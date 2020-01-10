@@ -3,11 +3,13 @@
 'use strict';
 
 import * as ava from 'ava';
+import * as https from 'https';
+
+import { config, expect } from 'chai';
+
 import { Subprocess } from './flowcrypt-node-modules';
 import { readFileSync } from 'fs';
-import * as https from 'https';
 import { util } from '../../../../flowcrypt-node-modules/source';
-import { expect, config } from 'chai';
 config.truncateThreshold = 0
 
 export type AvaContext = ava.ExecutionContext<{}>;

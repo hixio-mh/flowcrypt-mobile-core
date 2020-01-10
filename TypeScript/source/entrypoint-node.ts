@@ -6,13 +6,15 @@
 'use strict';
 
 import * as https from 'https';
+
+import { Buffers, HttpAuthErr, HttpClientErr, fmtErr, printReplayTestDefinition } from './node/fmt';
 import { IncomingMessage, ServerResponse, createServer } from 'http';
-import { parseReq } from './node/parse';
-import { fmtErr, HttpClientErr, HttpAuthErr, Buffers, printReplayTestDefinition } from './node/fmt';
+
+import { Buf } from './core/buf';
 import { Endpoints } from './node/endpoints';
+import { parseReq } from './node/parse';
 import { sendNativeMessageToJava } from './node/native';
 import { setGlobals } from './platform/util';
-import { Buf } from './core/buf';
 
 setGlobals();
 

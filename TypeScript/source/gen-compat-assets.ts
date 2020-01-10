@@ -9,10 +9,11 @@
 global.openpgp = require('openpgp'); // remove it and you'll see what I mean
 
 import * as ava from 'ava';
-import { PgpMsg } from './core/pgp';
-import { util } from './test/flowcrypt-node-modules';
+
 import { AvaContext } from './test/test-utils';
+import { PgpMsg } from './core/pgp';
 import { Xss } from './platform/xss';
+import { util } from './test/flowcrypt-node-modules';
 
 const text = Buffer.from('some\n汉\ntxt');
 const textSpecialChars = Buffer.from('> special <tag> & other\n> second line');

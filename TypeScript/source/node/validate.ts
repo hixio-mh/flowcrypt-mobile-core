@@ -6,7 +6,7 @@ type Obj = { [k: string]: any };
 
 export namespace NodeRequest {
   type PrvKeyInfo = { private: string; longid: string, passphrase: string | undefined };
-  type Attachment = {name: string; type: string; base64: string };
+  type Attachment = { name: string; type: string; base64: string };
   interface composeEmailBase { text: string, to: string[], cc: string[], bcc: string[], from: string, subject: string, replyToMimeMsg: string, atts?: Attachment[] };
   export interface composeEmailPlain extends composeEmailBase { format: 'plain' };
   export interface composeEmailEncrypted extends composeEmailBase { format: 'encrypt-inline' | 'encrypt-pgpmime', pubKeys: string[] };
@@ -141,7 +141,7 @@ const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 
     return typeof value === 'boolean' || typeof value === 'undefined';
   }
   if (type === 'string?') {
-    if(value === null) {
+    if (value === null) {
       v[name] = undefined;
       return true;
     }

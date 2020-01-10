@@ -2,11 +2,12 @@
 
 'use strict';
 
-import { MsgBlockType, MsgBlock, Mime } from '../core/mime';
-import { Str } from '../core/common';
-import { Pgp } from '../core/pgp';
-import { Xss } from '../platform/xss';
+import { Mime, MsgBlock, MsgBlockType } from '../core/mime';
+
 import { Buf } from '../core/buf';
+import { Pgp } from '../core/pgp';
+import { Str } from '../core/common';
+import { Xss } from '../platform/xss';
 
 export class HttpAuthErr extends Error { }
 export class HttpClientErr extends Error { }

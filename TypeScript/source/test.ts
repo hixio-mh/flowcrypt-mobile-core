@@ -3,11 +3,13 @@
 'use strict';
 
 import * as ava from 'ava';
-import { startNodeCoreInstance, request, expectNoData, getKeypairs, expectData, expectEmptyJson, getCompatAsset, allKeypairNames } from './test/test-utils';
-import { expect } from 'chai';
+
+import { allKeypairNames, expectData, expectEmptyJson, expectNoData, getCompatAsset, getKeypairs, request, startNodeCoreInstance } from './test/test-utils';
+
 import { ChildProcess } from './test/flowcrypt-node-modules';
-import { openpgp } from './core/pgp';
 import { Xss } from './platform/xss';
+import { expect } from 'chai';
+import { openpgp } from './core/pgp';
 
 const text = 'some\n汉\ntxt';
 const htmlContent = text.replace(/\n/g, '<br />');

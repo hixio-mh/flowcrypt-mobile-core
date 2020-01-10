@@ -1,4 +1,3 @@
-
 import { Str } from '../core/common';
 
 type Attributes = { [attr: string]: string };
