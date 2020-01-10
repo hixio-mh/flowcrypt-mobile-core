@@ -54,13 +54,13 @@ export class Xss {
       transformTags: {
         'img': (tagName, attribs) => {
           const srcBegin = (attribs.src || '').substring(0, 10);
-          if (srcBegin.indexOf('data:') === 0) {
+          if (srcBegin.startsWith('data:')) {
             return { tagName: 'img', attribs: { src: attribs.src, alt: attribs.alt || '' } };
-          } else if (srcBegin.indexOf('http://') === 0 || srcBegin.indexOf('https://') === 0) {
+          } else if (srcBegin.startsWith('http://') || srcBegin.startsWith('https://')) {
             remoteContentReplacedWithLink = true;
             return { tagName: 'a', attribs: { href: String(attribs.src), target: "_blank" }, text: imgContentReplaceable };
           } else {
-            return { tagName: 'img', attribs: {}, text: '[img]' } as Tag;
+            return { tagName: 'img', attribs: { alt: attribs.alt, title: attribs.title }, text: '[img]' } as Tag;
           }
         },
         '*': (tagName, attribs) => {
