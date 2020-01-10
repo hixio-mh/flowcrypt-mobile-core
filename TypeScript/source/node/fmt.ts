@@ -2,10 +2,10 @@
 
 'use strict';
 
-import { Mime, MsgBlock, MsgBlockType } from '../core/mime';
+import { MsgBlock, MsgBlockType } from '../core/msg-block';
 
 import { Buf } from '../core/buf';
-import { Pgp } from '../core/pgp';
+import { Mime } from '../core/mime';
 import { Str } from '../core/common';
 import { Xss } from '../platform/xss';
 
@@ -116,7 +116,7 @@ export const fmtContentBlock = (allContentBlocks: MsgBlock[]): { contentBlock: M
     </head>
     <body>${msgContentAsHtml}</body>
   </html>`;
-  return { contentBlock: Pgp.internal.msgBlockObj('plainHtml', msgContentAsHtml), text: msgContentAsText.trim() };
+  return { contentBlock: MsgBlock.fromContent('plainHtml', msgContentAsHtml), text: msgContentAsText.trim() };
 }
 
 export const fmtRes = (response: {}, data?: Buf | Uint8Array): Buffers => {

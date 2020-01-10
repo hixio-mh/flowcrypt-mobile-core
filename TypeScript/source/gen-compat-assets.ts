@@ -11,7 +11,7 @@ global.openpgp = require('openpgp'); // remove it and you'll see what I mean
 import * as ava from 'ava';
 
 import { AvaContext } from './test/test-utils';
-import { PgpMsg } from './core/pgp';
+import { PgpMsg } from './core/pgp-msg';
 import { Xss } from './platform/xss';
 import { util } from './test/flowcrypt-node-modules';
 

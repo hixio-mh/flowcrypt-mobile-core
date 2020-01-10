@@ -18,7 +18,7 @@
     "pg": "7.4.3",
     "request": "2.88.0",
     "tslint": "5.11.0",
-    "typescript": "3.4.1",
+    "typescript": "3.7.3",
     "webpack": "4.26.1",
     "webpack-cli": "3.1.2",
     "webpack-node-externals": "1.7.2",

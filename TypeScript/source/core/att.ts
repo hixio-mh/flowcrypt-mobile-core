@@ -1,4 +1,4 @@
-/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+/* ©️ 2016 - present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com */
 
 'use strict';
 
@@ -8,14 +8,14 @@ type Att$treatAs = "publicKey" | 'privateKey' | "encryptedMsg" | "hidden" | "sig
 export type AttMeta = {
   data?: Uint8Array; type?: string; name?: string; length?: number; url?: string;
   inline?: boolean; id?: string; msgId?: string; treatAs?: Att$treatAs; cid?: string;
+  contentDescription?: string,
 };
 
 export type FcAttLinkData = { name: string, type: string, size: number };
 
 export class Att {
 
-  private bytes: Uint8Array | undefined;
-  private treatAsValue: Att$treatAs | undefined;
+  public static readonly attachmentsPattern = /^(((cryptup|flowcrypt)-backup-[a-z0-9]+\.(key|asc))|(.+\.pgp)|(.+\.gpg)|(.+\.asc)|(noname)|(message)|(PGPMIME version identification)|())$/gm;
 
   public length: number = NaN;
   public type: string;
@@ -25,8 +25,16 @@ export class Att {
   public msgId: string | undefined;
   public inline: boolean;
   public cid: string | undefined;
+  public contentDescription: string | undefined;
 
-  constructor({ data, type, name, length, url, inline, id, msgId, treatAs, cid }: AttMeta) {
+  private bytes: Uint8Array | undefined;
+  private treatAsValue: Att$treatAs | undefined;
+
+  public static keyinfoAsPubkeyAtt = (ki: { public: string, longid: string }) => {
+    return new Att({ data: Buf.fromUtfStr(ki.public), type: 'application/pgp-keys', name: `0x${ki.longid}.asc` });
+  }
+
+  constructor({ data, type, name, length, url, inline, id, msgId, treatAs, cid, contentDescription }: AttMeta) {
     if (typeof data === 'undefined' && typeof url === 'undefined' && typeof id === 'undefined') {
       throw new Error('Att: one of data|url|id has to be set');
     }
@@ -42,14 +50,17 @@ export class Att {
     this.name = name || '';
     this.type = type || 'application/octet-stream';
     this.url = url || undefined;
-    this.inline = inline !== true;
+    this.inline = !!inline;
     this.id = id || undefined;
     this.msgId = msgId || undefined;
     this.treatAsValue = treatAs || undefined;
     this.cid = cid || undefined;
+    this.contentDescription = contentDescription || undefined;
   }
 
-  public hasData = () => this.bytes instanceof Uint8Array;
+  public hasData = () => {
+    return this.bytes instanceof Uint8Array;
+  }
 
   public setData = (bytes: Uint8Array) => {
     if (this.hasData()) {
@@ -83,7 +94,7 @@ export class Att {
       return 'encryptedMsg';
     } else if (this.name.match(/(\.pgp$)|(\.gpg$)|(\.[a-zA-Z0-9]{3,4}\.asc$)/g)) { // ends with one of .gpg, .pgp, .???.asc, .????.asc
       return 'encryptedFile';
-    } else if (this.name.match(/(cryptup|flowcrypt)-backup-[a-z]+\.key/g)) {
+    } else if (this.name.match(/(cryptup|flowcrypt)-backup-[a-z0-9]+\.(key|asc)$/g)) {
       return 'privateKey';
     } else if (this.name.match(/^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\.asc$/g)) { // name starts with a key id
       return 'publicKey';
@@ -97,9 +108,5 @@ export class Att {
       return 'plainFile';
     }
   }
-
-  public static readonly attachmentsPattern = /^(((cryptup|flowcrypt)-backup-[a-z]+\.key)|(.+\.pgp)|(.+\.gpg)|(.+\.asc)|(noname)|(message)|(PGPMIME version identification)|())$/gm;
-
-  public static keyinfoAsPubkeyAtt = (ki: { public: string, longid: string }) => new Att({ data: Buf.fromUtfStr(ki.public), type: 'application/pgp-keys', name: `0x${ki.longid}.asc` });
 
 }

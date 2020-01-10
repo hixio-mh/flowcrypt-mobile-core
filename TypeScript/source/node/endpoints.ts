@@ -5,17 +5,22 @@
 'use strict';
 
 import { Buffers, fmtContentBlock, fmtRes, isContentBlock } from './fmt';
-import { DecryptErrTypes, KeyDetails, Pgp, PgpMsg, openpgp } from '../core/pgp';
-import { Mime, MsgBlock, RichHeaders } from '../core/mime';
+import { DecryptErrTypes, PgpMsg } from '../core/pgp-msg';
+import { KeyDetails, PgpKey } from '../core/pgp-key';
+import { Mime, RichHeaders } from '../core/mime';
 
 import { Att } from '../core/att';
 import { Buf } from '../core/buf';
+import { MsgBlock } from '../core/msg-block';
+import { MsgBlockParser } from '../core/msg-block-parser';
+import { PgpPwd } from '../core/pgp-password';
 import { Store } from '../platform/store';
 import { Str } from '../core/common';
 import { VERSION } from '../core/const';
 import { Validate } from './validate';
 import { Xss } from '../platform/xss';
 import { gmailBackupSearchQuery } from '../core/const';
+import { openpgp } from '../core/pgp';
 
 export class Endpoints {
 
@@ -38,8 +43,8 @@ export class Endpoints {
     if (passphrase.length < 12) {
       throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
     }
-    let k = await Pgp.key.create(userIds, variant, passphrase);
-    return fmtRes({ key: legacyIsDecrypted(await Pgp.key.details(await Pgp.key.read(k.private))) });
+    let k = await PgpKey.create(userIds, variant, passphrase);
+    return fmtRes({ key: legacyIsDecrypted(await PgpKey.details(await PgpKey.read(k.private))) });
   }
 
   public composeEmail = async (uncheckedReq: any): Promise<Buffers> => {
@@ -53,7 +58,7 @@ export class Endpoints {
     }
     if (req.format === 'plain') {
       const atts = (req.atts || []).map(({ name, type, base64 }) => new Att({ name, type, data: Buf.fromBase64Str(base64) }));
-      return fmtRes({}, Buf.fromUtfStr(await Mime.encode(req.text, mimeHeaders, atts)));
+      return fmtRes({}, Buf.fromUtfStr(await Mime.encode({ 'text/html': req.text }, mimeHeaders, atts)));
     } else if (req.format === 'encrypt-inline') {
       const encryptedAtts: Att[] = [];
       for (const att of req.atts || []) {
@@ -61,7 +66,7 @@ export class Endpoints {
         encryptedAtts.push(new Att({ name: att.name, type: 'application/pgp-encrypted', data: encryptedAtt.message.packets.write() }))
       }
       const encrypted = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buf.fromUtfStr(req.text), armor: true }) as OpenPGP.EncryptArmorResult;
-      return fmtRes({}, Buf.fromUtfStr(await Mime.encode(encrypted.data, mimeHeaders, encryptedAtts)));
+      return fmtRes({}, Buf.fromUtfStr(await Mime.encode({ 'text/plain': encrypted.data }, mimeHeaders, encryptedAtts)));
     } else {
       throw new Error(`Unknown format: ${req.format}`);
     }
@@ -84,7 +89,7 @@ export class Endpoints {
       rawSigned = rawSignedContent;
       rawBlocks.push(...blocks);
     } else {
-      rawBlocks.push(Pgp.internal.msgBlockObj('encryptedMsg', new Buf(Buf.concat(data))));
+      rawBlocks.push(MsgBlock.fromContent('encryptedMsg', new Buf(Buf.concat(data))));
     }
     const sequentialProcessedBlocks: MsgBlock[] = []; // contains decrypted or otherwise formatted data
     for (const rawBlock of rawBlocks) {
@@ -99,7 +104,7 @@ export class Endpoints {
         const decryptRes = await PgpMsg.decrypt({ kisWithPp, msgPwd, encryptedData: Buf.with(rawBlock.content) });
         if (decryptRes.success) {
           if (decryptRes.isEncrypted) {
-            const formatted = await PgpMsg.fmtDecryptedAsSanitizedHtmlBlocks(decryptRes.content);
+            const formatted = await MsgBlockParser.fmtDecryptedAsSanitizedHtmlBlocks(decryptRes.content);
             sequentialProcessedBlocks.push(...formatted.blocks);
             subject = formatted.subject || subject;
           } else {
@@ -111,7 +116,12 @@ export class Endpoints {
           }
         } else {
           decryptRes.message = undefined;
-          sequentialProcessedBlocks.push(Pgp.internal.msgBlockDecryptErrObj(decryptRes.error.type === DecryptErrTypes.noMdc ? decryptRes.content! : rawBlock.content, decryptRes));
+          sequentialProcessedBlocks.push({
+            type: 'decryptErr',
+            content: decryptRes.error.type === DecryptErrTypes.noMdc ? decryptRes.content! : rawBlock.content,
+            decryptErr: decryptRes,
+            complete: true
+          });
         }
       } else if (rawBlock.type === 'encryptedAtt' && rawBlock.attMeta && /^(0x)?[A-Fa-f0-9]{16,40}\.asc\.pgp$/.test(rawBlock.attMeta.name || '')) {
         // encrypted pubkey attached
@@ -142,14 +152,17 @@ export class Endpoints {
       }
       if (block.type === 'publicKey') {
         if (!block.keyDetails) { // this could eventually be moved into detectBlocks, which would make it async
-          const { keys } = await Pgp.key.normalize(block.content);
+          const { keys } = await PgpKey.normalize(block.content);
           if (keys.length) {
             for (const pub of keys) {
-              blocks.push({ type: 'publicKey', content: pub.armor(), complete: true, keyDetails: legacyIsDecrypted(await Pgp.key.details(pub)) });
+              blocks.push({ type: 'publicKey', content: pub.armor(), complete: true, keyDetails: legacyIsDecrypted(await PgpKey.details(pub)) });
             }
           } else {
             blocks.push({
-              type: 'decryptErr', content: block.content, complete: true, decryptErr: {
+              type: 'decryptErr',
+              content: block.content,
+              complete: true,
+              decryptErr: {
                 success: false,
                 error: { type: 'format' as DecryptErrTypes, message: 'Badly formatted public key' },
                 longids: { message: [], matching: [], chosen: [], needPassphrase: [] }
@@ -193,14 +206,14 @@ export class Endpoints {
     const r = Validate.zxcvbnStrengthBar(uncheckedReq);
     if (r.purpose === 'passphrase') {
       if (typeof r.guesses === 'number') { // the host has a port of zxcvbn and already knows amount of guesses per password
-        return fmtRes(Pgp.password.estimateStrength(r.guesses));
+        return fmtRes(PgpPwd.estimateStrength(r.guesses));
       } else if (typeof r.value === 'string') { // host does not have zxcvbn, let's use zxcvbn-js to estimate guesses
         type FakeWindow = { zxcvbn: (password: string, weakWords: string[]) => { guesses: number } };
         if (typeof (window as unknown as FakeWindow).zxcvbn !== 'function') {
           throw new Error("window.zxcvbn missing in js")
         }
-        let guesses = (window as unknown as FakeWindow).zxcvbn(r.value, Pgp.password.weakWords()).guesses;
-        return fmtRes(Pgp.password.estimateStrength(guesses));
+        let guesses = (window as unknown as FakeWindow).zxcvbn(r.value, PgpPwd.weakWords()).guesses;
+        return fmtRes(PgpPwd.estimateStrength(guesses));
       } else {
         throw new Error('Unexpected format: guesses is not a number, value is not a string');
       }
@@ -223,9 +236,9 @@ export class Endpoints {
     }
     if (pgpType.armored) {
       // armored
-      const { blocks } = Pgp.armor.detectBlocks(allData.toString());
+      const { blocks } = MsgBlockParser.detectBlocks(allData.toString());
       for (const block of blocks) {
-        const { keys } = await Pgp.key.parse(block.content.toString());
+        const { keys } = await PgpKey.parse(block.content.toString());
         keyDetails.push(...keys);
       }
       return fmtRes({ format: 'armored', keyDetails: keyDetails.map(legacyIsDecrypted) });
@@ -233,7 +246,7 @@ export class Endpoints {
     // binary
     const { keys: openPgpKeys } = await openpgp.key.read(allData);
     for (const openPgpKey of openPgpKeys) {
-      keyDetails.push(await Pgp.key.details(openPgpKey))
+      keyDetails.push(await PgpKey.details(openPgpKey))
     }
     return fmtRes({ format: 'binary', keyDetails: keyDetails.map(legacyIsDecrypted) });
   }
@@ -250,7 +263,7 @@ export class Endpoints {
       throw new Error(`decryptKey: Can only accept exactly 1 pass phrase for decrypt, received: ${passphrases.length}`);
     }
     const key = await readArmoredKeyOrThrow(armored);
-    if (await Pgp.key.decrypt(key, passphrases[0])) {
+    if (await PgpKey.decrypt(key, passphrases[0])) {
       return fmtRes({ decryptedKey: key.armor() });
     }
     return fmtRes({ decryptedKey: null });
