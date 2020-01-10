@@ -334,14 +334,11 @@ export class Mime {
   }
 
   private static getNodeAsAtt = (node: MimeParserNode): Att => {
-    console.log('getNodeAsAtt.node.headers.content-type', node.headers['content-type']);
-    console.log('getNodeAsAtt.node.headers.content-disposition', node.headers['content-disposition']);
     return new Att({
       name: Mime.getNodeFilename(node),
       type: Mime.getNodeType(node),
       data: node.contentTransferEncoding.value === 'quoted-printable' ? Mime.fromEqualSignNotationAsBuf(node.rawContent!) : node.content,
       cid: Mime.getNodeContentId(node),
-      // ...
     });
   }
 
