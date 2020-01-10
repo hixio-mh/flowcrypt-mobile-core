@@ -175,7 +175,7 @@ export class Endpoints {
         }
       } else if (isContentBlock(block.type)) {
         msgContentBlocks.push(block);
-      } else if (Mime.isPlainInlineImg(block)) {
+      } else if (Mime.isPlainImgAtt(block)) {
         msgContentBlocks.push(block);
       } else if (block.type !== 'plainAtt') {
         blocks.push(block);

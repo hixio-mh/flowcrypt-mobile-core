@@ -63,14 +63,14 @@ const fillInlineHtmlImgs = (htmlContent: string, inlineImgsByCid: { [cid: string
 export const fmtContentBlock = (allContentBlocks: MsgBlock[]): { contentBlock: MsgBlock, text: string } => {
   let msgContentAsHtml = '';
   let msgContentAsText = '';
-  const contentBlocks = allContentBlocks.filter(b => !Mime.isPlainInlineImg(b))
+  const contentBlocks = allContentBlocks.filter(b => !Mime.isPlainImgAtt(b))
   const imgsAtTheBottom: MsgBlock[] = [];
   const inlineImgsByCid: { [cid: string]: MsgBlock } = {};
-  for (let inlineImg of allContentBlocks.filter(b => Mime.isPlainInlineImg(b))) {
-    if (inlineImg.attMeta!.cid) {
-      inlineImgsByCid[inlineImg.attMeta!.cid.replace(/>$/, '').replace(/^</, '')] = inlineImg;
+  for (let plainImgBlock of allContentBlocks.filter(b => Mime.isPlainImgAtt(b))) {
+    if (plainImgBlock.attMeta!.cid) {
+      inlineImgsByCid[plainImgBlock.attMeta!.cid.replace(/>$/, '').replace(/^</, '')] = plainImgBlock;
     } else {
-      imgsAtTheBottom.push(inlineImg);
+      imgsAtTheBottom.push(plainImgBlock);
     }
   }
   for (const block of contentBlocks) {
