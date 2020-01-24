@@ -5,25 +5,13 @@
   "tasks": [
     {
       "type": "npm",
+      "script": "test",
+      "path": ".",
+      "problemMatcher": []
+    },
+    {
+      "type": "npm",
       "script": "updateCore",
-      "path": ".",
-      "problemMatcher": []
-    },
-    {
-      "type": "npm",
-      "script": "build",
-      "path": ".",
-      "problemMatcher": []
-    },
-    {
-      "type": "npm",
-      "script": "_buildWrap",
-      "path": ".",
-      "problemMatcher": []
-    },
-    {
-      "type": "npm",
-      "script": "deploy",
       "path": ".",
       "problemMatcher": []
     },
@@ -35,19 +23,13 @@
     },
     {
       "type": "npm",
+      "script": "deploy",
+      "path": ".",
+      "problemMatcher": []
+    },
+    {
+      "type": "npm",
       "script": "genCompatAssets",
-      "path": ".",
-      "problemMatcher": []
-    },
-    {
-      "type": "npm",
-      "script": "_buildBundles",
-      "path": ".",
-      "problemMatcher": []
-    },
-    {
-      "type": "npm",
-      "script": "test",
       "path": ".",
       "problemMatcher": []
     }
