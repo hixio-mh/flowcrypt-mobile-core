@@ -10,8 +10,8 @@ mkdir -p build/final
 ./node_modules/.bin/tsc --project tsconfig.json
 
 # build raw/ with webpack
-webpack --config webpack.node.config.js
-webpack --config webpack.bare.config.js
+./node_modules/.bin/webpack --config webpack.node.config.js
+./node_modules/.bin/webpack --config webpack.bare.config.js
 
 # move modified raw/ to bundles/
 node tooling/fix-bundles.js
