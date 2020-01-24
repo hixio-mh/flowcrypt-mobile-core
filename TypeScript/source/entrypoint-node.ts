@@ -1,6 +1,6 @@
 /* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
 
-/// <reference path="../../../flowcrypt-node-modules/node_modules/@types/node/index.d.ts" />
+/// <reference path="../node_modules/@types/node/index.d.ts" />
 /// <reference path="./core/types/openpgp.d.ts" />
 
 'use strict';
