@@ -17,17 +17,17 @@
     "strictFunctionTypes": false,
     "sourceMap": false,
     "checkJs": false,
-    "outDir": "./TypeScript/build/ts",
+    "outDir": "./build/ts",
     "baseUrl": "..",
     "typeRoots": [
-      "./TypeScript/source/core/types/*.d.ts"
+      "./source/core/types/*.d.ts"
     ]
   },
   "include": [
-    "./TypeScript/source/entrypoint-node.ts",
-    "./TypeScript/source/entrypoint-bare.ts",
-    "./TypeScript/source/test.ts",
-    "./TypeScript/source/gen-compat-assets.ts"
+    "./source/entrypoint-node.ts",
+    "./source/entrypoint-bare.ts",
+    "./source/test.ts",
+    "./source/gen-compat-assets.ts"
   ],
   "exclude": [
     "**/build/**",

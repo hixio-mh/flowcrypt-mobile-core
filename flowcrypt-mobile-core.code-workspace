@@ -5,7 +5,7 @@
     }
   ],
   "settings": {
-    "typescript.tsdk": "./TypeScript/node_modules/typescript/lib",
+    "typescript.tsdk": "./node_modules/typescript/lib",
     "errorLens.enabledDiagnosticLevels": [
       "error"
     ],

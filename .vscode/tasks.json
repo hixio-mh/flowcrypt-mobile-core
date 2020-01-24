@@ -6,49 +6,49 @@
     {
       "type": "npm",
       "script": "updateCore",
-      "path": "TypeScript/",
+      "path": ".",
       "problemMatcher": []
     },
     {
       "type": "npm",
       "script": "build",
-      "path": "TypeScript/",
+      "path": ".",
       "problemMatcher": []
     },
     {
       "type": "npm",
       "script": "_buildWrap",
-      "path": "TypeScript/",
+      "path": ".",
       "problemMatcher": []
     },
     {
       "type": "npm",
       "script": "deploy",
-      "path": "TypeScript/",
+      "path": ".",
       "problemMatcher": []
     },
     {
       "type": "npm",
       "script": "donateCore",
-      "path": "TypeScript/",
+      "path": ".",
       "problemMatcher": []
     },
     {
       "type": "npm",
       "script": "genCompatAssets",
-      "path": "TypeScript/",
+      "path": ".",
       "problemMatcher": []
     },
     {
       "type": "npm",
       "script": "_buildBundles",
-      "path": "TypeScript/",
+      "path": ".",
       "problemMatcher": []
     },
     {
       "type": "npm",
       "script": "test",
-      "path": "TypeScript/",
+      "path": ".",
       "problemMatcher": []
     }
   ]

@@ -15,6 +15,5 @@ blocks:
         - name: Build and Test
           commands:
             - checkout
-            - cd TypeScript
             - npm install
             - npm test

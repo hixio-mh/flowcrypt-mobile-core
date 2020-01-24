@@ -7,7 +7,7 @@ rm -rf build/ts build/bundles build/final/*
 mkdir -p build/final
 
 # build our source with typescript
-( cd .. && ./TypeScript/node_modules/typescript/bin/tsc --project tsconfig.json )
+./node_modules/.bin/tsc --project tsconfig.json
 
 # build raw/ with webpack
 webpack --config webpack.node.config.js

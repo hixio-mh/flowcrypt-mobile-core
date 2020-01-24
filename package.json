@@ -29,16 +29,16 @@
   "scripts": {
     "build": "./tooling/build.sh",
     "predeploy": "npm run-script build",
-    "deploy": "cp build/final/flowcrypt-android-prod.js ../../flowcrypt-android/FlowCrypt/src/main/assets/js/flowcrypt-android.js && cp build/final/flowcrypt-ios-prod.js ../../flowcrypt-ios/FlowCrypt/Resources/flowcrypt-ios-prod.js.txt",
+    "deploy": "cp build/final/flowcrypt-android-prod.js ../flowcrypt-android/FlowCrypt/src/main/assets/js/flowcrypt-android.js && cp build/final/flowcrypt-ios-prod.js ../flowcrypt-ios/FlowCrypt/Resources/flowcrypt-ios-prod.js.txt",
     "pretest": "npm run-script build",
     "test": "ava build/ts/test.js --verbose",
     "pregenCompatAssets": "npm run-script build",
     "genCompatAssets": "ava build/ts/gen-compat-assets.js --verbose",
     "preupdateCore": "rm -rf source/core source/lib",
     "updateCore": "npm run-script _updateCoreLib && npm run-script _updateCoreSrc",
-    "_updateCoreSrc": "cp -r ../../flowcrypt-browser/extension/js/common/core source/core",
-    "_updateCoreLib": "mkdir source/lib && cd source/lib && LIBD='../../../../flowcrypt-browser/extension/lib' && cp -r $LIBD/emailjs . && cp $LIBD/openpgp.js . && cp $LIBD/iso-*.js . && cp $LIBD/zxcvbn.js .",
-    "donateCore": "rm -rf ../../flowcrypt-browser/extension/js/common/core && cp -r source/core ../../flowcrypt-browser/extension/js/common/core"
+    "_updateCoreSrc": "cp -r ../flowcrypt-browser/extension/js/common/core source/core",
+    "_updateCoreLib": "mkdir source/lib && cd source/lib && LIBD='../../../flowcrypt-browser/extension/lib' && cp -r $LIBD/emailjs . && cp $LIBD/openpgp.js . && cp $LIBD/iso-*.js . && cp $LIBD/zxcvbn.js .",
+    "donateCore": "rm -rf ../flowcrypt-browser/extension/js/common/core && cp -r source/core ../flowcrypt-browser/extension/js/common/core"
   },
   "repository": {
     "type": "git",

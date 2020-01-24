@@ -13,7 +13,7 @@ export const requireOpenpgp = (): typeof OpenPGP => {
   // running tests on a desktop os node instance
   // making the require semi-dynamic to surpress Webpack warnings/errors. This line does not rely on webpack at all
   // if this was webpack, then the `openpgp` variable would be already set, and it would never get down here
-  return require(`${'../../../source/lib/openpgp'}`); // points to flowcrypt-mobile-core/TypeScript/source/lib/openpgp.js
+  return require(`${'../../../source/lib/openpgp'}`); // points to flowcrypt-mobile-core/source/lib/openpgp.js
 };
 
 export const requireMimeParser = (): any => {
