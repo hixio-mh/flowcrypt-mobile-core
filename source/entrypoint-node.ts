@@ -1,4 +1,4 @@
-/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+/* © 2016-present FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
 
 /// <reference path="../node_modules/@types/node/index.d.ts" />
 /// <reference path="./core/types/openpgp.d.ts" />
