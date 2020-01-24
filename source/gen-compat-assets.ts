@@ -125,59 +125,59 @@ const write = async (t: AvaContext, fileContent: Buffer | string) => {
   await writeFile(`./source/assets/compat/${t.title}`, fileContent instanceof Buffer ? fileContent : Buffer.from(fileContent));
 }
 
-ava.test('direct-encrypted-text.txt', async t => {
+ava.default('direct-encrypted-text.txt', async t => {
   const { data } = await PgpMsg.encrypt({ data: text, pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
   await write(t, data);
   t.pass();
 });
 
-ava.test('direct-encrypted-pgpmime.txt', async t => {
+ava.default('direct-encrypted-pgpmime.txt', async t => {
   const { data } = await PgpMsg.encrypt({ data: mimePgp(t, text), pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
   await write(t, data);
   t.pass();
 });
 
-ava.test('direct-encrypted-pgpmime-special-chars.txt', async t => {
+ava.default('direct-encrypted-pgpmime-special-chars.txt', async t => {
   const { data } = await PgpMsg.encrypt({ data: mimePgp(t, textSpecialChars), pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
   await write(t, data);
   t.pass();
 });
 
-ava.test('direct-encrypted-text-special-chars.txt', async t => {
+ava.default('direct-encrypted-text-special-chars.txt', async t => {
   const { data } = await PgpMsg.encrypt({ data: textSpecialChars, pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
   await write(t, data);
   t.pass();
 });
 
-ava.test('mime-email-plain.txt', async t => {
+ava.default('mime-email-plain.txt', async t => {
   await write(t, mimeEmail(t, text));
   t.pass();
 });
 
-ava.test('mime-email-plain-with-pubkey.txt', async t => {
+ava.default('mime-email-plain-with-pubkey.txt', async t => {
   await write(t, mimeEmail(t, `${text}\n${pubkeys[0]}`));
   t.pass();
 });
 
-ava.test('mime-email-encrypted-inline-text.txt', async t => {
+ava.default('mime-email-encrypted-inline-text.txt', async t => {
   const { data } = await PgpMsg.encrypt({ data: text, pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
   await write(t, mimeEmail(t, data));
   t.pass();
 });
 
-ava.test('mime-email-encrypted-inline-pgpmime.txt', async t => {
+ava.default('mime-email-encrypted-inline-pgpmime.txt', async t => {
   const { data } = await PgpMsg.encrypt({ data: mimePgp(t, text), pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
   await write(t, mimeEmail(t, data));
   t.pass();
 });
 
-ava.test('mime-email-encrypted-inline-text-2.txt', async t => {
+ava.default('mime-email-encrypted-inline-text-2.txt', async t => {
   const { data } = await PgpMsg.encrypt({ data: text, pubkeys, armor: true }) as OpenPGP.EncryptArmorResult;
   await write(t, textEncoderMimeEmail(t, data));
   t.pass();
 });
 
-ava.test('mime-email-plain-html.txt', async t => {
+ava.default('mime-email-plain-html.txt', async t => {
   await write(t, plainHtmlMimeEmail(t));
   t.pass();
 });

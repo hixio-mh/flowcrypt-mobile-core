@@ -10,7 +10,7 @@ import { Subprocess } from './subprocess'
 import { readFileSync } from 'fs';
 config.truncateThreshold = 0
 
-export type AvaContext = ava.ExecutionContext<{}>;
+export type AvaContext = ava.ExecutionContext<any>;
 type JsonDict = { [k: string]: any };
 type TestKey = { pubKey: string, private: string, decrypted: string, passphrase: string, longid: string };
 
@@ -39,7 +39,7 @@ const getSslInfo = new Function(`${readFileSync('source/assets/flowcrypt-android
 const { NODE_SSL_CA, NODE_SSL_CRT, NODE_SSL_KEY, NODE_AUTH_HEADER } = getSslInfo();
 const requestOpts = { hostname: 'localhost', port: 3000, method: 'POST', ca: NODE_SSL_CA, cert: NODE_SSL_CRT, key: NODE_SSL_KEY, headers: { Authorization: NODE_AUTH_HEADER } };
 
-export const request = (endpoint: string, json: JsonDict, data: Buffer | string | never[], expectSuccess = true): Promise<{ json: JsonDict, data: Buffer, err?: string, status: number }> => new Promise((resolve, reject) => {
+export const request = (endpoint: string, json: JsonDict, data: Buffer | string | (never | undefined)[], expectSuccess = true): Promise<{ json: JsonDict, data: Buffer, err?: string, status: number }> => new Promise((resolve, reject) => {
   const req = https.request(requestOpts, r => {
     const buffers: Buffer[] = [];
     r.on('data', buffer => buffers.push(buffer));
