@@ -9,7 +9,6 @@
   },
   "devDependencies": {
     "@types/chai": "4.1.4",
-    "@types/chrome": "0.0.65",
     "@types/node": "13.1.6",
     "@types/node-cleanup": "2.1.0",
     "ava": "1.4.1",
