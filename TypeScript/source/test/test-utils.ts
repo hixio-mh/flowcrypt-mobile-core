@@ -4,11 +4,10 @@
 
 import * as ava from 'ava';
 import * as https from 'https';
-
+import * as fs from 'fs';
 import { config, expect } from 'chai';
 import { Subprocess } from './subprocess'
 import { readFileSync } from 'fs';
-import { util } from '../../../../flowcrypt-node-modules/source';
 config.truncateThreshold = 0
 
 export type AvaContext = ava.ExecutionContext<{}>;
@@ -20,7 +19,7 @@ const stdouts: string[] = [];
 
 export const startNodeCoreInstance = async (t: AvaContext) => {
   const r = await Subprocess.spawn('node', ['build/final/flowcrypt-android-dev.js'], `listening on 3000`);
-  await util.wait(500); // wait for initial rn-bridge msg to pass
+  await wait(500); // wait for initial rn-bridge msg to pass
   const stdLog = (type: 'stderr' | 'stdout', content: Buffer) => {
     const msg = `node ${type}: ${content.toString().trim()}`;
     if (type === 'stderr') {
@@ -173,5 +172,11 @@ export const getKeypairs = (...names: KeypairName[]) => {
 }
 
 export const getCompatAsset = async (name: string) => {
-  return await util.readFile(`source/assets/compat/${name}.txt`);
+  return await readFile(`source/assets/compat/${name}.txt`);
 }
+
+export let readFile = (path: string): Promise<Buffer> => new Promise((resolve, reject) => fs.readFile(path, (e, data) => e ? reject(e) : resolve(data)));
+
+export let writeFile = (path: string, data: Buffer): Promise<void> => new Promise((resolve, reject) => fs.writeFile(path, data, e => e ? reject(e) : resolve()));
+
+export let wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));

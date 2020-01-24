@@ -6,7 +6,7 @@ module.exports = {
   externals: [nodeExternals()],
   mode: 'none',
   entry: {
-    'entrypoint-node': './build/ts/flowcrypt-mobile-core/TypeScript/source/entrypoint-node.js',
+    'entrypoint-node': './build/ts/entrypoint-node.js',
     'node-asn1': './node_modules/asn1.js/lib/asn1.js',
     'bn': './node_modules/bn.js/lib/bn.js',
     'minimalistic-assert': './node_modules/minimalistic-assert/index.js',

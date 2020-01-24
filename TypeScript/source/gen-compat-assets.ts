@@ -10,10 +10,9 @@ global.openpgp = require('openpgp'); // remove it and you'll see what I mean
 
 import * as ava from 'ava';
 
-import { AvaContext } from './test/test-utils';
+import { AvaContext, writeFile } from './test/test-utils';
 import { PgpMsg } from './core/pgp-msg';
 import { Xss } from './platform/xss';
-import { util } from './test/flowcrypt-node-modules';
 
 const text = Buffer.from('some\n汉\ntxt');
 const textSpecialChars = Buffer.from('> special <tag> & other\n> second line');
@@ -123,7 +122,7 @@ ${Xss.escape(text.toString()).replace(/\n/g, '<br>')}
 `.replace(/^\n/, ''));
 
 const write = async (t: AvaContext, fileContent: Buffer | string) => {
-  await util.writeFile(`./source/assets/compat/${t.title}`, fileContent instanceof Buffer ? fileContent : Buffer.from(fileContent));
+  await writeFile(`./source/assets/compat/${t.title}`, fileContent instanceof Buffer ? fileContent : Buffer.from(fileContent));
 }
 
 ava.test('direct-encrypted-text.txt', async t => {
