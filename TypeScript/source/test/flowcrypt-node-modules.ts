@@ -5,5 +5,4 @@
 export {
   util,
   Subprocess, SubprocessError, ChildProcess,
-  HttpClientErr, HttpAuthErr,
 } from '../../../../flowcrypt-node-modules/source/index';
