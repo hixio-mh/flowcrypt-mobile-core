@@ -6,10 +6,10 @@ import * as ava from 'ava';
 
 import { allKeypairNames, expectData, expectEmptyJson, expectNoData, getCompatAsset, getKeypairs, request, startNodeCoreInstance } from './test/test-utils';
 
-import { ChildProcess } from './test/flowcrypt-node-modules';
 import { Xss } from './platform/xss';
 import { expect } from 'chai';
 import { openpgp } from './core/pgp';
+import { ChildProcess } from 'child_process';
 
 const text = 'some\n汉\ntxt';
 const htmlContent = text.replace(/\n/g, '<br />');

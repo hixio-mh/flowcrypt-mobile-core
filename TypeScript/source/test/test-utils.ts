@@ -6,8 +6,7 @@ import * as ava from 'ava';
 import * as https from 'https';
 
 import { config, expect } from 'chai';
-
-import { Subprocess } from './flowcrypt-node-modules';
+import { Subprocess } from './subprocess'
 import { readFileSync } from 'fs';
 import { util } from '../../../../flowcrypt-node-modules/source';
 config.truncateThreshold = 0

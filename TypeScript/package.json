@@ -7,6 +7,8 @@
     "sanitize-html": "1.20.1"
   },
   "devDependencies": {
+    "@types/node": "13.1.6",
+    "@types/node-cleanup": "^2.1.0",
     "@babel/core": "7.1.6",
     "@types/chai": "4.1.4",
     "@types/chrome": "0.0.65",
