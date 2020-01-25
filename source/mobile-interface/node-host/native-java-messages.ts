@@ -4,7 +4,7 @@
 
 import * as EventEmitter from 'events';
 
-import { Dict, Str } from '../core/common';
+import { Dict, Str } from '../../core/common';
 
 declare const APP_ENV: 'dev' | 'prod';
 

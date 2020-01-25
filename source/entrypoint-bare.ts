@@ -5,8 +5,8 @@
 'use strict';
 
 import { Buf } from './core/buf';
-import { Endpoints } from './node/endpoints';
-import { fmtErr } from './node/fmt';
+import { Endpoints } from './mobile-interface/endpoints';
+import { fmtErr } from './mobile-interface/fmt';
 
 declare const global: any;
 

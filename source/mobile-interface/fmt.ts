@@ -10,9 +10,6 @@ import { Str } from '../core/common';
 import { Xss } from '../platform/xss';
 import { KeyDetails } from '../core/pgp-key';
 
-export class HttpAuthErr extends Error { }
-export class HttpClientErr extends Error { }
-
 export type Buffers = (Buf | Uint8Array)[];
 
 export const isContentBlock = (t: MsgBlockType) => t === 'plainText' || t === 'decryptedText' || t === 'plainHtml' || t === 'decryptedHtml' || t === 'signedMsg' || t === 'verifiedMsg';

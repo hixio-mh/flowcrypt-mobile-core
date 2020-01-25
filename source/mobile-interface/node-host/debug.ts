@@ -1,6 +1,6 @@
 /* © 2016-present FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
 
-import { Buf } from '../core/buf';
+import { Buf } from '../../core/buf';
 
 export class Debug {
 

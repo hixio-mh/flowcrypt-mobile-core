@@ -7,13 +7,14 @@
 
 import * as https from 'https';
 
-import { Buffers, HttpAuthErr, HttpClientErr, fmtErr, printReplayTestDefinition } from './node/fmt';
+import { Buffers, fmtErr, printReplayTestDefinition } from './mobile-interface/fmt';
+import { HttpAuthErr, HttpClientErr } from './mobile-interface/node-host/errs';
 import { IncomingMessage, ServerResponse, createServer } from 'http';
 
 import { Buf } from './core/buf';
-import { Endpoints } from './node/endpoints';
-import { parseReq } from './node/parse';
-import { sendNativeMessageToJava } from './node/native';
+import { Endpoints } from './mobile-interface/endpoints';
+import { parseReq } from './mobile-interface/node-host/parse';
+import { sendNativeMessageToJava } from './mobile-interface/node-host/native-java-messages';
 import { setGlobals } from './platform/util';
 
 setGlobals();

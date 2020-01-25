@@ -2,8 +2,8 @@
 
 'use strict';
 
-import { Buffers, HttpClientErr } from './fmt';
-
+import { Buffers } from '../fmt';
+import { HttpClientErr } from '../node-host/errs';
 import { Debug } from './debug';
 import { IncomingMessage } from 'http';
 
