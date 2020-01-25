@@ -62,7 +62,13 @@ Output is a callback `(b64response: string) => void` which is a base64-encoded s
  
 On Android, the host app will look for an empty port and start a nodejs-mobile instance (see `entrypoint-node.ts`) on that port. The host will also pass self-signed HTTPS certs it created, to encrypt and authenticate http trafic on this port.
 
-Requests are sent as POST HTTP requests to `https://localhost:PORT/`, in the http request body, in the following format: `utf(endpointName)` + `0x0A (newline)` + `utf(json(request))` + `0x0A (newline)` + `data`.
+Requests are sent as POST HTTP requests to `https://localhost:PORT/`, in the http request body, in the following format: `utf(endpointName)` + `0x0A (newline)` + `utf(json(request))` + `0x0A (newline)` + `data`. The complete request body may look like this:
+
+```
+generateKey
+{"variant":"curve25519","passphrase":"hBRhfzK77vKMmYe3AnCb22X8","userIds":[{"name":"John","email":"john@corp.co"}]}
+
+```
 
 Responses are returned in HTTP response body as "COMBINED OUTPUT". All http response status codes are 200, if there is any error, it is indicated in `utf(json(response))` (see below).
 
