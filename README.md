@@ -43,8 +43,13 @@ Call output:
  - `response`: JSON encoded response, MUST BE ON SINGLE LINE (for proper response parsing on Android)
  - `data`: binary data, if any (such as unarmored encrypted data as a response from `encryptFile`)
  
-This output is encoded together into a single blob of binary output: `utf(json(response))` + `0x0A (newline)` + `data`, called "COMBINED OUTPUT" below.
- 
+This output is encoded together into a single blob of binary output: `utf(json(response))` + `0x0A (newline)` + `data`, called "COMBINED OUTPUT". Example COMBINED OUTPUT response of `decryptFile`:
+
+```
+{"success":true,"name":"file.png"}
+�PNGIHDR��a	pHYs........
+```
+
 ### iOS request handling + formatting (bare engine)
  
 On iOS, requests are sent from the host to TS Core by calling `handleRequestFromHost` from the host. This method is defined in `entrypoint-bare.ts` (where "bare" means code is run in bare JS engine, as opposed to "node" which means Nodejs).
@@ -59,4 +64,14 @@ On Android, the host app will look for an empty port and start a nodejs-mobile i
 
 Requests are sent as POST HTTP requests to `https://localhost:PORT/`, in the http request body, in the following format: `utf(endpointName)` + `0x0A (newline)` + `utf(json(request))` + `0x0A (newline)` + `data`.
 
-Responses are returned in HTTP response body as "COMBINED OUTPUT". All http response status codes are 200, if there is any error, it is indicated in `utf(json(response))`.
+Responses are returned in HTTP response body as "COMBINED OUTPUT". All http response status codes are 200, if there is any error, it is indicated in `utf(json(response))` (see below).
+
+### Error responses on both iOS and Android
+
+Errors are returned back to host as part of the response JSON, in the following format: `{"message": "Something failed","stack": "..."}`. When there is an error, the full COMBINED OUTPUT may look like this:
+
+```
+{"message": "Something failed","stack": "..."}
+
+```
+The first line is the JSON line, then there is `0x0A (newline)`, and zero bytes of binary data.
