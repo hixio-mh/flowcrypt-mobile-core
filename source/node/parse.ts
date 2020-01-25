@@ -22,17 +22,12 @@ export const parseReq = (r: IncomingMessage, debug: boolean): Promise<ParseRes> 
     }
     let byteOffset = 0;
     while (newlinesEncountered < 2) {
-      // console.log(`while newlinesEncountered: ${newlinesEncountered}`)
-      // console.log(`byteOffset: ${byteOffset}`);
       const nextNewlineIndex = chunk.indexOf(NEWLINE, byteOffset);
-      // console.log(`nextNewlineIndex: ${nextNewlineIndex}`)
       if (nextNewlineIndex === -1) {
-        // console.log(`pushing -1`);
         initBuffers.push(chunk.subarray(byteOffset));
         return;
       }
       const beginNextLine = nextNewlineIndex + NEWLINE.length;
-      // console.log(`beginNextLine: ${beginNextLine}`);
       initBuffers.push(chunk.slice(byteOffset, beginNextLine));
       byteOffset = beginNextLine;
       newlinesEncountered++;
