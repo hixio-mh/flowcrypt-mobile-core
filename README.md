@@ -19,7 +19,7 @@ When built (with `npm test` or `npm run-script build`), you'll see the final pro
 
 Code in [source/core](https://github.com/FlowCrypt/flowcrypt-mobile-core/tree/master/source/core) is reused across iOS, Android, browser extension and backend code. Commonly, this code is developed along with [browser extension](https://github.com/FlowCrypt/flowcrypt-browser/tree/master/extension/js/common/core) and then merged into this repo after important changes land there.
 
-## Methods/endpoints
+## Endpoints
 
 The TS Core API meant to be used on Android/iOS has the following methods (see [entrypoint.ts](https://github.com/FlowCrypt/flowcrypt-mobile-core/blob/master/source/node/endpoints.ts)):
  - `generateKey`: generate a `curve25519|rsa2048|rsa4096` key
@@ -30,6 +30,33 @@ The TS Core API meant to be used on Android/iOS has the following methods (see [
  - `parseKeys`: parse armored or binary keys to get their details/parameters
  - `decryptKey`, `encryptKey`: accepts armored key, returns armored key either encrypted or decrypted with provided pass phrase
  
-## Method call input/output format
+## Endpoint call input/output format
 
-**todo**
+For both Android (nodejs) and iOS (bare engine), the contents of inputs/outputs are the same but formatted slightly differently.
+
+Call input:
+ - `endpoint`: method name, one from the list above such as `generateKey`
+ - `request`: JSON encoded request fields, MUST BE ON SINGLE LINE (for proper request parsing on Android)
+ - `data`: binary data, if any (such as a MIME message for `parseDecryptMsg`, or file contents for `encryptFile`)
+
+Call output:
+ - `response`: JSON encoded response, MUST BE ON SINGLE LINE (for proper response parsing on Android)
+ - `data`: binary data, if any (such as unarmored encrypted data as a response from `encryptFile`)
+ 
+This output is encoded together into a single blob of binary output: `utf(json(response))` + `0x0A (newline)` + `data`, called "COMBINED OUTPUT" below.
+ 
+### iOS request handling + formatting (bare engine)
+ 
+On iOS, requests are sent from the host to TS Core by calling `handleRequestFromHost` from the host. This method is defined in `entrypoint-bare.ts` (where "bare" means code is run in bare JS engine, as opposed to "node" which means Nodejs).
+ 
+Inputs are `endpointName: string, request: string, data: string` which correspond to the inputs above, with `data` being a base64-encoded string of the binary data, if any.
+
+Output is a callback `(b64response: string) => void` which is a base64-encoded string of "COMBINED OUTPUT".
+
+### Android request handling + formatting (nodejs http)
+ 
+On Android, the host app will look for an empty port and start a nodejs-mobile instance (see `entrypoint-node.ts`) on that port. The host will also pass self-signed HTTPS certs it created, to encrypt and authenticate http trafic on this port.
+
+Requests are sent as POST HTTP requests to `https://localhost:PORT/`, in the http request body, in the following format: `utf(endpointName)` + `0x0A (newline)` + `utf(json(request))` + `0x0A (newline)` + `data`.
+
+Responses are returned in HTTP response body as "COMBINED OUTPUT". All http response status codes are 200, if there is any error, it is indicated in `utf(json(response))`.
