@@ -70,7 +70,7 @@ generateKey
 
 ```
 
-Responses are returned in HTTP response body as "COMBINED OUTPUT". All http response status codes are 200, if there is any error, it is indicated in `utf(json(response))` (see below).
+Responses are returned in HTTP response body as "COMBINED OUTPUT". All http response status codes are 200. If there is any error, it is indicated in `utf(json(response))` (see below).
 
 ### Error responses on both iOS and Android
 
