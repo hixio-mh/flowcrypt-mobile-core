@@ -84,8 +84,28 @@ The first line is the JSON line, then there is `0x0A (newline)`, and zero bytes 
 
 ## JavaScript code can utilize host app methods
 
-On both iOS and Android, JavaScript has a way to call back into the host app, sort of a reverse request. The only time this will happen is when the JavaScript code is processing a request from the host, and needs host's help to get it done, typically to take advantage of faster cryptographic implementations in Kotlin and Swift as opposed to JavaScript.
+On both iOS and Android, JavaScript has a way to call back into the host app, sort of a reverse request. The only time this will happen is when the JavaScript code is processing a request from the host, and needs host's help to get it done, typically to take advantage of faster cryptographic implementations in Kotlin and Swift as opposed to JavaScript, or to fill gaps in missing functionality on JavaScriptCore.
 
 On iOS this is done through `CoreHost` (swift class) which is exposed to JavaScript as `coreHost` (global object containing methods).
 
 On Android, we set `global.coreHost` directly in JS in `native-crypto.js`. These methods on Android use `hostAsyncRequest` which uses `sendNativeMessageToJava` which uses `EventEmitter` to send messages back to Java and await responses.
+
+CoreHost usage examples:
+
+```js
+// defining timeout methods that are missing in JavaScriptCore
+const setTimeout = (cb, ms) => coreHost.setTimeout(cb, ms);
+const clearTimeout = (id) => coreHost.clearTimeout(id);
+```
+```js
+// getting random bytes in JavaScriptCore
+let bytesAsNumberArr = coreHost.getSecureRandomByteNumberArray(byteCount);
+```
+```js
+// decrypt RSA, both platforms
+let decryptedBase64 = await coreHost.decryptRsaNoPadding(derRsaPrvBase64, encryptedBase64);
+```
+```js
+// decrypt AES, JavaScriptCore
+return Uint8Array.from(coreHost.decryptAesCfbNoPadding(ct, key, iv));
+```
