@@ -2,6 +2,8 @@
 
 'use strict';
 
+import { openpgp } from '../core/pgp';
+
 type Obj = { [k: string]: any };
 
 export namespace NodeRequest {
@@ -163,4 +165,15 @@ const hasProp = (v: Obj, name: string, type: 'string[]' | 'object' | 'string' | 
     return isObj(value);
   }
   return false;
+}
+
+export const readArmoredKeyOrThrow = async (armored: string) => {
+  const { keys: [key], err } = await openpgp.key.readArmored(armored);
+  if (err && err.length && err[0] instanceof Error) {
+    throw err[0];
+  }
+  if (!key) {
+    throw new Error('No key found');
+  }
+  return key;
 }

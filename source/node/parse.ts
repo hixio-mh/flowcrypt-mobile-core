@@ -4,7 +4,7 @@
 
 import { Buffers, HttpClientErr } from './fmt';
 
-import { Debug } from './endpoints';
+import { Debug } from './debug';
 import { IncomingMessage } from 'http';
 
 type ParseRes = { endpoint: string, data: Buffers, request: {} };

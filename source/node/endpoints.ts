@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { Buffers, fmtContentBlock, fmtRes, isContentBlock } from './fmt';
+import { Buffers, fmtContentBlock, fmtRes, isContentBlock, legacyIsDecrypted } from './fmt';
 import { DecryptErrTypes, PgpMsg } from '../core/pgp-msg';
 import { KeyDetails, PgpKey } from '../core/pgp-key';
 import { Mime, RichHeaders } from '../core/mime';
@@ -17,7 +17,7 @@ import { PgpPwd } from '../core/pgp-password';
 import { Store } from '../platform/store';
 import { Str } from '../core/common';
 import { VERSION } from '../core/const';
-import { Validate } from './validate';
+import { Validate, readArmoredKeyOrThrow } from './validate';
 import { Xss } from '../platform/xss';
 import { gmailBackupSearchQuery } from '../core/const';
 import { openpgp } from '../core/pgp';
@@ -280,71 +280,4 @@ export class Endpoints {
     return fmtRes({ encryptedKey: key.armor() });
   }
 
-}
-
-/**
- * Core now uses isFullyEncrypted / isFullyDecrypted
- * However host apps still rely on legacy isDecrypted field
- * This should be deleted when https://github.com/FlowCrypt/flowcrypt-android/issues/708 is resolved
- */
-const legacyIsDecrypted = (keyDetails: KeyDetails) => {
-  if (keyDetails.private) {
-    if (keyDetails.isFullyDecrypted) {
-      // @ts-ignore
-      keyDetails.isDecrypted = true;
-    } else if (keyDetails.isFullyEncrypted) {
-      // @ts-ignore
-      keyDetails.isDecrypted = false;
-    } else {
-      throw new Error('This key is only partially encrypted.')
-    }
-  } else {
-    // @ts-ignore
-    keyDetails.isDecrypted = null; // public key
-  }
-  return keyDetails
-}
-
-const readArmoredKeyOrThrow = async (armored: string) => {
-  const { keys: [key], err } = await openpgp.key.readArmored(armored);
-  if (err && err.length && err[0] instanceof Error) {
-    throw err[0];
-  }
-  if (!key) {
-    throw new Error('No key found');
-  }
-  return key;
-}
-
-export class Debug {
-
-  public static printChunk = (name: string, data: Buf | Uint8Array) => {
-    const header1 = `Debug.printChunk[${name}, ${data.length}B]: `;
-    const header2 = ' '.repeat(header1.length);
-    const chunk = Array.from(data.subarray(0, 30));
-    const chunkIndices = chunk.map((_, i) => i);
-    console.log(`-\n${header1} - +-[${chunk.map(Debug.pad).join(' ')}]\n${header2} | -[${chunk.map(Debug.char).map(Debug.pad).join(' ')}]\n${header2} \`-[${chunkIndices.map(Debug.pad).join(' ')} ]`);
-  }
-
-  private static char = (byte: number) => {
-    let c = ''
-    if (byte === 10) {
-      c += '\\n';
-    } else if (byte === 13) {
-      c += '\\r';
-    } else if (byte === 140 || byte === 160) {
-      c += '???';
-    } else {
-      c += String.fromCharCode(byte);
-    }
-    return c;
-  }
-
-  private static pad = (char: string | number) => {
-    char = String(char);
-    while (char.length < 3) {
-      char = ' ' + char;
-    }
-    return char;
-  }
 }
