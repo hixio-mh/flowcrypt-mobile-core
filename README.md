@@ -81,3 +81,11 @@ Errors are returned back to host as part of the response JSON, in the following 
 
 ```
 The first line is the JSON line, then there is `0x0A (newline)`, and zero bytes of binary data.
+
+## JavaScript code can utilize host app methods
+
+On both iOS and Android, JavaScript has a way to call back into the host app, sort of a reverse request. The only time this will happen is when the JavaScript code is processing a request from the host, and needs host's help to get it done, typically to take advantage of faster cryptographic implementations in Kotlin and Swift as opposed to JavaScript.
+
+On iOS this is done through `CoreHost` (swift class) which is exposed to JavaScript as `coreHost` (global object containing methods).
+
+On Android, we set `global.coreHost` directly in JS in `native-crypto.js`. These methods on Android use `hostAsyncRequest` which uses `sendNativeMessageToJava` which uses `EventEmitter` to send messages back to Java and await responses.
