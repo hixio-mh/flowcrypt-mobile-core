@@ -7,7 +7,7 @@
 
 import * as https from 'https';
 
-import { Buffers, fmtErr, printReplayTestDefinition } from './mobile-interface/fmt';
+import { Buffers, fmtErr, printReplayTestDefinition } from './mobile-interface/format-output';
 import { HttpAuthErr, HttpClientErr } from './mobile-interface/node-host/errs';
 import { IncomingMessage, ServerResponse, createServer } from 'http';
 

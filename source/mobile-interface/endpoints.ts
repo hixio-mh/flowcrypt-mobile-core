@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { Buffers, fmtContentBlock, fmtRes, isContentBlock, legacyIsDecrypted } from './fmt';
+import { Buffers, fmtContentBlock, fmtRes, isContentBlock, legacyIsDecrypted } from './format-output';
 import { DecryptErrTypes, PgpMsg } from '../core/pgp-msg';
 import { KeyDetails, PgpKey } from '../core/pgp-key';
 import { Mime, RichHeaders } from '../core/mime';
@@ -17,7 +17,7 @@ import { PgpPwd } from '../core/pgp-password';
 import { Store } from '../platform/store';
 import { Str } from '../core/common';
 import { VERSION } from '../core/const';
-import { Validate, readArmoredKeyOrThrow } from './validate';
+import { ValidateInput, readArmoredKeyOrThrow } from './validate-input';
 import { Xss } from '../platform/xss';
 import { gmailBackupSearchQuery } from '../core/const';
 import { openpgp } from '../core/pgp';
@@ -32,14 +32,14 @@ export class Endpoints {
   }
 
   public encryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
-    const req = Validate.encryptMsg(uncheckedReq);
+    const req = ValidateInput.encryptMsg(uncheckedReq);
     const encrypted = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buf.concat(data), armor: true }) as OpenPGP.EncryptArmorResult;
     return fmtRes({}, Buf.fromUtfStr(encrypted.data));
   }
 
   public generateKey = async (uncheckedReq: any): Promise<Buffers> => {
     Store.keyCacheWipe(); // generateKey may be used when changing major settings, wipe cache to prevent dated results
-    const { passphrase, userIds, variant } = Validate.generateKey(uncheckedReq);
+    const { passphrase, userIds, variant } = ValidateInput.generateKey(uncheckedReq);
     if (passphrase.length < 12) {
       throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
     }
@@ -48,7 +48,7 @@ export class Endpoints {
   }
 
   public composeEmail = async (uncheckedReq: any): Promise<Buffers> => {
-    const req = Validate.composeEmail(uncheckedReq);
+    const req = ValidateInput.composeEmail(uncheckedReq);
     const mimeHeaders: RichHeaders = { to: req.to, from: req.from, subject: req.subject, cc: req.cc, bcc: req.bcc };
     if (req.replyToMimeMsg) {
       const previousMsg = await Mime.decode(Buf.fromUtfStr((req.replyToMimeMsg.substr(0, 10000).split('\n\n')[0] || '') + `\n\nno content`));
@@ -73,13 +73,13 @@ export class Endpoints {
   }
 
   public encryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
-    const req = Validate.encryptFile(uncheckedReq);
+    const req = ValidateInput.encryptFile(uncheckedReq);
     const encrypted = await PgpMsg.encrypt({ pubkeys: req.pubKeys, data: Buf.concat(data), filename: req.name, armor: false }) as OpenPGP.EncryptBinaryResult;
     return fmtRes({}, encrypted.message.packets.write());
   }
 
   public parseDecryptMsg = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
-    const { keys: kisWithPp, msgPwd, isEmail } = Validate.parseDecryptMsg(uncheckedReq);
+    const { keys: kisWithPp, msgPwd, isEmail } = ValidateInput.parseDecryptMsg(uncheckedReq);
     const rawBlocks: MsgBlock[] = []; // contains parsed, unprocessed / possibly encrypted data
     let rawSigned: string | undefined = undefined;
     let subject: string | undefined = undefined;
@@ -188,7 +188,7 @@ export class Endpoints {
   }
 
   public decryptFile = async (uncheckedReq: any, data: Buffers): Promise<Buffers> => {
-    const { keys: kisWithPp, msgPwd } = Validate.decryptFile(uncheckedReq);
+    const { keys: kisWithPp, msgPwd } = ValidateInput.decryptFile(uncheckedReq);
     const decryptedMeta = await PgpMsg.decrypt({ kisWithPp, encryptedData: Buf.concat(data), msgPwd });
     if (!decryptedMeta.success) {
       decryptedMeta.message = undefined;
@@ -198,12 +198,12 @@ export class Endpoints {
   }
 
   public parseDateStr = async (uncheckedReq: any) => {
-    const { dateStr } = Validate.parseDateStr(uncheckedReq);
+    const { dateStr } = ValidateInput.parseDateStr(uncheckedReq);
     return fmtRes({ timestamp: String(Date.parse(dateStr) || -1) });
   }
 
   public zxcvbnStrengthBar = async (uncheckedReq: any) => {
-    const r = Validate.zxcvbnStrengthBar(uncheckedReq);
+    const r = ValidateInput.zxcvbnStrengthBar(uncheckedReq);
     if (r.purpose === 'passphrase') {
       if (typeof r.guesses === 'number') { // the host has a port of zxcvbn and already knows amount of guesses per password
         return fmtRes(PgpPwd.estimateStrength(r.guesses));
@@ -223,7 +223,7 @@ export class Endpoints {
   }
 
   public gmailBackupSearch = async (uncheckedReq: any) => {
-    const { acctEmail } = Validate.gmailBackupSearch(uncheckedReq);
+    const { acctEmail } = ValidateInput.gmailBackupSearch(uncheckedReq);
     return fmtRes({ query: gmailBackupSearchQuery(acctEmail) });
   }
 
@@ -252,13 +252,13 @@ export class Endpoints {
   }
 
   public isEmailValid = async (uncheckedReq: any) => {
-    const { email } = Validate.isEmailValid(uncheckedReq);
+    const { email } = ValidateInput.isEmailValid(uncheckedReq);
     return fmtRes({ valid: Str.isEmailValid(email) });
   }
 
   public decryptKey = async (uncheckedReq: any) => {
     Store.keyCacheWipe(); // decryptKey may be used when changing major settings, wipe cache to prevent dated results
-    const { armored, passphrases } = Validate.decryptKey(uncheckedReq);
+    const { armored, passphrases } = ValidateInput.decryptKey(uncheckedReq);
     if (passphrases.length !== 1) { // todo - refactor endpoint decryptKey api to accept a single pp
       throw new Error(`decryptKey: Can only accept exactly 1 pass phrase for decrypt, received: ${passphrases.length}`);
     }
@@ -271,7 +271,7 @@ export class Endpoints {
 
   public encryptKey = async (uncheckedReq: any) => {
     Store.keyCacheWipe(); // encryptKey may be used when changing major settings, wipe cache to prevent dated results
-    const { armored, passphrase } = Validate.encryptKey(uncheckedReq);
+    const { armored, passphrase } = ValidateInput.encryptKey(uncheckedReq);
     const key = await readArmoredKeyOrThrow(armored);
     if (!passphrase || passphrase.length < 12) { // last resort check, this should never happen
       throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');

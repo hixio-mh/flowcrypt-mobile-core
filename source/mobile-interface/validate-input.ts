@@ -27,7 +27,7 @@ export namespace NodeRequest {
   export type encryptKey = { armored: string, passphrase: string };
 }
 
-export class Validate {
+export class ValidateInput {
 
   public static generateKey = (v: any): NodeRequest.generateKey => {
     if (isObj(v) && hasProp(v, 'userIds', 'Userid[]') && v.userIds.length && hasProp(v, 'passphrase', 'string') && ['rsa2048', 'rsa4096', 'curve25519'].includes(v.variant)) {

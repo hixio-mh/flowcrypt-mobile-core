@@ -2,7 +2,7 @@
 
 'use strict';
 
-import { Buffers } from '../fmt';
+import { Buffers } from '../format-output';
 import { HttpClientErr } from '../node-host/errs';
 import { Debug } from './debug';
 import { IncomingMessage } from 'http';
