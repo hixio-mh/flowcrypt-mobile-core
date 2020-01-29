@@ -3,9 +3,12 @@
  */
 
 if (typeof coreHost === 'undefined') {
-  // on JavaScriptCore, coreHost code is injected during startup
-  // on NodeJS-mobile, this is defined below manually
-  global.coreHost = { // returns promises, althrough on JavaScriptCore returns direct value. We await it either way
+  // on iOS/JavaScriptCore, coreHost code is injected during startup
+  // on Android/NodeJS-mobile, this is defined below manually
+  global.coreHost = {
+    // methods return promises on Android/Node
+    // but return values directly (synchronously) on iOS/JavaScriptCore
+    // the code that uses these methods should await the results either way
     decryptRsaNoPadding: (derRsaPrvBase64, encryptedBase64) => hostAsyncRequest('decryptRsaNoPadding', `${derRsaPrvBase64},${encryptedBase64}`),
     verifyRsaModPow: (base, exponent, modulo) => hostAsyncRequest('verifyRsaModPow', `${base},${exponent},${modulo}`),
   };
