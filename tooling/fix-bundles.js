@@ -29,11 +29,18 @@ for (const filename of fs.readdirSync(bundleRawDir)) {
 fs.copyFileSync(`${bundleRawDir}/entrypoint-node.js`, `${bundleDir}/entrypoint-node-bundle.js`);
 fs.copyFileSync(`${bundleRawDir}/entrypoint-bare.js`, `${bundleDir}/entrypoint-bare-bundle.js`);
 
+const sanitizeHtmlDist = './node_modules/sanitize-html/dist/sanitize-html.js';
+
+// * -- REMOVE THIS AND UPDATE sanitize-html WHEN PR LANDS: https://github.com/apostrophecms/sanitize-html/pull/326
+// this patches the source directly in node_modules, because we also use it directly during tests
+fs.writeFileSync(sanitizeHtmlDist, fs.readFileSync(sanitizeHtmlDist).toString().replace(/if\(value\.length\)/g, 'if(value&&value.length)'));
+// -- *
+
 // copy wip to html-sanitize-bundle
 fs.copyFileSync(`${bundleWipDir}/node-html-sanitize.js`, `${bundleDir}/node-html-sanitize-bundle.js`);
 fs.writeFileSync(
   `${bundleDir}/bare-html-sanitize-bundle.js`,
-  `${fs.readFileSync('./node_modules/sanitize-html/dist/sanitize-html.js').toString()}\nconst dereq_html_sanitize = window.sanitizeHtml;\n`
+  `${fs.readFileSync(sanitizeHtmlDist).toString()}\nconst dereq_html_sanitize = window.sanitizeHtml;\n`
 );
 
 // copy zxcvbn, only used for bare (iOS) because zxcvbn-ios is not well maintained: https://github.com/dropbox/zxcvbn-ios/issues

@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import { config, expect } from 'chai';
 import { Subprocess } from './subprocess'
 import { readFileSync } from 'fs';
+import { Buf } from '../core/buf';
 config.truncateThreshold = 0
 
 export type AvaContext = ava.ExecutionContext<any>;
@@ -72,6 +73,26 @@ export const request = (endpoint: string, json: JsonDict, data: Buffer | string 
   req.write(data instanceof Buffer ? data : Buffer.from(data as string));
   req.end();
 });
+
+export const httpGet = async (url: string): Promise<Buf> => {
+  return await new Promise((resolve, reject) => {
+    const req = https.request(url, r => {
+      const buffers: Buffer[] = [];
+      r.on('data', buffer => buffers.push(buffer));
+      r.on('end', () => {
+        const buf = Buf.fromUint8(Buffer.concat(buffers));
+        const status = r.statusCode || -1;
+        if (status !== 200) {
+          reject(`Status unexpectedly ${status} for url ${url}`);
+        } else {
+          resolve(buf);
+        }
+      });
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
 
 export const expectEmptyJson = (json: JsonDict) => {
   expect(Object.keys(json)).to.have.property('length').that.equals(0);

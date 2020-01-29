@@ -4,12 +4,14 @@
 
 import * as ava from 'ava';
 
-import { allKeypairNames, expectData, expectEmptyJson, expectNoData, getCompatAsset, getKeypairs, request, startNodeCoreInstance } from './test/test-utils';
+import { allKeypairNames, expectData, expectEmptyJson, expectNoData, getCompatAsset, getKeypairs, request, startNodeCoreInstance, httpGet } from './test/test-utils';
 
 import { Xss } from './platform/xss';
 import { expect } from 'chai';
 import { openpgp } from './core/pgp';
 import { ChildProcess } from 'child_process';
+// @ts-ignore - this way we can test the Xss class directly as well
+global.dereq_html_sanitize = require("sanitize-html");
 
 const text = 'some\n汉\ntxt';
 const htmlContent = text.replace(/\n/g, '<br />');
@@ -492,6 +494,16 @@ ava.default('parseDecryptMsg compat mime-email-plain-with-pubkey', async t => {
   t.pass();
 });
 
+ava.default('can process dirty html without throwing', async t => {
+  const dirtyBuf = await httpGet('https://raw.githubusercontent.com/cure53/HTTPLeaks/master/leak.html');
+  const clean = Xss.htmlSanitizeKeepBasicTags(dirtyBuf.toUtfStr());
+  expect(clean).to.not.contain('background');
+  expect(clean).to.not.contain('script');
+  expect(clean).to.not.contain('style');
+  expect(clean).to.not.contain('src=http');
+  expect(clean).to.not.contain('src="http');
+  t.pass();
+})
 
 ava.after(async t => {
   nodeProcess.kill();

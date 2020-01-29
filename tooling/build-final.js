@@ -16,7 +16,8 @@ const path = {
 }
 
 // node
-const fixNodeImports = (src) => src.replace(/require\(['"]bn\.js['"]\)/g, 'dereq_bn')
+const fixNodeImports = (src) => src
+  .replace(/require\(['"]bn\.js['"]\)/g, 'dereq_bn')
   .replace(/require\(['"]minimalistic-assert['"]\)/g, 'dereq_minimalistic_assert')
   .replace(/require\(['"]inherits['"]\)/g, 'dereq_inherits')
   .replace(/require\(['"]asn1\.js['"]\)/g, 'dereq_asn1');
