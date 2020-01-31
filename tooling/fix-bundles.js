@@ -110,26 +110,33 @@ openpgpLibBare = replace( // bare - aes decrypt on host
   `return Uint8Array.from(coreHost.decryptAesCfbNoPadding(ct, key, iv));`
 );
 
+const asn1LibBare = fs.readFileSync(`${bundleWipDir}/bare-asn1.js`).toString();
+
+const asn1libNode = fs.readFileSync(`${bundleWipDir}/node-asn1.js`).toString()
+  .replace(/require\("safer-buffer"\)/g, 'require("buffer")'); // we don't use old node versions
+
+const minimalisticAssertLibNode = fs.readFileSync(`${bundleWipDir}/minimalistic-assert.js`).toString();
+
+const bnLibNode = fs.readFileSync(`${bundleWipDir}/bn.js`).toString();
+
 fs.writeFileSync(`${bundleDir}/bare-openpgp-bundle.js`, `
-${fs.readFileSync('source/lib/web-streams-polyfill.js').toString()}
-const ReadableStream = self.ReadableStream;
-const WritableStream = self.WritableStream;
-const TransformStream = self.TransformStream;
-/* asn1 begin */
-${fs.readFileSync(`${bundleWipDir}/bare-asn1.js`).toString()}
-/* asn1 end */
-${openpgpLibBare}
-const openpgp = window.openpgp;
+  ${fs.readFileSync('source/lib/web-streams-polyfill.js').toString()}
+  const ReadableStream = self.ReadableStream;
+  const WritableStream = self.WritableStream;
+  const TransformStream = self.TransformStream;
+  /* asn1 begin */
+  ${asn1LibBare}
+  /* asn1 end */
+  ${openpgpLibBare}
+  const openpgp = window.openpgp;
 `);
 
 fs.writeFileSync(`${bundleDir}/node-openpgp-bundle.js`, `
   (function(){
     console.debug = console.log;
-    ${[
-    `${bundleWipDir}/minimalistic-assert.js`,
-    `${bundleWipDir}/bn.js`,
-    `${bundleWipDir}/node-asn1.js`
-  ].map(path => fs.readFileSync(path).toString()).join('\n')}
+    ${minimalisticAssertLibNode}
+    ${bnLibNode}
+    ${asn1libNode}
     ${openpgpLibNode}
     const openpgp = module.exports;
     module.exports = {};
@@ -140,11 +147,9 @@ fs.writeFileSync(`${bundleDir}/node-openpgp-bundle.js`, `
 fs.writeFileSync(`${bundleDir}/node-dev-openpgp-bundle.js`, `
   (function(){
     console.debug = console.log;
-    ${[
-    `${bundleWipDir}/minimalistic-assert.js`,
-    `${bundleWipDir}/bn.js`,
-    `${bundleWipDir}/node-asn1.js`
-  ].map(path => fs.readFileSync(path).toString()).join('\n')}
+    ${minimalisticAssertLibNode}
+    ${bnLibNode}
+    ${asn1libNode}
     ${openpgpLibNodeDev}
     const openpgp = module.exports;
     module.exports = {};
