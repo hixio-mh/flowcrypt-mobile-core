@@ -50,7 +50,7 @@ ava.default('generateKey', async t => {
   t.pass();
 });
 
-for (const keypairName of allKeypairNames) {
+for (const keypairName of allKeypairNames.filter(name => name != 'expired')) {
   ava.default(`encryptMsg -> parseDecryptMsg (${keypairName})`, async t => {
     const content = 'hello\nwrld';
     const { pubKeys, keys } = getKeypairs(keypairName);
@@ -255,7 +255,7 @@ ava.default('composeEmail format:encrypt-inline -> parseDecryptMsg', async t => 
   t.pass();
 });
 
-for (const keypairName of allKeypairNames) {
+for (const keypairName of allKeypairNames.filter(name => name != 'expired')) {
   ava.default(`encryptFile -> decryptFile ${keypairName}`, async t => {
     const { pubKeys, keys } = getKeypairs(keypairName);
     const name = 'myfile.txt';
@@ -319,7 +319,49 @@ ava.default('parseKeys', async t => {
           "bits": 2048,
           "algorithmId": 1
         },
-        "created": 1543592161
+        "created": 1543592161,
+        "lastModified": 1543592161
+      }
+    ]
+  });
+  expectNoData(data);
+  t.pass();
+});
+
+ava.default('parseKeys - expiration and date last updated', async t => {
+  const { pubKeys: [pubkey] } = getKeypairs('expired');
+  const { data, json } = await request('parseKeys', {}, Buffer.from(pubkey));
+  expect(json).to.deep.equal({
+    "format": "armored",
+    "keyDetails": [
+      {
+        "public": "-----BEGIN PGP PUBLIC KEY BLOCK-----\r\nVersion: FlowCrypt 0.0.1-dev Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\n\r\nxsBNBF8PcdUBCADi8no6T4Bd9Ny5COpbheBuPWEyDOedT2EVeaPrfutB1D8i\r\nCP6Rf1cUvs/qNUX/O7HQHFpgFuW2uOY4OU5cvcrwmNpOxT3pPt2cavxJMdJo\r\nfwEvloY3OfY7MCqdAj5VUcFGMhubfV810V2n5pf2FFUNTirksT6muhviMymy\r\nuWZLdh0F4WxrXEon7k3y2dZ3mI4xsG+Djttb6hj3gNr8/zNQQnTmVjB0mmpO\r\nFcGUQLTTTYMngvVMkz8/sh38trqkVGuf/M81gkbr1egnfKfGz/4NT3qQLjin\r\nnA8In2cSFS/MipIV14gTfHQAICFIMsWuW/xkaXUqygvAnyFa2nAQdgELABEB\r\nAAHNKDxhdXRvLnJlZnJlc2guZXhwaXJlZC5rZXlAcmVjaXBpZW50LmNvbT7C\r\nwJMEEAEIACYFAl8PcdUFCQAAAAEGCwkHCAMCBBUICgIEFgIBAAIZAQIbAwIe\r\nAQAhCRC+46QtmpyKyRYhBG0+CYZ1RO5ify6Sj77jpC2anIrJIvQIALG8TGMN\r\nYB4CRouMJawNCLui6Fx4Ba1ipPTaqlJPybLoe6z/WVZwAA9CmbjkCIk683pp\r\nmGQ3GXv7f8Sdk7DqhEhfZ7JtAK/Uw2VZqqIryNrrB0WV3EUHsENCOlq0YJod\r\nLqtkqgl83lCNDIkeoQwq4IyrgC8wsPgF7YMpxxQLONJvChZxSdCDjnfX3kvO\r\nZsLYFiKnNlX6wyrKAQxWnxxYhglMf0GDDyh0AJ+vOQHJ9m+oeBnA1tJ5AZU5\r\naQHvRtyWBKkYaEhljhyWr3eu1JjK4mn7/W6Rszveso33987wtIoQ66GpGcX2\r\nmh7y217y/uXz4D3X5PUEBXIbhvAPty71bnTOwE0EXw9x1QEIALdJgAsQ0Jnv\r\nLXwAKoOammWlUQmracK89v1Yc4mFnImtHDHS3pGsbx3DbNGuiz5BhXCdoPDf\r\ngMxlGmJgShy9JAhrhWFXkvsjW/7aO4bM1wU486VPKXb7Av/dcrfHH0ASj4zj\r\n/TYAeubNoxQtxHgyb13LVCW1kh4Oe6s0ac/hKtxogwEvNFY3x+4yfloHH0Ik\r\n9sbLGk0gS03bPABDHMpYk346406f5TuP6UDzb9M90i2cFxbq26svyBzBZ0vY\r\nzfMRuNsm6an0+B/wS6NLYBqsRyxwwCTdrhYS512yBzCHDYJJX0o3OJNe85/0\r\nTqEBO1prgkh3QMfw13/Oxq8PuMsyJpUAEQEAAcLAfAQYAQgADwUCXw9x1QUJ\r\nAAAAAQIbDAAhCRC+46QtmpyKyRYhBG0+CYZ1RO5ify6Sj77jpC2anIrJARgH\r\n/1KV7JBOS2ZEtO95FrLYnIqI45rRpvT1XArpBPrYLuHtDBwgMcmpiMhhKIZC\r\nFlZkR1W88ENdSkr8Nx81nW+f9JWRR6HuSyom7kOfS2Gdbfwo3bgp48DWr7K8\r\nKV/HHGuqLqd8UfPyDpsBGNx0w7tRo+8vqUbhskquLAIahYCbhEIE8zgy0fBV\r\nhXKFe1FjuFUoW29iEm0tZWX0k2PT5r1owEgDe0g/X1AXgSQyfPRFVDwE3QNJ\r\n1np/Rmygq1C+DIW2cohJOc7tO4gbl11XolsfQ+FU+HewYXy8aAEbrTSRfsff\r\nMvK6tgT9BZ3kzjOxT5ou2SdvTa0eUk8k+zv8OnJJfXA=\r\n=LPeQ\r\n-----END PGP PUBLIC KEY BLOCK-----\r\n",
+        "users": [
+          "<auto.refresh.expired.key@recipient.com>"
+        ],
+        "ids": [
+          {
+            "fingerprint": "6D3E09867544EE627F2E928FBEE3A42D9A9C8AC9",
+            "longid": "BEE3A42D9A9C8AC9",
+            "shortid": "9A9C8AC9",
+            "keywords": "SAME BRUSH ARENA CRY SILLY BOMB"
+          },
+          {
+            "fingerprint": "0731F9992FE2152E101E0D37D16EE86BDB129956",
+            "longid": "D16EE86BDB129956",
+            "shortid": "DB129956",
+            "keywords": "SPHERE JAR BRAIN RENEW CIVIL CLIENT"
+          }
+        ],
+        "algo": {
+          "algorithm": "rsa_encrypt_sign",
+          "bits": 2048,
+          "algorithmId": 1
+        },
+        "created": 1594847701,
+        "isDecrypted": null,
+        "expiration": 1594847702,
+        "lastModified": 1594847701
       }
     ]
   });
@@ -486,7 +528,8 @@ ava.default('parseDecryptMsg compat mime-email-plain-with-pubkey', async t => {
           { "fingerprint": "9EF2F8F36A841C0D5FAB8B0F0BAB9C018B265D22", "longid": "0BAB9C018B265D22", "shortid": "8B265D22", "keywords": "ARM FRIEND ABOUT BIND GRAPE CATTLE" }
         ],
         "algo": { "algorithm": "rsa_encrypt_sign", "bits": 2048, "algorithmId": 1 },
-        "created": 1543592161
+        "created": 1543592161,
+        "lastModified": 1543592161
       }
     },
   ]);
@@ -495,7 +538,7 @@ ava.default('parseDecryptMsg compat mime-email-plain-with-pubkey', async t => {
 });
 
 ava.default('can process dirty html without throwing', async t => {
-  const dirtyBuf = await httpGet('https://raw.githubusercontent.com/cure53/HTTPLeaks/master/leak.html');
+  const dirtyBuf = await httpGet('https://raw.githubusercontent.com/cure53/HTTPLeaks/main/leak.html');
   const clean = Xss.htmlSanitizeKeepBasicTags(dirtyBuf.toUtfStr());
   expect(clean).to.not.contain('background');
   expect(clean).to.not.contain('script');
