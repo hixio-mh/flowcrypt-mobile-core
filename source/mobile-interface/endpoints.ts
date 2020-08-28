@@ -170,7 +170,6 @@ export class Endpoints {
             });
           }
         } else {
-          block.keyDetails = block.keyDetails;
           blocks.push(block);
         }
       } else if (isContentBlock(block.type)) {
