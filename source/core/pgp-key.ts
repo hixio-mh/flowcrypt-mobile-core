@@ -60,6 +60,8 @@ export interface KeyDetails {
   ids: KeyDetails$ids[];
   users: string[];
   created: number;
+  lastModified: number | undefined; // date of last signature, or undefined if never had valid signature
+  expiration: number | undefined; // number of millis of expiration or undefined if never expires
   algo: { // same as OpenPGP.key.AlgorithmInfo
     algorithm: string;
     algorithmId: number;
@@ -313,6 +315,9 @@ export class PgpKey {
     const algoInfo = k.primaryKey.getAlgorithmInfo();
     const algo = { algorithm: algoInfo.algorithm, bits: algoInfo.bits, curve: (algoInfo as any).curve, algorithmId: openpgp.enums.publicKey[algoInfo.algorithm] };
     const created = k.primaryKey.created.getTime() / 1000;
+    const exp = await k.getExpirationTime('encrypt');
+    const expiration = exp === Infinity || !exp ? undefined : (exp as Date).getTime() / 1000;
+    const lastModified = await PgpKey.lastSig(k) / 1000;
     const ids: KeyDetails$ids[] = [];
     for (const key of keys) {
       const fingerprint = key.getFingerprint().toUpperCase();
@@ -333,6 +338,8 @@ export class PgpKey {
       ids,
       algo,
       created,
+      expiration,
+      lastModified
     };
   }
 
