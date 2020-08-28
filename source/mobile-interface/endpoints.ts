@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { Buffers, fmtContentBlock, fmtRes, isContentBlock, legacyIsDecrypted } from './format-output';
+import { Buffers, fmtContentBlock, fmtRes, isContentBlock } from './format-output';
 import { DecryptErrTypes, PgpMsg } from '../core/pgp-msg';
 import { KeyDetails, PgpKey } from '../core/pgp-key';
 import { Mime, RichHeaders } from '../core/mime';
@@ -44,7 +44,7 @@ export class Endpoints {
       throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
     }
     let k = await PgpKey.create(userIds, variant, passphrase);
-    return fmtRes({ key: legacyIsDecrypted(await PgpKey.details(await PgpKey.read(k.private))) });
+    return fmtRes({ key: await PgpKey.details(await PgpKey.read(k.private)) });
   }
 
   public composeEmail = async (uncheckedReq: any): Promise<Buffers> => {
@@ -155,7 +155,7 @@ export class Endpoints {
           const { keys } = await PgpKey.normalize(block.content);
           if (keys.length) {
             for (const pub of keys) {
-              blocks.push({ type: 'publicKey', content: pub.armor(), complete: true, keyDetails: legacyIsDecrypted(await PgpKey.details(pub)) });
+              blocks.push({ type: 'publicKey', content: pub.armor(), complete: true, keyDetails: await PgpKey.details(pub) });
             }
           } else {
             blocks.push({
@@ -170,7 +170,7 @@ export class Endpoints {
             });
           }
         } else {
-          block.keyDetails = legacyIsDecrypted(block.keyDetails);
+          block.keyDetails = block.keyDetails;
           blocks.push(block);
         }
       } else if (isContentBlock(block.type)) {
@@ -241,14 +241,14 @@ export class Endpoints {
         const { keys } = await PgpKey.parse(block.content.toString());
         keyDetails.push(...keys);
       }
-      return fmtRes({ format: 'armored', keyDetails: keyDetails.map(legacyIsDecrypted) });
+      return fmtRes({ format: 'armored', keyDetails });
     }
     // binary
     const { keys: openPgpKeys } = await openpgp.key.read(allData);
     for (const openPgpKey of openPgpKeys) {
       keyDetails.push(await PgpKey.details(openPgpKey))
     }
-    return fmtRes({ format: 'binary', keyDetails: keyDetails.map(legacyIsDecrypted) });
+    return fmtRes({ format: 'binary', keyDetails: keyDetails });
   }
 
   public isEmailValid = async (uncheckedReq: any) => {
