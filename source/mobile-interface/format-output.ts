@@ -8,7 +8,6 @@ import { Buf } from '../core/buf';
 import { Mime } from '../core/mime';
 import { Str } from '../core/common';
 import { Xss } from '../platform/xss';
-import { KeyDetails } from '../core/pgp-key';
 
 export type Buffers = (Buf | Uint8Array)[];
 
@@ -144,27 +143,4 @@ ava.test.only('replaying', async t => {
   t.pass();
 });
   `)
-}
-
-/**
- * Core now uses isFullyEncrypted / isFullyDecrypted
- * However host apps still rely on legacy isDecrypted field
- * This should be deleted when https://github.com/FlowCrypt/flowcrypt-android/issues/708 is resolved
- */
-export const legacyIsDecrypted = (keyDetails: KeyDetails) => {
-  if (keyDetails.private) {
-    if (keyDetails.isFullyDecrypted) {
-      // @ts-ignore
-      keyDetails.isDecrypted = true;
-    } else if (keyDetails.isFullyEncrypted) {
-      // @ts-ignore
-      keyDetails.isDecrypted = false;
-    } else {
-      throw new Error('This key is only partially encrypted.')
-    }
-  } else {
-    // @ts-ignore
-    keyDetails.isDecrypted = null; // public key
-  }
-  return keyDetails
 }
