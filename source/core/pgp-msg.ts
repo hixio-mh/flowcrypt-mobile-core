@@ -336,7 +336,7 @@ export class PgpMsg {
           }
         }
       }
-      keys.prvForDecrypt = keys.prvMatching.length ? keys.prvMatching : kiWithPp;
+      keys.prvForDecrypt = keys.prvMatching;
     } else { // prvs not needed for signed msgs
       keys.prvForDecrypt = [];
     }
