@@ -135,11 +135,8 @@ export const expectData = (data: Buffer, type?: 'armoredMsg' | 'msgBlocks' | 'bi
         }
       }
     }
-    console.log(blocks);
-    console.log(`blocks to compare: ${expectedBlocks.length}`);
     expect(blocks.length).to.equal(expectedBlocks.length);
     for (let i = 0; i < expectedBlocks.length; i++) {
-      console.log(`comparing block ${i}`);
       // if (i === 0 && blocks[i].type === 'decryptedHtml') {
       // }
       expect(blocks[i]).to.deep.equal(expectedBlocks[i], `block ${i} failed cmp check`);
