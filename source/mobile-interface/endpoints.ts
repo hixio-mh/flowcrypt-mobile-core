@@ -176,7 +176,7 @@ export class Endpoints {
         msgContentBlocks.push(block);
       } else if (Mime.isPlainImgAtt(block)) {
         msgContentBlocks.push(block);
-      } else if (block.type !== 'plainAtt') {
+      } else {
         blocks.push(block);
       }
     }

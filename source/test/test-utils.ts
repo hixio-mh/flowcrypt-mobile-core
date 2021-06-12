@@ -135,16 +135,18 @@ export const expectData = (data: Buffer, type?: 'armoredMsg' | 'msgBlocks' | 'bi
         }
       }
     }
-    for (let i = 0; i < blocks.length; i++) {
-      if (i === 0 && blocks[i].type === 'decryptedHtml') {
-
-      }
+    expect(blocks.length).to.equal(expectedBlocks.length);
+    for (let i = 0; i < expectedBlocks.length; i++) {
+      // if (i === 0 && blocks[i].type === 'decryptedHtml') {
+      // }
       expect(blocks[i]).to.deep.equal(expectedBlocks[i], `block ${i} failed cmp check`);
     }
   } else if (type === "binary") {
     expect(details).to.be.instanceOf(Buffer);
     const expectedBuffer = details as Buffer;
     expect(data).to.deep.equal(expectedBuffer);
+  } else if(typeof details !== 'undefined') {
+    throw Error("Unknown test type");
   }
 }
 

@@ -474,7 +474,7 @@ ava.default('parseDecryptMsg compat mime-email-encrypted-inline-text-2 Mime-Text
   t.pass();
 });
 
-ava.default.only('parseDecryptMsg - decryptErr', async t => {
+ava.default('parseDecryptMsg - decryptErr', async t => {
   const { keys } = getKeypairs('rsa2'); // intentional key mismatch
   const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys }, await getCompatAsset('direct-encrypted-text'), false);
   expectData(blocks, 'msgBlocks', [{
@@ -531,6 +531,29 @@ ava.default('parseDecryptMsg compat mime-email-plain-with-pubkey', async t => {
     },
   ]);
   expect(decryptJson).to.deep.equal({ text, replyType: 'plain', subject: 'mime email plain with pubkey' });
+  t.pass();
+});
+
+ava.default('parseDecryptMsg plainAtt', async t => {
+  const { keys } = getKeypairs('rsa1');
+  const { data: blocks, json: decryptJson } = await request('parseDecryptMsg', { keys, isEmail: true }, await getCompatAsset('mime-email-plain-with-attachment'));
+  expectData(blocks, 'msgBlocks', [
+    { rendered: true, frameColor: 'plain', htmlContent },
+    { 
+      type: 'plainAtt',
+      content: '',
+      complete: true,
+      attMeta: {
+        name: 'name.txt',
+        type: 'text/plain',
+        length: 18,
+        data: 'ZmlsZSBjb250ZW50IGhlcmUK',
+        inline: false,
+        cid: '<f_kpu3dty00>'
+      } 
+    } 
+  ]);
+  expect(decryptJson).to.deep.equal({ text, replyType: 'plain', subject: 'plain message with attachment' });
   t.pass();
 });
 
