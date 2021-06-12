@@ -148,7 +148,7 @@ export const expectData = (data: Buffer, type?: 'armoredMsg' | 'msgBlocks' | 'bi
     expect(details).to.be.instanceOf(Buffer);
     const expectedBuffer = details as Buffer;
     expect(data).to.deep.equal(expectedBuffer);
-  } else {
+  } else if(typeof details !== 'undefined') {
     throw Error("Unknown test type");
   }
 }
