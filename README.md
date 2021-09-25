@@ -1,3 +1,7 @@
+Repo archived, go to https://github.com/FlowCrypt/flowcrypt-ios/tree/master/Core instead
+
+-------------------
+
 # flowcrypt-mobile-core
 
 This repo hosts TS Core with added interfaces to run it on iOS or Android.
