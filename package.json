@@ -3,14 +3,14 @@
   "version": "0.0.1",
   "description": "Node.js bundle for FlowCrypt Android internal use.",
   "dependencies": {
-    "sanitize-html": "1.21.1",
+    "sanitize-html": "2.7.2",
     "zxcvbn": "4.4.2"
   },
   "devDependencies": {
     "@types/chai": "4.3.3",
-    "@types/node": "13.1.6",
+    "@types/node": "18.11.5",
     "@types/node-cleanup": "2.1.2",
-    "ava": "1.4.1",
+    "ava": "5.0.1",
     "babel-loader": "8.2.5",
     "babel-preset-env": "1.7.0",
     "chai": "4.3.6",
