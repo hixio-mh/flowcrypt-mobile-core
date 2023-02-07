@@ -10,7 +10,7 @@
     "@types/chai": "4.3.3",
     "@types/node": "18.11.5",
     "@types/node-cleanup": "2.1.2",
-    "ava": "5.0.1",
+    "ava": "5.2.0",
     "babel-loader": "8.2.5",
     "babel-preset-env": "1.7.0",
     "chai": "4.3.6",
