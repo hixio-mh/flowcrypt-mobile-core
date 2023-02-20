@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Node.js bundle for FlowCrypt Android internal use.",
   "dependencies": {
-    "sanitize-html": "2.7.2",
+    "sanitize-html": "2.10.0",
     "zxcvbn": "4.4.2"
   },
   "devDependencies": {
